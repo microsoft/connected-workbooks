@@ -1,0 +1,43 @@
+{
+  "name": "@microsoft/connected-workbooks",
+  "version": "1.0.0",
+  "description": "Use this library to generate Excel workbooks with a custom Mashup Query loaded to the grid, to be used by applications for 'Export to Excel' features to allow refreshable workbooks",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "npm run build",
+    "prepublish": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/microsoft/connected-workbooks.git"
+  },
+  "keywords": [
+    "Power Query",
+    "Excel",
+    "Workbook",
+    "Refresh"
+  ],
+  "author": "Microsoft",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/microsoft/connected-workbooks/issues"
+  },
+  "homepage": "https://github.com/microsoft/connected-workbooks#readme",
+  "dependencies": {
+    "byte-base64": "^1.1.0",
+    "iconv-lite": "^0.6.2",
+    "jszip": "^3.5.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.14",
+    "@types/mocha": "^8.0.3",
+    "chai": "^4.2.0",
+    "mocha": "^8.2.1",
+    "nyc": "^15.1.0",
+    "prettier": "^2.2.1",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.5"
+  }
+}
