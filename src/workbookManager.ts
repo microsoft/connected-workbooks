@@ -72,7 +72,6 @@ export class WorkbookManager {
         properties.parentElement?.setAttribute("refreshOnLoad","1");
         connectionId = properties.parentElement?.getAttribute("id")!;
         let newConn = serializer.serializeToString(connectionsDoc);
-        console.log("newConn:",newConn)
         zip.file(connectionsXmlPath, newConn);
         break;
       }
@@ -95,8 +94,6 @@ export class WorkbookManager {
     (await Promise.all(queryTablePromises)).forEach(({path, queryTableXmlString})=>{
       let queryTableDoc: Document = parser.parseFromString(queryTableXmlString, "text/xml");
       let element = queryTableDoc.getElementsByTagName("queryTable")[0];
-      console.log(element.getAttribute("connectionId"));
-      console.log(connectionId);
       if(element.getAttribute("connectionId") == connectionId){
         element.setAttribute("refreshOnLoad","1");
         let newQT = serializer.serializeToString(queryTableDoc);
@@ -110,12 +107,9 @@ export class WorkbookManager {
 
     // Find Query Table
     let pivotCachePromises:Promise<{path:string,pivotCacheXmlString:string}>[] = [];
-    console.log("looking for cache");
 
     zip.folder(pivotCachesPath)?.forEach(async (relativePath,pivotCacheFile)=>{
-      console.log(relativePath);
       if (relativePath.startsWith("pivotCacheDefinition")){
-        console.log("Found pivot cache");
         pivotCachePromises.push((()=>{
           return pivotCacheFile.async("text").then(pivotCacheString=>{
             return {path:relativePath,pivotCacheXmlString:pivotCacheString};
@@ -127,8 +121,6 @@ export class WorkbookManager {
     (await Promise.all(pivotCachePromises)).forEach(({path, pivotCacheXmlString})=>{
       let pivotCacheDoc: Document = parser.parseFromString(pivotCacheXmlString, "text/xml");
       let element = pivotCacheDoc.getElementsByTagName("cacheSource")[0];
-      console.log(element.getAttribute("connectionId"));
-      console.log(connectionId);
       if(element.getAttribute("connectionId") == connectionId){
         element.parentElement!.setAttribute("refreshOnLoad","1");
         let newPC = serializer.serializeToString(pivotCacheDoc);
