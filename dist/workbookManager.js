@@ -73,7 +73,6 @@ class WorkbookManager {
                     (_b = properties.parentElement) === null || _b === void 0 ? void 0 : _b.setAttribute("refreshOnLoad", "1");
                     connectionId = (_c = properties.parentElement) === null || _c === void 0 ? void 0 : _c.getAttribute("id");
                     let newConn = serializer.serializeToString(connectionsDoc);
-                    console.log("newConn:", newConn);
                     zip.file(connectionsXmlPath, newConn);
                     break;
                 }
@@ -94,8 +93,6 @@ class WorkbookManager {
             (yield Promise.all(queryTablePromises)).forEach(({ path, queryTableXmlString }) => {
                 let queryTableDoc = parser.parseFromString(queryTableXmlString, "text/xml");
                 let element = queryTableDoc.getElementsByTagName("queryTable")[0];
-                console.log(element.getAttribute("connectionId"));
-                console.log(connectionId);
                 if (element.getAttribute("connectionId") == connectionId) {
                     element.setAttribute("refreshOnLoad", "1");
                     let newQT = serializer.serializeToString(queryTableDoc);
@@ -108,11 +105,8 @@ class WorkbookManager {
             }
             // Find Query Table
             let pivotCachePromises = [];
-            console.log("looking for cache");
             (_e = zip.folder(pivotCachesPath)) === null || _e === void 0 ? void 0 : _e.forEach((relativePath, pivotCacheFile) => __awaiter(this, void 0, void 0, function* () {
-                console.log(relativePath);
                 if (relativePath.startsWith("pivotCacheDefinition")) {
-                    console.log("Found pivot cache");
                     pivotCachePromises.push((() => {
                         return pivotCacheFile.async("text").then(pivotCacheString => {
                             return { path: relativePath, pivotCacheXmlString: pivotCacheString };
@@ -123,8 +117,6 @@ class WorkbookManager {
             (yield Promise.all(pivotCachePromises)).forEach(({ path, pivotCacheXmlString }) => {
                 let pivotCacheDoc = parser.parseFromString(pivotCacheXmlString, "text/xml");
                 let element = pivotCacheDoc.getElementsByTagName("cacheSource")[0];
-                console.log(element.getAttribute("connectionId"));
-                console.log(connectionId);
                 if (element.getAttribute("connectionId") == connectionId) {
                     element.parentElement.setAttribute("refreshOnLoad", "1");
                     let newPC = serializer.serializeToString(pivotCacheDoc);
