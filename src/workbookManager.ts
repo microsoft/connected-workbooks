@@ -6,10 +6,10 @@ import iconv from "iconv-lite";
 import MashupHandler from "./mashupDocumentParser";
 import WorkbookTemplate from "./workbookTemplate";
 
-const pqCustomXmlPath: string = "customXml/item1.xml";
-const connectionsXmlPath: string = "xl/connections.xml";
-const queryTablesPath: string = "xl/queryTables/";
-const pivotCachesPath: string = "xl/pivotCache/";
+const pqCustomXmlPath = "customXml/item1.xml";
+const connectionsXmlPath = "xl/connections.xml";
+const queryTablesPath = "xl/queryTables/";
+const pivotCachesPath = "xl/pivotCache/";
 
 export class QueryInfo {
   queryMashup: string;
@@ -27,7 +27,7 @@ export class WorkbookManager {
     query: QueryInfo,
     templateFile?: File
   ): Promise<Blob> {
-    let zip =
+    const zip =
       templateFile === undefined
         ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, {base64: true})
         : await JSZip.loadAsync(templateFile);
@@ -39,8 +39,8 @@ export class WorkbookManager {
     zip: JSZip,
     query: QueryInfo
   ): Promise<Blob> {
-    let old_base64 = await this.getBase64(zip);
-    let new_base64 = await this.mashupHandler.ReplaceSingleQuery(
+    const old_base64 = await this.getBase64(zip);
+    const new_base64 = await this.mashupHandler.ReplaceSingleQuery(
       old_base64,
       query.queryMashup
     );
@@ -57,21 +57,22 @@ export class WorkbookManager {
   }
 
   private async setSingleQueryRefreshOnOpen(zip: JSZip) {
-    let connectionsXmlString = await zip.file(connectionsXmlPath)?.async("text");
+    const connectionsXmlString = await zip.file(connectionsXmlPath)?.async("text");
     if (connectionsXmlString === undefined) {
       throw new Error("Connections were not found in template");
     }
-    let parser: DOMParser = new DOMParser();
-    let serializer = new XMLSerializer();
+    const parser: DOMParser = new DOMParser();
+    const serializer = new XMLSerializer();
 
-    let connectionsDoc: Document = parser.parseFromString(connectionsXmlString, "text/xml");
+    const connectionsDoc: Document = parser.parseFromString(connectionsXmlString, "text/xml");
     let connectionId = "-1";
-    let connectionsProperties = connectionsDoc.getElementsByTagName("dbPr");
-    for (let properties of connectionsProperties){
+    const connectionsProperties = connectionsDoc.getElementsByTagName("dbPr");
+    for (const properties of connectionsProperties){
       if (properties.getAttribute("command") == "SELECT * FROM [Query1]"){
         properties.parentElement?.setAttribute("refreshOnLoad","1");
-        connectionId = properties.parentElement?.getAttribute("id")!;
-        let newConn = serializer.serializeToString(connectionsDoc);
+        const attr = properties.parentElement?.getAttribute("id");
+        connectionId = attr!;
+        const newConn = serializer.serializeToString(connectionsDoc);
         zip.file(connectionsXmlPath, newConn);
         break;
       }
@@ -82,7 +83,7 @@ export class WorkbookManager {
     let found = false;
 
     // Find Query Table
-    let queryTablePromises:Promise<{path:string,queryTableXmlString:string}>[] = [];
+    const queryTablePromises:Promise<{path:string,queryTableXmlString:string}>[] = [];
 
     zip.folder(queryTablesPath)?.forEach(async (relativePath,queryTableFile)=>{
       queryTablePromises.push((()=>{
@@ -92,11 +93,11 @@ export class WorkbookManager {
       })());
     });
     (await Promise.all(queryTablePromises)).forEach(({path, queryTableXmlString})=>{
-      let queryTableDoc: Document = parser.parseFromString(queryTableXmlString, "text/xml");
-      let element = queryTableDoc.getElementsByTagName("queryTable")[0];
+      const queryTableDoc: Document = parser.parseFromString(queryTableXmlString, "text/xml");
+      const element = queryTableDoc.getElementsByTagName("queryTable")[0];
       if(element.getAttribute("connectionId") == connectionId){
         element.setAttribute("refreshOnLoad","1");
-        let newQT = serializer.serializeToString(queryTableDoc);
+        const newQT = serializer.serializeToString(queryTableDoc);
         zip.file(queryTablesPath+path, newQT);
         found=true;
       }
@@ -106,7 +107,7 @@ export class WorkbookManager {
     }
 
     // Find Query Table
-    let pivotCachePromises:Promise<{path:string,pivotCacheXmlString:string}>[] = [];
+    const pivotCachePromises:Promise<{path:string,pivotCacheXmlString:string}>[] = [];
 
     zip.folder(pivotCachesPath)?.forEach(async (relativePath,pivotCacheFile)=>{
       if (relativePath.startsWith("pivotCacheDefinition")){
@@ -119,11 +120,11 @@ export class WorkbookManager {
     });
 
     (await Promise.all(pivotCachePromises)).forEach(({path, pivotCacheXmlString})=>{
-      let pivotCacheDoc: Document = parser.parseFromString(pivotCacheXmlString, "text/xml");
-      let element = pivotCacheDoc.getElementsByTagName("cacheSource")[0];
+      const pivotCacheDoc: Document = parser.parseFromString(pivotCacheXmlString, "text/xml");
+      const element = pivotCacheDoc.getElementsByTagName("cacheSource")[0];
       if(element.getAttribute("connectionId") == connectionId){
         element.parentElement!.setAttribute("refreshOnLoad","1");
-        let newPC = serializer.serializeToString(pivotCacheDoc);
+        const newPC = serializer.serializeToString(pivotCacheDoc);
         zip.file(pivotCachesPath+path, newPC);
         found=true;
       }
@@ -134,20 +135,20 @@ export class WorkbookManager {
   }
 
   private async setBase64(zip: JSZip, base64: string) {
-    let newXml = `<?xml version="1.0" encoding="utf-16"?><DataMashup xmlns="http://schemas.microsoft.com/DataMashup">${base64}</DataMashup>`;
-    let encoded = iconv.encode(newXml, "UCS2", { addBOM: true });
+    const newXml = `<?xml version="1.0" encoding="utf-16"?><DataMashup xmlns="http://schemas.microsoft.com/DataMashup">${base64}</DataMashup>`;
+    const encoded = iconv.encode(newXml, "UCS2", { addBOM: true });
     zip.file(pqCustomXmlPath, encoded);
   }
 
   private async getBase64(zip: JSZip): Promise<string> {
-    let xmlValue = await zip.file(pqCustomXmlPath)?.async("uint8array");
+    const xmlValue = await zip.file(pqCustomXmlPath)?.async("uint8array");
     if (xmlValue === undefined) {
       throw new Error("PQ document wasn't found in zip");
     }
-    let xmlString = iconv.decode(xmlValue.buffer, "UTF-16");
-    let parser: DOMParser = new DOMParser();
-    let doc: Document = parser.parseFromString(xmlString, "text/xml");
-    let result = doc.childNodes[0].textContent;
+    const xmlString = iconv.decode(xmlValue.buffer as Buffer, "UTF-16");
+    const parser: DOMParser = new DOMParser();
+    const doc: Document = parser.parseFromString(xmlString, "text/xml");
+    const result = doc.childNodes[0].textContent;
     if (result === null) {
       throw Error("Base64 wasn't found in zip");
     }

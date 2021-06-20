@@ -8,7 +8,14 @@
     "/dist"
   ],
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "jest",
+    "prepare": "husky install"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run build && npm run test && exit 1"
+    }
   },
   "repository": {
     "type": "git",
@@ -32,13 +39,29 @@
     "jszip": "^3.5.0"
   },
   "devDependencies": {
-    "@types/chai": "^4.2.14",
-    "@types/mocha": "^8.0.3",
-    "chai": "^4.2.0",
-    "mocha": "^8.2.1",
+    "@babel/core": "^7.14.6",
+    "@babel/preset-env": "^7.14.5",
+    "@babel/preset-typescript": "^7.14.5",
+    "@types/jest": "^26.0.23",
+    "@typescript-eslint/eslint-plugin": "^4.27.0",
+    "@typescript-eslint/parser": "^4.27.0",
+    "eslint": "^7.28.0",
+    "eslint-plugin-jest": "^24.3.6",
+    "jest": "^27.0.4",
     "nyc": "^15.1.0",
     "prettier": "^2.2.1",
     "ts-node": "^9.0.0",
-    "typescript": "^4.0.5"
+    "typescript": "^4.0.5",
+    "husky": "^6.0.0"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "moduleDirectories": [
+      "node_modules",
+      "src"
+    ]
   }
 }
