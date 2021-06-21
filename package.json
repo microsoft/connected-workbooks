@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc",
     "test": "jest",
-    "postinstall": "husky install"
+    "postinstall": "husky install .config/husky"
   },
   "repository": {
     "type": "git",
