@@ -9,12 +9,12 @@ class ArrayReader {
         this._position = 0;
     }
     getInt32() {
-        let retVal = new DataView(this._array, this._position, 4).getInt32(0, true);
+        const retVal = new DataView(this._array, this._position, 4).getInt32(0, true);
         this._position += 4;
         return retVal;
     }
     getBytes(bytes) {
-        let retVal = this._array.slice(this._position, (bytes ? bytes + this._position : bytes));
+        const retVal = this._array.slice(this._position, (bytes ? bytes + this._position : bytes));
         this._position += retVal.byteLength;
         return new Uint8Array(retVal);
     }
@@ -24,7 +24,7 @@ class ArrayReader {
 }
 exports.ArrayReader = ArrayReader;
 function getInt32Buffer(val) {
-    let packageSizeBuffer = new ArrayBuffer(4);
+    const packageSizeBuffer = new ArrayBuffer(4);
     new DataView(packageSizeBuffer).setInt32(0, val, true);
     return new Uint8Array(packageSizeBuffer);
 }
@@ -32,7 +32,7 @@ exports.getInt32Buffer = getInt32Buffer;
 function concatArrays(...args) {
     let size = 0;
     args.forEach(arr => size += arr.byteLength);
-    let retVal = new Uint8Array(size);
+    const retVal = new Uint8Array(size);
     let position = 0;
     args.forEach(arr => {
         retVal.set(arr, position);
