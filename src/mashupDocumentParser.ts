@@ -7,25 +7,25 @@ import {ArrayReader, concatArrays, getInt32Buffer} from "./arrayUtils";
 
 export default class MashupHandler {
   async ReplaceSingleQuery(base64str:string, query:string) {
-    let buffer = base64.base64ToBytes(base64str).buffer;
-    let mashupArray = new ArrayReader(buffer);
-    let startArray = mashupArray.getBytes(4);
-    let packageSize = mashupArray.getInt32();
-    let packageOPC = mashupArray.getBytes(packageSize);
-    let endBuffer = mashupArray.getBytes();
-    let newPackageBuffer = await this.editSingleQueryPackage(packageOPC, "Query1", query);
-    let packageSizeBuffer = getInt32Buffer(newPackageBuffer.byteLength);
-    let newMashup = concatArrays(startArray, packageSizeBuffer, newPackageBuffer, endBuffer);
+    const buffer = base64.base64ToBytes(base64str).buffer;
+    const mashupArray = new ArrayReader(buffer);
+    const startArray = mashupArray.getBytes(4);
+    const packageSize = mashupArray.getInt32();
+    const packageOPC = mashupArray.getBytes(packageSize);
+    const endBuffer = mashupArray.getBytes();
+    const newPackageBuffer = await this.editSingleQueryPackage(packageOPC, "Query1", query);
+    const packageSizeBuffer = getInt32Buffer(newPackageBuffer.byteLength);
+    const newMashup = concatArrays(startArray, packageSizeBuffer, newPackageBuffer, endBuffer);
     return base64.bytesToBase64(newMashup);
   }
 
   private async editSingleQueryPackage(packageOPC:ArrayBuffer, queryName:string, query: string) {
-    let packageZip = await JSZip.loadAsync(packageOPC);
-    let section1m = await packageZip.file("Formulas/Section1.m")?.async("text");
+    const packageZip = await JSZip.loadAsync(packageOPC);
+    const section1m = await packageZip.file("Formulas/Section1.m")?.async("text");
     if (section1m === undefined) {
       throw new Error("Formula section wasn't found in template");
     }
-    let newSection1m = 
+    const newSection1m = 
     `section Section1;
     
     shared ${queryName} = 
