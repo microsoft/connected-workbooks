@@ -9,7 +9,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" --config .prettierrc"
   },
   "repository": {
     "type": "git",
@@ -41,10 +42,12 @@
     "@typescript-eslint/parser": "^4.28.2",
     "babel-jest": "^27.0.6",
     "eslint": "^7.30.0",
+    "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-jest": "^24.3.6",
+    "eslint-plugin-prettier": "^3.4.0",
     "jest": "^27.0.6",
     "nyc": "^15.1.0",
-    "prettier": "^2.2.1",
+    "prettier": "2.3.2",
     "ts-node": "^9.0.0",
     "typescript": "^4.0.5"
   }
