@@ -8,7 +8,8 @@
     "/dist"
   ],
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -32,9 +33,16 @@
     "jszip": "^3.5.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.14.6",
+    "@babel/preset-env": "^7.14.7",
+    "@babel/preset-typescript": "^7.14.5",
+    "@types/jest": "^26.0.24",
     "@typescript-eslint/eslint-plugin": "^4.28.2",
     "@typescript-eslint/parser": "^4.28.2",
+    "babel-jest": "^27.0.6",
     "eslint": "^7.30.0",
+    "eslint-plugin-jest": "^24.3.6",
+    "jest": "^27.0.6",
     "nyc": "^15.1.0",
     "prettier": "^2.2.1",
     "ts-node": "^9.0.0",
