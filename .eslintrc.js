@@ -7,7 +7,8 @@ module.exports = {
     },
     "extends": [
         "eslint:recommended",
-        "plugin:@typescript-eslint/recommended"
+        "plugin:@typescript-eslint/recommended",
+        "prettier"
     ],
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
@@ -16,7 +17,8 @@ module.exports = {
     },
     "plugins": [
         "@typescript-eslint",
-        "jest"
+        "jest",
+        "prettier"
     ],
     "rules": {
         "jest/no-disabled-tests": "warn",
