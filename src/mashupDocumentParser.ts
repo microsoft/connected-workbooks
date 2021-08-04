@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import JSZip from "jszip";
 import * as base64 from "base64-js";
-import { ArrayReader, concatArrays, getInt32Buffer } from "./arrayUtils";
+import { arrayUtils, zipUtils, pqUtils } from "./utils/";
 
 export default class MashupHandler {
     async ReplaceSingleQuery(
@@ -11,7 +10,7 @@ export default class MashupHandler {
         query: string
     ): Promise<string> {
         const buffer = base64.toByteArray(base64str).buffer;
-        const mashupArray = new ArrayReader(buffer);
+        const mashupArray = new arrayUtils.ArrayReader(buffer);
         const startArray = mashupArray.getBytes(4);
         const packageSize = mashupArray.getInt32();
         const packageOPC = mashupArray.getBytes(packageSize);
@@ -21,8 +20,10 @@ export default class MashupHandler {
             "Query1",
             query
         );
-        const packageSizeBuffer = getInt32Buffer(newPackageBuffer.byteLength);
-        const newMashup = concatArrays(
+        const packageSizeBuffer = arrayUtils.getInt32Buffer(
+            newPackageBuffer.byteLength
+        );
+        const newMashup = arrayUtils.concatArrays(
             startArray,
             packageSizeBuffer,
             newPackageBuffer,
@@ -36,21 +37,9 @@ export default class MashupHandler {
         queryName: string,
         query: string
     ) {
-        const packageZip = await JSZip.loadAsync(packageOPC);
-        const section1m = await packageZip
-            .file("Formulas/Section1.m")
-            ?.async("text");
-        if (section1m === undefined) {
-            throw new Error("Formula section wasn't found in template");
-        }
-        const newSection1m = `section Section1;
-    
-    shared ${queryName} = 
-    ${query};`;
-
-        packageZip.file("Formulas/Section1.m", newSection1m, {
-            compression: "",
-        });
+        const packageZip = await zipUtils.loadAsync(packageOPC);
+        pqUtils.getSection1m(packageZip);
+        pqUtils.setSection1m(queryName, query, packageZip);
 
         return await packageZip.generateAsync({ type: "uint8array" });
     }

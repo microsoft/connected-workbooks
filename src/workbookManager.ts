@@ -1,15 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import JSZip from "jszip";
-import iconv from "iconv-lite";
 import MashupHandler from "./mashupDocumentParser";
-import WorkbookTemplate from "./workbookTemplate";
-
-const pqCustomXmlPath = "customXml/item1.xml";
-const connectionsXmlPath = "xl/connections.xml";
-const queryTablesPath = "xl/queryTables/";
-const pivotCachesPath = "xl/pivotCache/";
+import { zipUtils, JSZip } from "./utils";
+import {
+    connectionsXmlPath,
+    queryTablesPath,
+    pivotCachesPath,
+} from "./constants";
 
 export class QueryInfo {
     queryMashup: string;
@@ -28,11 +26,8 @@ export class WorkbookManager {
     ): Promise<Blob> {
         const zip =
             templateFile === undefined
-                ? await JSZip.loadAsync(
-                      WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE,
-                      { base64: true }
-                  )
-                : await JSZip.loadAsync(templateFile);
+                ? await zipUtils.loadAsyncDefaultTemplate()
+                : await zipUtils.loadAsync(templateFile);
 
         return await this.generateSingleQueryWorkbookFromZip(zip, query);
     }
@@ -41,12 +36,12 @@ export class WorkbookManager {
         zip: JSZip,
         query: QueryInfo
     ): Promise<Blob> {
-        const old_base64 = await this.getBase64(zip);
+        const old_base64 = await zipUtils.getBase64(zip);
         const new_base64 = await this.mashupHandler.ReplaceSingleQuery(
             old_base64,
             query.queryMashup
         );
-        await this.setBase64(zip, new_base64);
+        await zipUtils.setBase64(zip, new_base64);
 
         if (query.refreshOnOpen) {
             await this.setSingleQueryRefreshOnOpen(zip);
@@ -179,26 +174,5 @@ export class WorkbookManager {
                 "No Query Table or Pivot Table found for Query1 in given template."
             );
         }
-    }
-
-    private async setBase64(zip: JSZip, base64: string) {
-        const newXml = `<?xml version="1.0" encoding="utf-16"?><DataMashup xmlns="http://schemas.microsoft.com/DataMashup">${base64}</DataMashup>`;
-        const encoded = iconv.encode(newXml, "UCS2", { addBOM: true });
-        zip.file(pqCustomXmlPath, encoded);
-    }
-
-    private async getBase64(zip: JSZip): Promise<string> {
-        const xmlValue = await zip.file(pqCustomXmlPath)?.async("uint8array");
-        if (xmlValue === undefined) {
-            throw new Error("PQ document wasn't found in zip");
-        }
-        const xmlString = iconv.decode(xmlValue.buffer as Buffer, "UTF-16");
-        const parser: DOMParser = new DOMParser();
-        const doc: Document = parser.parseFromString(xmlString, "text/xml");
-        const result = doc.childNodes[0].textContent;
-        if (result === null) {
-            throw Error("Base64 wasn't found in zip");
-        }
-        return result;
     }
 }
