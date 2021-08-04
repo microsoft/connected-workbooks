@@ -2,12 +2,15 @@
 // Licensed under the MIT license.
 
 import JSZip from "jszip";
-import * as base64 from "byte-base64";
+import * as base64 from "base64-js";
 import { ArrayReader, concatArrays, getInt32Buffer } from "./arrayUtils";
 
 export default class MashupHandler {
-    async ReplaceSingleQuery(base64str: string, query: string) {
-        const buffer = base64.base64ToBytes(base64str).buffer;
+    async ReplaceSingleQuery(
+        base64str: string,
+        query: string
+    ): Promise<string> {
+        const buffer = base64.toByteArray(base64str).buffer;
         const mashupArray = new ArrayReader(buffer);
         const startArray = mashupArray.getBytes(4);
         const packageSize = mashupArray.getInt32();
@@ -25,7 +28,7 @@ export default class MashupHandler {
             newPackageBuffer,
             endBuffer
         );
-        return base64.bytesToBase64(newMashup);
+        return base64.fromByteArray(newMashup);
     }
 
     private async editSingleQueryPackage(

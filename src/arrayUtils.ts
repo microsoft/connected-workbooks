@@ -10,7 +10,7 @@ export class ArrayReader {
         this._position = 0;
     }
 
-    public getInt32() {
+    public getInt32(): number {
         const retVal = new DataView(this._array, this._position, 4).getInt32(
             0,
             true
@@ -29,18 +29,18 @@ export class ArrayReader {
         return new Uint8Array(retVal);
     }
 
-    reset() {
+    reset(): void {
         this._position = 0;
     }
 }
 
-export function getInt32Buffer(val: number) {
+export function getInt32Buffer(val: number): Uint8Array {
     const packageSizeBuffer = new ArrayBuffer(4);
     new DataView(packageSizeBuffer).setInt32(0, val, true);
     return new Uint8Array(packageSizeBuffer);
 }
 
-export function concatArrays(...args: Uint8Array[]) {
+export function concatArrays(...args: Uint8Array[]): Uint8Array {
     let size = 0;
     args.forEach((arr) => (size += arr.byteLength));
     const retVal = new Uint8Array(size);

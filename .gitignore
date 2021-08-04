@@ -278,6 +278,9 @@ node_modules/
 # Build files
 dist/
 
+# Test coverage files 
+coverage/
+
 # Visual Studio 6 build log
 *.plg
 

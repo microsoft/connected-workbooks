@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/microsoft/connected-workbooks#readme",
   "dependencies": {
-    "byte-base64": "^1.1.0",
+    "base64-js": "^1.5.1",
     "iconv-lite": "^0.6.2",
     "jszip": "^3.5.0"
   },
