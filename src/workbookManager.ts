@@ -9,7 +9,7 @@ import {
     queryTablesPath,
     pivotCachesPath,
 } from "./constants";
-import workbookTemplate from "./workbookTemplate";
+import WorkbookTemplate from "./workbookTemplate";
 
 export class QueryInfo {
     queryMashup: string;
@@ -29,7 +29,7 @@ export class WorkbookManager {
         const zip =
             templateFile === undefined
                 ? await JSZip.loadAsync(
-                      workbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE,
+                      WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE,
                       { base64: true }
                   )
                 : await JSZip.loadAsync(templateFile);
