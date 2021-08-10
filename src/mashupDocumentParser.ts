@@ -2,7 +2,10 @@
 // Licensed under the MIT license.
 
 import * as base64 from "base64-js";
-import { arrayUtils, zipUtils, pqUtils } from "./utils/";
+import JSZip from "jszip";
+import { section1mPath } from "./constants";
+import { arrayUtils } from "./utils";
+import { generateSingleQueryMashup } from "./generators";
 
 export default class MashupHandler {
     async ReplaceSingleQuery(
@@ -37,10 +40,31 @@ export default class MashupHandler {
         queryName: string,
         query: string
     ) {
-        const packageZip = await zipUtils.loadAsync(packageOPC);
-        pqUtils.getSection1m(packageZip);
-        pqUtils.setSection1m(queryName, query, packageZip);
+        const packageZip = await JSZip.loadAsync(packageOPC);
+        this.getSection1m(packageZip);
+        this.setSection1m(queryName, query, packageZip);
 
         return await packageZip.generateAsync({ type: "uint8array" });
     }
+
+    private setSection1m = (
+        queryName: string,
+        query: string,
+        zip: JSZip
+    ): void => {
+        const newSection1m = generateSingleQueryMashup(queryName, query);
+
+        zip.file(section1mPath, newSection1m, {
+            compression: "",
+        });
+    };
+
+    private getSection1m = async (zip: JSZip): Promise<string> => {
+        const section1m = zip.file(section1mPath)?.async("text");
+        if (!section1m) {
+            throw new Error("Formula section wasn't found in template");
+        }
+
+        return section1m;
+    };
 }
