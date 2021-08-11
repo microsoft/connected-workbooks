@@ -1,9 +1,9 @@
-import { getInt32Buffer, concatArrays, ArrayReader } from "../src/arrayUtils";
+import { arrayUtils } from "../src/utils/";
 import * as base64 from "base64-js";
 
 describe("ArrayReader tests", () => {
     const buffer = base64.toByteArray("UHJhaXNlIFRoZSBTdW4h").buffer;
-    const arrReader = new ArrayReader(buffer);
+    const arrReader = new arrayUtils.ArrayReader(buffer);
 
     test("getInt32 test", () => {
         const int32 = arrReader.getInt32();
@@ -34,7 +34,7 @@ test("getInt32Buffer test", () => {
     new DataView(packageSizeBuffer).setInt32(0, val, true);
     const expected = new Uint8Array(packageSizeBuffer);
 
-    const actual = getInt32Buffer(size);
+    const actual = arrayUtils.getInt32Buffer(size);
 
     expect(actual).toStrictEqual(expected);
 });
@@ -47,7 +47,7 @@ test("concatArrays test", () => {
     expected.set(uIntArr1, 0);
     expected.set(uIntArr2, 4);
 
-    const actual = concatArrays(uIntArr1, uIntArr2);
+    const actual = arrayUtils.concatArrays(uIntArr1, uIntArr2);
 
     expect(actual).toStrictEqual(expected);
 });

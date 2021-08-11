@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export class ArrayReader {
+class ArrayReader {
     private _array: ArrayBuffer;
     private _position: number;
 
@@ -34,13 +34,13 @@ export class ArrayReader {
     }
 }
 
-export function getInt32Buffer(val: number): Uint8Array {
+function getInt32Buffer(val: number): Uint8Array {
     const packageSizeBuffer = new ArrayBuffer(4);
     new DataView(packageSizeBuffer).setInt32(0, val, true);
     return new Uint8Array(packageSizeBuffer);
 }
 
-export function concatArrays(...args: Uint8Array[]): Uint8Array {
+function concatArrays(...args: Uint8Array[]): Uint8Array {
     let size = 0;
     args.forEach((arr) => (size += arr.byteLength));
     const retVal = new Uint8Array(size);
@@ -52,3 +52,9 @@ export function concatArrays(...args: Uint8Array[]): Uint8Array {
 
     return retVal;
 }
+
+export default {
+    ArrayReader,
+    getInt32Buffer,
+    concatArrays,
+};
