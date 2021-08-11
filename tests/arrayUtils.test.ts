@@ -1,8 +1,8 @@
 import { getInt32Buffer, concatArrays, ArrayReader } from "../src/arrayUtils";
-import * as base64 from "byte-base64";
+import * as base64 from "base64-js";
 
 describe("ArrayReader tests", () => {
-    const buffer = base64.base64ToBytes("UHJhaXNlIFRoZSBTdW4h").buffer;
+    const buffer = base64.toByteArray("UHJhaXNlIFRoZSBTdW4h").buffer;
     const arrReader = new ArrayReader(buffer);
 
     test("getInt32 test", () => {
