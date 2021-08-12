@@ -2,12 +2,14 @@
 // Licensed under the MIT license.
 
 import MashupHandler from "./mashupDocumentParser";
-import { zipUtils, JSZip } from "./utils";
+import JSZip from "jszip";
+import { pqUtils } from "./utils";
 import {
     connectionsXmlPath,
     queryTablesPath,
     pivotCachesPath,
 } from "./constants";
+import WorkbookTemplate from "./workbookTemplate";
 
 export class QueryInfo {
     queryMashup: string;
@@ -26,8 +28,11 @@ export class WorkbookManager {
     ): Promise<Blob> {
         const zip =
             templateFile === undefined
-                ? await zipUtils.loadAsyncDefaultTemplate()
-                : await zipUtils.loadAsync(templateFile);
+                ? await JSZip.loadAsync(
+                      WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE,
+                      { base64: true }
+                  )
+                : await JSZip.loadAsync(templateFile);
 
         return await this.generateSingleQueryWorkbookFromZip(zip, query);
     }
@@ -36,12 +41,12 @@ export class WorkbookManager {
         zip: JSZip,
         query: QueryInfo
     ): Promise<Blob> {
-        const old_base64 = await zipUtils.getBase64(zip);
+        const old_base64 = await pqUtils.getBase64(zip);
         const new_base64 = await this.mashupHandler.ReplaceSingleQuery(
             old_base64,
             query.queryMashup
         );
-        await zipUtils.setBase64(zip, new_base64);
+        await pqUtils.setBase64(zip, new_base64);
 
         if (query.refreshOnOpen) {
             await this.setSingleQueryRefreshOnOpen(zip);

@@ -1,28 +1,33 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { JSZip } from "./zipUtils";
-import { generateSection1mString } from "../generators";
-import { section1mPath } from "../constants";
+import JSZip from "jszip";
+import iconv from "iconv-lite";
+import { pqCustomXmlPath } from "../constants";
+import { generateMashupXMLTemplate } from "../generators";
 
-const setSection1m = (queryName: string, query: string, zip: JSZip): void => {
-    const newSection1m = generateSection1mString(queryName, query);
-
-    zip.file(section1mPath, newSection1m, {
-        compression: "",
-    });
+const getBase64 = async (zip: JSZip): Promise<string> => {
+    const xmlValue = await zip.file(pqCustomXmlPath)?.async("uint8array");
+    if (xmlValue === undefined) {
+        throw new Error("PQ document wasn't found in zip");
+    }
+    const xmlString = iconv.decode(xmlValue.buffer as Buffer, "UTF-16");
+    const parser: DOMParser = new DOMParser();
+    const doc: Document = parser.parseFromString(xmlString, "text/xml");
+    const result = doc.childNodes[0].textContent;
+    if (result === null) {
+        throw Error("Base64 wasn't found in zip");
+    }
+    return result;
 };
 
-const getSection1m = async (zip: JSZip): Promise<string> => {
-    const section1m = zip.file(section1mPath)?.async("text");
-    if (!section1m) {
-        throw new Error("Formula section wasn't found in template");
-    }
-
-    return section1m;
+const setBase64 = (zip: JSZip, base64: string): void => {
+    const newXml = generateMashupXMLTemplate(base64);
+    const encoded = iconv.encode(newXml, "UCS2", { addBOM: true });
+    zip.file(pqCustomXmlPath, encoded);
 };
 
 export default {
-    setSection1m,
-    getSection1m,
+    getBase64,
+    setBase64,
 };
