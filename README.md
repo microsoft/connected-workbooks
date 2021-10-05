@@ -1,4 +1,5 @@
 # Connected Workbooks
+[![Build Status](https://obilshield.visualstudio.com/ConnectedWorkbooks/_apis/build/status/microsoft.connected-workbooks?branchName=main)](https://obilshield.visualstudio.com/ConnectedWorkbooks/_build/latest?definitionId=14&branchName=main)
 
 ## Using this project
 
