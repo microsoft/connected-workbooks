@@ -1,31 +1,38 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import MashupHandler from "./mashupDocumentParser";
 import JSZip from "jszip";
-import { pqUtils } from "./utils";
+import { pqUtils, documentUtils } from "./utils";
+import WorkbookTemplate from "./workbookTemplate";
+import MashupHandler from "./mashupDocumentParser";
 import {
     connectionsXmlPath,
     queryTablesPath,
     pivotCachesPath,
+    docPropsCoreXmlPath,
+    defaultDocProps,
 } from "./constants";
-import WorkbookTemplate from "./workbookTemplate";
+import {
+    DocProps,
+    QueryInfo,
+    docPropsAutoUpdatedElements,
+    docPropsModifiableElements,
+} from "./types";
 
-export class QueryInfo {
-    queryMashup: string;
-    refreshOnOpen: boolean;
-    constructor(queryMashup: string, refreshOnOpen: boolean) {
-        this.queryMashup = queryMashup;
-        this.refreshOnOpen = refreshOnOpen;
-    }
+export interface GenerateSingleQueryWorkbookParams {
+    query: QueryInfo;
+    templateFile?: File;
+    docProps?: DocProps;
 }
+
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
 
-    async generateSingleQueryWorkbook(
-        query: QueryInfo,
-        templateFile?: File
-    ): Promise<Blob> {
+    async generateQuery1Workbook({
+        query,
+        templateFile,
+        docProps,
+    }: GenerateSingleQueryWorkbookParams): Promise<Blob> {
         const zip =
             templateFile === undefined
                 ? await JSZip.loadAsync(
@@ -34,23 +41,17 @@ export class WorkbookManager {
                   )
                 : await JSZip.loadAsync(templateFile);
 
-        return await this.generateSingleQueryWorkbookFromZip(zip, query);
+        return await this.generateQuery1WorkbookFromZip(zip, query, docProps);
     }
 
-    private async generateSingleQueryWorkbookFromZip(
+    private async generateQuery1WorkbookFromZip(
         zip: JSZip,
-        query: QueryInfo
+        query: QueryInfo,
+        docProps?: DocProps
     ): Promise<Blob> {
-        const old_base64 = await pqUtils.getBase64(zip);
-        const new_base64 = await this.mashupHandler.ReplaceSingleQuery(
-            old_base64,
-            query.queryMashup
-        );
-        await pqUtils.setBase64(zip, new_base64);
-
-        if (query.refreshOnOpen) {
-            await this.setSingleQueryRefreshOnOpen(zip);
-        }
+        await this.updatePowerQueryDocument(zip, query.queryMashup);
+        await this.updateSingleQueryRefreshOnOpen(zip, query.refreshOnOpen);
+        await this.updateDocProps(zip, docProps);
 
         return await zip.generateAsync({
             type: "blob",
@@ -58,7 +59,81 @@ export class WorkbookManager {
         });
     }
 
-    private async setSingleQueryRefreshOnOpen(zip: JSZip) {
+    private async updatePowerQueryDocument(zip: JSZip, queryMashup: string) {
+        const mashupHandler = new MashupHandler();
+        const old_base64 = await pqUtils.getBase64(zip);
+        const new_base64 = await mashupHandler.ReplaceSingleQuery(
+            old_base64,
+            queryMashup
+        );
+        await pqUtils.setBase64(zip, new_base64);
+    }
+
+    private async updateDocProps(zip: JSZip, docProps?: DocProps) {
+        if (docProps === undefined) {
+            return;
+        }
+
+        //set defaults
+        if (!docProps.title) docProps.title = defaultDocProps.title;
+        if (!docProps.createdBy) docProps.createdBy = defaultDocProps.createdBy;
+        if (!docProps.lastModifiedBy)
+            docProps.lastModifiedBy = defaultDocProps.lastModifiedBy;
+
+        //set auto updated elements
+        const { doc, properties } = await documentUtils.getDocPropsProperties(
+            zip
+        );
+        const docPropsAutoUpdatedElementsArr = Object.keys(
+            docPropsAutoUpdatedElements
+        ) as Array<keyof typeof docPropsAutoUpdatedElements>;
+
+        docPropsAutoUpdatedElementsArr.forEach((tag) => {
+            if (
+                properties.getElementsByTagName(
+                    docPropsAutoUpdatedElements[tag]
+                ).length !== 1
+            ) {
+                throw new Error(
+                    `Invalid DocProps core.xml - ${tag} does not appear exactly once.`
+                );
+            }
+            documentUtils.createOrUpdateProperty(
+                doc,
+                properties,
+                docPropsAutoUpdatedElements[tag],
+                new Date().toISOString()
+            );
+        });
+
+        //set modifiable elements
+        const docPropsModifiableElementsArr = Object.keys(
+            docPropsModifiableElements
+        ) as Array<keyof typeof docPropsModifiableElements>;
+
+        docPropsModifiableElementsArr
+            .map((key) => ({
+                name: docPropsModifiableElements[key],
+                value: docProps[key],
+            }))
+            .forEach((kvp) => {
+                documentUtils.createOrUpdateProperty(
+                    doc,
+                    properties,
+                    kvp.name!,
+                    kvp.value
+                );
+            });
+
+        const serializer = new XMLSerializer();
+        const newDoc = serializer.serializeToString(doc);
+        zip.file(docPropsCoreXmlPath, newDoc);
+    }
+
+    private async updateSingleQueryRefreshOnOpen(
+        zip: JSZip,
+        refreshOnOpen: boolean
+    ) {
         const connectionsXmlString = await zip
             .file(connectionsXmlPath)
             ?.async("text");
@@ -67,7 +142,7 @@ export class WorkbookManager {
         }
         const parser: DOMParser = new DOMParser();
         const serializer = new XMLSerializer();
-
+        const refreshOnLoadValue = refreshOnOpen ? "1" : "0";
         const connectionsDoc: Document = parser.parseFromString(
             connectionsXmlString,
             "text/xml"
@@ -79,7 +154,10 @@ export class WorkbookManager {
             if (
                 properties.getAttribute("command") == "SELECT * FROM [Query1]"
             ) {
-                properties.parentElement?.setAttribute("refreshOnLoad", "1");
+                properties.parentElement?.setAttribute(
+                    "refreshOnLoad",
+                    refreshOnLoadValue
+                );
                 const attr = properties.parentElement?.getAttribute("id");
                 connectionId = attr!;
                 const newConn = serializer.serializeToString(connectionsDoc);
@@ -123,7 +201,7 @@ export class WorkbookManager {
                 const element =
                     queryTableDoc.getElementsByTagName("queryTable")[0];
                 if (element.getAttribute("connectionId") == connectionId) {
-                    element.setAttribute("refreshOnLoad", "1");
+                    element.setAttribute("refreshOnLoad", refreshOnLoadValue);
                     const newQT = serializer.serializeToString(queryTableDoc);
                     zip.file(queryTablesPath + path, newQT);
                     found = true;
@@ -134,7 +212,7 @@ export class WorkbookManager {
             return;
         }
 
-        // Find Query Table
+        // Find Pivot Table
         const pivotCachePromises: Promise<{
             path: string;
             pivotCacheXmlString: string;
@@ -167,7 +245,10 @@ export class WorkbookManager {
                 const element =
                     pivotCacheDoc.getElementsByTagName("cacheSource")[0];
                 if (element.getAttribute("connectionId") == connectionId) {
-                    element.parentElement!.setAttribute("refreshOnLoad", "1");
+                    element.parentElement!.setAttribute(
+                        "refreshOnLoad",
+                        refreshOnLoadValue
+                    );
                     const newPC = serializer.serializeToString(pivotCacheDoc);
                     zip.file(pivotCachesPath + path, newPC);
                     found = true;
