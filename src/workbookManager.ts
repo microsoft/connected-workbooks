@@ -19,20 +19,15 @@ import {
     docPropsModifiableElements,
 } from "./types";
 
-export interface GenerateSingleQueryWorkbookParams {
-    query: QueryInfo;
-    templateFile?: File;
-    docProps?: DocProps;
-}
 
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
 
-    async generateQuery1Workbook({
-        query,
-        templateFile,
-        docProps,
-    }: GenerateSingleQueryWorkbookParams): Promise<Blob> {
+    async generateQuery1Workbook(
+        query: QueryInfo,
+        templateFile?: File,
+        docProps?: DocProps
+    ): Promise<Blob> {
         const zip =
             templateFile === undefined
                 ? await JSZip.loadAsync(
@@ -69,10 +64,7 @@ export class WorkbookManager {
         await pqUtils.setBase64(zip, new_base64);
     }
 
-    private async updateDocProps(zip: JSZip, docProps?: DocProps) {
-        if (docProps === undefined) {
-            return;
-        }
+    private async updateDocProps(zip: JSZip, docProps: DocProps = {}) {
 
         //set defaults
         if (!docProps.title) docProps.title = defaultDocProps.title;
@@ -80,10 +72,11 @@ export class WorkbookManager {
         if (!docProps.lastModifiedBy)
             docProps.lastModifiedBy = defaultDocProps.lastModifiedBy;
 
-        //set auto updated elements
+            //set auto updated elements
         const { doc, properties } = await documentUtils.getDocPropsProperties(
             zip
         );
+
         const docPropsAutoUpdatedElementsArr = Object.keys(
             docPropsAutoUpdatedElements
         ) as Array<keyof typeof docPropsAutoUpdatedElements>;
@@ -113,8 +106,8 @@ export class WorkbookManager {
 
         docPropsModifiableElementsArr
             .map((key) => ({
-                name: docPropsModifiableElements[key],
-                value: docProps[key],
+                    name: docPropsModifiableElements[key],
+                    value: docProps[key],
             }))
             .forEach((kvp) => {
                 documentUtils.createOrUpdateProperty(
@@ -124,7 +117,7 @@ export class WorkbookManager {
                     kvp.value
                 );
             });
-
+            
         const serializer = new XMLSerializer();
         const newDoc = serializer.serializeToString(doc);
         zip.file(docPropsCoreXmlPath, newDoc);
@@ -150,21 +143,22 @@ export class WorkbookManager {
         let connectionId = "-1";
         const connectionsProperties =
             connectionsDoc.getElementsByTagName("dbPr");
-        for (const properties of connectionsProperties) {
-            if (
-                properties.getAttribute("command") == "SELECT * FROM [Query1]"
-            ) {
-                properties.parentElement?.setAttribute(
-                    "refreshOnLoad",
-                    refreshOnLoadValue
-                );
-                const attr = properties.parentElement?.getAttribute("id");
-                connectionId = attr!;
-                const newConn = serializer.serializeToString(connectionsDoc);
-                zip.file(connectionsXmlPath, newConn);
-                break;
-            }
+
+        const connectionsPropertiesArr = [...connectionsProperties];
+        const queryProp = connectionsPropertiesArr.find((prop) => {
+            prop.getAttribute("command") == "SELECT * FROM [Query1]";
+        });
+        if (queryProp) {
+            queryProp.parentElement?.setAttribute(
+                "refreshOnLoad",
+                refreshOnLoadValue
+            );
+            const attr = queryProp.parentElement?.getAttribute("id");
+            connectionId = attr!;
+            const newConn = serializer.serializeToString(connectionsDoc);
+            zip.file(connectionsXmlPath, newConn);
         }
+
         if (connectionId == "-1") {
             throw new Error("No connection found for Query1");
         }

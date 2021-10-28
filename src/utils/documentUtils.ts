@@ -17,7 +17,7 @@ export const createOrUpdateProperty = (
     const elements = parent.getElementsByTagName(property);
     if (elements.length === 0) {
         const newElement = doc.createElement(property);
-        newElement.nodeValue = value;
+        newElement.textContent = value;
         parent.appendChild(newElement);
     } else if (elements.length > 1) {
         throw new Error(
