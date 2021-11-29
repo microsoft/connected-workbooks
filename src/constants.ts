@@ -8,9 +8,3 @@ export const pivotCachesPath = "xl/pivotCache/";
 export const section1mPath = "Formulas/Section1.m";
 export const docPropsCoreXmlPath = "docProps/core.xml";
 export const docPropsRootElement = "cp:coreProperties";
-
-export const defaultDocProps = {
-    title: "@microsoft/connected-workbooks workbook",
-    createdBy: "@microsoft/connected-workbooks",
-    lastModifiedBy: "@microsoft/connected-workbooks",
-};

@@ -10,7 +10,8 @@
   "scripts": {
     "build": "tsc",
     "test": "jest",
-    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" --config .prettierrc"
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" --config .prettierrc",
+    "setup": "npm run build && npm run test"
   },
   "repository": {
     "type": "git",

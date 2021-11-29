@@ -10,7 +10,7 @@ export const createOrUpdateProperty = (
     property: string,
     value: string | null | undefined
 ): void => {
-    if (value === undefined) {
+    if (!value) {
         return;
     }
 

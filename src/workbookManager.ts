@@ -10,7 +10,6 @@ import {
     queryTablesPath,
     pivotCachesPath,
     docPropsCoreXmlPath,
-    defaultDocProps,
 } from "./constants";
 import {
     DocProps,
@@ -18,7 +17,6 @@ import {
     docPropsAutoUpdatedElements,
     docPropsModifiableElements,
 } from "./types";
-
 
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
@@ -65,21 +63,16 @@ export class WorkbookManager {
     }
 
     private async updateDocProps(zip: JSZip, docProps: DocProps = {}) {
-
-        //set defaults
-        if (!docProps.title) docProps.title = defaultDocProps.title;
-        if (!docProps.createdBy) docProps.createdBy = defaultDocProps.createdBy;
-        if (!docProps.lastModifiedBy)
-            docProps.lastModifiedBy = defaultDocProps.lastModifiedBy;
-
-            //set auto updated elements
         const { doc, properties } = await documentUtils.getDocPropsProperties(
             zip
         );
 
+        //set auto updated elements
         const docPropsAutoUpdatedElementsArr = Object.keys(
             docPropsAutoUpdatedElements
         ) as Array<keyof typeof docPropsAutoUpdatedElements>;
+
+        const nowTime = new Date().toISOString();
 
         docPropsAutoUpdatedElementsArr.forEach((tag) => {
             if (
@@ -95,7 +88,7 @@ export class WorkbookManager {
                 doc,
                 properties,
                 docPropsAutoUpdatedElements[tag],
-                new Date().toISOString()
+                nowTime
             );
         });
 
@@ -106,8 +99,8 @@ export class WorkbookManager {
 
         docPropsModifiableElementsArr
             .map((key) => ({
-                    name: docPropsModifiableElements[key],
-                    value: docProps[key],
+                name: docPropsModifiableElements[key],
+                value: docProps[key],
             }))
             .forEach((kvp) => {
                 documentUtils.createOrUpdateProperty(
@@ -117,7 +110,7 @@ export class WorkbookManager {
                     kvp.value
                 );
             });
-            
+
         const serializer = new XMLSerializer();
         const newDoc = serializer.serializeToString(doc);
         zip.file(docPropsCoreXmlPath, newDoc);
