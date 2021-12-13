@@ -141,16 +141,19 @@ export class WorkbookManager {
         const queryProp = connectionsPropertiesArr.find((prop) => {
             prop.getAttribute("command") == "SELECT * FROM [Query1]";
         });
-        if (queryProp) {
-            queryProp.parentElement?.setAttribute(
-                "refreshOnLoad",
-                refreshOnLoadValue
-            );
-            const attr = queryProp.parentElement?.getAttribute("id");
-            connectionId = attr!;
-            const newConn = serializer.serializeToString(connectionsDoc);
-            zip.file(connectionsXmlPath, newConn);
+
+        if (!queryProp) {
+            throw new Error("No query was found!");
         }
+
+        queryProp.parentElement?.setAttribute(
+            "refreshOnLoad",
+            refreshOnLoadValue
+        );
+        const attr = queryProp.parentElement?.getAttribute("id");
+        connectionId = attr!;
+        const newConn = serializer.serializeToString(connectionsDoc);
+        zip.file(connectionsXmlPath, newConn);
 
         if (connectionId == "-1") {
             throw new Error("No connection found for Query1");

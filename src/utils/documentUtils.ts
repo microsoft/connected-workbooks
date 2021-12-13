@@ -8,9 +8,9 @@ export const createOrUpdateProperty = (
     doc: Document,
     parent: Element,
     property: string,
-    value: string | null | undefined
+    value?: string | null
 ): void => {
-    if (!value) {
+    if (value === undefined) {
         return;
     }
 
@@ -23,7 +23,7 @@ export const createOrUpdateProperty = (
         throw new Error(
             `Invalid DocProps core.xml, multiple ${property} elements`
         );
-    } else {
+    } else if (elements && Array.isArray(elements?.item)) {
         elements.item(0)!.textContent = value;
     }
 };
