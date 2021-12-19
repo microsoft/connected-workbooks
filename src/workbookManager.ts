@@ -133,13 +133,19 @@ export class WorkbookManager {
             connectionsXmlString,
             "text/xml"
         );
-        let connectionId = "-1";
+
         const connectionsProperties =
             connectionsDoc.getElementsByTagName("dbPr");
 
-        const connectionsPropertiesArr = [...connectionsProperties];
-        const queryProp = connectionsPropertiesArr.find((prop) => {
-            prop.getAttribute("command") == "SELECT * FROM [Query1]";
+        const dbPr = connectionsProperties[0];
+        const connectionsAttributes = dbPr.attributes;
+        const connectionsAttributesArr = [...connectionsAttributes];
+
+        const queryProp = connectionsAttributesArr.find((prop) => {
+            return (
+                prop?.name === "command" &&
+                prop.nodeValue === "SELECT * FROM [Query1]"
+            );
         });
 
         if (!queryProp) {
@@ -150,12 +156,11 @@ export class WorkbookManager {
             "refreshOnLoad",
             refreshOnLoadValue
         );
-        const attr = queryProp.parentElement?.getAttribute("id");
-        connectionId = attr!;
+        const connectionId = dbPr.parentElement?.getAttribute("id");
         const newConn = serializer.serializeToString(connectionsDoc);
         zip.file(connectionsXmlPath, newConn);
 
-        if (connectionId == "-1") {
+        if (connectionId == "-1" || !connectionId) {
             throw new Error("No connection found for Query1");
         }
         let found = false;

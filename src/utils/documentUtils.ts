@@ -15,7 +15,8 @@ export const createOrUpdateProperty = (
     }
 
     const elements = parent.getElementsByTagName(property);
-    if (elements.length === 0) {
+
+    if (elements?.length === 0) {
         const newElement = doc.createElement(property);
         newElement.textContent = value;
         parent.appendChild(newElement);
@@ -23,8 +24,9 @@ export const createOrUpdateProperty = (
         throw new Error(
             `Invalid DocProps core.xml, multiple ${property} elements`
         );
-    } else if (elements && Array.isArray(elements?.item)) {
-        elements.item(0)!.textContent = value;
+    } else if (elements?.length > 0) {
+        elements[0]!.textContent = value;
+        elements[0]!.innerHTML = value!;
     }
 };
 
