@@ -3,28 +3,52 @@
 
 import JSZip from "jszip";
 import iconv from "iconv-lite";
-import { pqCustomXmlPath } from "../constants";
-import { generateMashupXMLTemplate } from "../generators";
+import { URLS } from "../constants";
+import {
+    generateMashupXMLTemplate,
+    generateCustomXmlFileName,
+} from "../generators";
 
-const getBase64 = async (zip: JSZip): Promise<string> => {
-    const xmlValue = await zip.file(pqCustomXmlPath)?.async("uint8array");
-    if (xmlValue === undefined) {
-        throw new Error("PQ document wasn't found in zip");
+const getBase64 = async (zip: JSZip): Promise<string | undefined> => {
+    const { found, value } = await getCustumXmlFile(zip, URLS.DATA_MASHUP);
+    if (!found) {
+        throw new Error("DataMashup XML is not found");
     }
-    const xmlString = iconv.decode(xmlValue.buffer as Buffer, "UTF-16");
-    const parser: DOMParser = new DOMParser();
-    const doc: Document = parser.parseFromString(xmlString, "text/xml");
-    const result = doc.childNodes[0].textContent;
-    if (result === null) {
-        throw Error("Base64 wasn't found in zip");
-    }
-    return result;
+    return value;
 };
 
-const setBase64 = (zip: JSZip, base64: string): void => {
+const setBase64 = async (zip: JSZip, base64: string): Promise<void> => {
     const newXml = generateMashupXMLTemplate(base64);
     const encoded = iconv.encode(newXml, "UCS2", { addBOM: true });
-    zip.file(pqCustomXmlPath, encoded);
+    const { path } = await getCustumXmlFile(zip, URLS.DATA_MASHUP);
+    zip.file(path, encoded);
+};
+
+const getCustumXmlFile = async (zip: JSZip, url: string) => {
+    const parser: DOMParser = new DOMParser();
+    let found = false;
+    let path;
+    let value;
+    for (let i = 1; ; i++) {
+        path = generateCustomXmlFileName(i);
+        const xmlValue = await zip.file(path)?.async("uint8array");
+
+        if (xmlValue === undefined) {
+            break;
+        }
+
+        const xmlString = iconv.decode(xmlValue.buffer as Buffer, "UTF-16");
+        const doc: Document = parser.parseFromString(xmlString, "text/xml");
+
+        found = doc?.documentElement?.namespaceURI === url;
+
+        if (found) {
+            value = doc.documentElement.innerHTML;
+            break;
+        }
+    }
+
+    return { found, path, value };
 };
 
 export default {
