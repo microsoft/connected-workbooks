@@ -26,7 +26,8 @@ const setBase64 = async (zip: JSZip, base64: string): Promise<void> => {
 
 const getCustumXmlFile = async (
     zip: JSZip,
-    url: string
+    url: string,
+    encoding = "UTF-16"
 ): Promise<{ found: boolean; path: string; value: string | undefined }> => {
     const parser: DOMParser = new DOMParser();
     let found = false;
@@ -40,7 +41,7 @@ const getCustumXmlFile = async (
             break;
         }
 
-        const xmlString = iconv.decode(xmlValue.buffer as Buffer, "UTF-16");
+        const xmlString = iconv.decode(xmlValue.buffer as Buffer, encoding);
         const doc: Document = parser.parseFromString(xmlString, "text/xml");
 
         found = doc?.documentElement?.namespaceURI === url;

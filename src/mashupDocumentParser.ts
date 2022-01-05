@@ -41,10 +41,7 @@ export default class MashupHandler {
         const endBuffer = mashupArray.getBytes();
 
         return {
-            buffer,
-            mashupArray,
             startArray,
-            packageSize,
             packageOPC,
             endBuffer,
         };
