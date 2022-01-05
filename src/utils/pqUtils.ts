@@ -6,7 +6,7 @@ import iconv from "iconv-lite";
 import { URLS } from "../constants";
 import {
     generateMashupXMLTemplate,
-    generateCustomXmlFileName,
+    generateCustomXmlFilePath,
 } from "../generators";
 
 const getBase64 = async (zip: JSZip): Promise<string | undefined> => {
@@ -24,13 +24,16 @@ const setBase64 = async (zip: JSZip, base64: string): Promise<void> => {
     zip.file(path, encoded);
 };
 
-const getCustumXmlFile = async (zip: JSZip, url: string) => {
+const getCustumXmlFile = async (
+    zip: JSZip,
+    url: string
+): Promise<{ found: boolean; path: string; value: string | undefined }> => {
     const parser: DOMParser = new DOMParser();
     let found = false;
     let path;
     let value;
     for (let i = 1; ; i++) {
-        path = generateCustomXmlFileName(i);
+        path = generateCustomXmlFilePath(i);
         const xmlValue = await zip.file(path)?.async("uint8array");
 
         if (xmlValue === undefined) {
@@ -54,4 +57,5 @@ const getCustumXmlFile = async (zip: JSZip, url: string) => {
 export default {
     getBase64,
     setBase64,
+    getCustumXmlFile,
 };
