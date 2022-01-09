@@ -26,6 +26,9 @@ export class WorkbookManager {
         query: QueryInfo,
         templateFile?: File
     ): Promise<Blob> {
+        if (!query.queryMashup) {
+            throw new Error("Query mashup can't be empty");
+        }
         const zip =
             templateFile === undefined
                 ? await JSZip.loadAsync(
