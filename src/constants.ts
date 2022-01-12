@@ -6,7 +6,12 @@ export const queryTablesPath = "xl/queryTables/";
 export const pivotCachesPath = "xl/pivotCache/";
 export const section1mPath = "Formulas/Section1.m";
 
-export enum URLS {
-    DATA_MASHUP = "http://schemas.microsoft.com/DataMashup",
-    CONNECTED_WORKBOOK = "http://schemas.microsoft.com/ConnectedWorkbook",
-}
+export const URLS = {
+    PQ: [
+        "http://schemas.microsoft.com/DataMashup",
+        "http://schemas.microsoft.com/DataExplorer",
+        "http://schemas.microsoft.com/DataMashup/Temp",
+        "http://schemas.microsoft.com/DataExplorer/Temp",
+    ],
+    CONNECTED_WORKBOOK: "http://schemas.microsoft.com/ConnectedWorkbook",
+};
