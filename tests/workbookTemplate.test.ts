@@ -2,17 +2,31 @@ import workbookTemplate from "../src/workbookTemplate";
 import { pqUtils } from "../src/utils";
 import { URLS } from "../src/constants";
 import MashupHandler from "../src/mashupDocumentParser";
-import { section1mBlankQueryMock } from "./mocks";
+import {
+    section1mBlankQueryMock,
+    pqEmptySingleQueryBase64,
+    connectedWorkbookXmlMock,
+    item1Path,
+    item2Path,
+} from "./mocks";
 import JSZip from "jszip";
 
-describe("single query template tests", () => {
+const getZip = async (template: string) =>
+    await JSZip.loadAsync(template, {
+        base64: true,
+    });
+
+describe("Single query template tests", () => {
     const singleQueryDefaultTemplate =
         workbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE;
     let defaultZipFile;
+
     beforeAll(async () => {
-        defaultZipFile = await JSZip.loadAsync(singleQueryDefaultTemplate, {
-            base64: true,
-        });
+        expect(
+            async () => await getZip(singleQueryDefaultTemplate)
+        ).not.toThrow();
+
+        defaultZipFile = await getZip(singleQueryDefaultTemplate);
     });
 
     test("Default template is a valid zip file", async () => {
@@ -20,32 +34,29 @@ describe("single query template tests", () => {
     });
 
     test("DataMashup XML exists, and valid PQ Base64 can be extracted", async () => {
-        const { found, path } = await pqUtils.getCustumXmlFile(
-            defaultZipFile,
-            URLS.DATA_MASHUP
+        expect(
+            async () => await pqUtils.getDataMashupFile(defaultZipFile)
+        ).not.toThrowError();
+
+        const { found, path, value } = await pqUtils.getDataMashupFile(
+            defaultZipFile
         );
 
         expect(found).toBeTruthy();
-        expect(path).toEqual("customXml/item1.xml");
-
-        expect(
-            async () => await pqUtils.getBase64(defaultZipFile)
-        ).not.toThrowError();
-
-        const base64Str = await pqUtils.getBase64(defaultZipFile);
-
-        expect(base64Str).toBeTruthy();
+        expect(value).toEqual(pqEmptySingleQueryBase64);
+        expect(path).toEqual(item1Path);
     });
 
     test("ConnectedWorkbook XML exists as item2.xml", async () => {
-        const { found, path } = await pqUtils.getCustumXmlFile(
+        const { found, path, xmlString } = await pqUtils.getCustomXmlFile(
             defaultZipFile,
             URLS.CONNECTED_WORKBOOK,
             "UTF-8"
         );
 
         expect(found).toBeTruthy();
-        expect(path).toEqual("customXml/item2.xml");
+        expect(xmlString).toEqual(connectedWorkbookXmlMock);
+        expect(path).toEqual(item2Path);
     });
 
     test("A single blank query named Query1 exists", async () => {
