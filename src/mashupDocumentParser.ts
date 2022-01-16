@@ -9,15 +9,12 @@ import { generateSingleQueryMashup } from "./generators";
 
 export default class MashupHandler {
     async ReplaceSingleQuery(
-        base64str: string,
+        base64Str: string,
         query: string
     ): Promise<string> {
-        const buffer = base64.toByteArray(base64str).buffer;
-        const mashupArray = new arrayUtils.ArrayReader(buffer);
-        const startArray = mashupArray.getBytes(4);
-        const packageSize = mashupArray.getInt32();
-        const packageOPC = mashupArray.getBytes(packageSize);
-        const endBuffer = mashupArray.getBytes();
+        const { packageOPC, startArray, endBuffer } =
+            this.getPackageComponents(base64Str);
+
         const newPackageBuffer = await this.editSingleQueryPackage(
             packageOPC,
             "Query1",
@@ -33,6 +30,21 @@ export default class MashupHandler {
             endBuffer
         );
         return base64.fromByteArray(newMashup);
+    }
+
+    private getPackageComponents(base64Str: string) {
+        const buffer = base64.toByteArray(base64Str).buffer;
+        const mashupArray = new arrayUtils.ArrayReader(buffer);
+        const startArray = mashupArray.getBytes(4);
+        const packageSize = mashupArray.getInt32();
+        const packageOPC = mashupArray.getBytes(packageSize);
+        const endBuffer = mashupArray.getBytes();
+
+        return {
+            startArray,
+            packageOPC,
+            endBuffer,
+        };
     }
 
     private async editSingleQueryPackage(
