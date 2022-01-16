@@ -26,6 +26,9 @@ export class WorkbookManager {
         templateFile?: File,
         docProps?: DocProps
     ): Promise<Blob> {
+        if (!query.queryMashup) {
+            throw new Error("Query mashup can't be empty");
+        }
         const zip =
             templateFile === undefined
                 ? await JSZip.loadAsync(
@@ -53,9 +56,13 @@ export class WorkbookManager {
     }
 
     private async updatePowerQueryDocument(zip: JSZip, queryMashup: string) {
-        const mashupHandler = new MashupHandler();
         const old_base64 = await pqUtils.getBase64(zip);
-        const new_base64 = await mashupHandler.ReplaceSingleQuery(
+
+        if (!old_base64) {
+            throw new Error("Base64 string is not found in zip file");
+        }
+
+        const new_base64 = await this.mashupHandler.ReplaceSingleQuery(
             old_base64,
             queryMashup
         );
