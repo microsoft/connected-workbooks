@@ -12,6 +12,7 @@ import {
 type CustomXmlFile = {
     found: boolean;
     path: string;
+    xmlString: string | undefined;
     value: string | undefined;
 };
 
@@ -47,7 +48,8 @@ const getDataMashupFile = async (zip: JSZip): Promise<CustomXmlFile> => {
 
 const getCustomXmlFile = async (
     zip: JSZip,
-    url: string
+    url: string,
+    encoding = "UTF-16"
 ): Promise<CustomXmlFile> => {
     const parser: DOMParser = new DOMParser();
     const itemsArray = await zip.file(/customXml\/item\d.xml/);
@@ -58,7 +60,8 @@ const getCustomXmlFile = async (
 
     let found = false;
     let path: string;
-    let value: string;
+    let xmlString: string | undefined;
+    let value: string | undefined;
 
     for (let i = 1; i <= itemsArray.length; i++) {
         path = generateCustomXmlFilePath(i);
@@ -68,7 +71,7 @@ const getCustomXmlFile = async (
             break;
         }
 
-        const xmlString = iconv.decode(xmlValue.buffer as Buffer, "UTF-16");
+        xmlString = iconv.decode(xmlValue.buffer as Buffer, encoding);
         const doc: Document = parser.parseFromString(xmlString, "text/xml");
 
         found = doc?.documentElement?.namespaceURI === url;
@@ -79,11 +82,12 @@ const getCustomXmlFile = async (
         }
     }
 
-    return { found, path: path!, value: value! };
+    return { found, path: path!, xmlString: xmlString, value };
 };
 
 export default {
     getBase64,
     setBase64,
     getCustomXmlFile,
+    getDataMashupFile,
 };
