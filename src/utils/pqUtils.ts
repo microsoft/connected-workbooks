@@ -3,31 +3,87 @@
 
 import JSZip from "jszip";
 import iconv from "iconv-lite";
-import { pqCustomXmlPath } from "../constants";
-import { generateMashupXMLTemplate } from "../generators";
+import { URLS } from "../constants";
+import {
+    generateMashupXMLTemplate,
+    generateCustomXmlFilePath,
+} from "../generators";
 
-const getBase64 = async (zip: JSZip): Promise<string> => {
-    const xmlValue = await zip.file(pqCustomXmlPath)?.async("uint8array");
-    if (xmlValue === undefined) {
-        throw new Error("PQ document wasn't found in zip");
-    }
-    const xmlString = iconv.decode(xmlValue.buffer as Buffer, "UTF-16");
-    const parser: DOMParser = new DOMParser();
-    const doc: Document = parser.parseFromString(xmlString, "text/xml");
-    const result = doc.childNodes[0].textContent;
-    if (result === null) {
-        throw Error("Base64 wasn't found in zip");
-    }
-    return result;
+type CustomXmlFile = {
+    found: boolean;
+    path: string;
+    value: string | undefined;
 };
 
-const setBase64 = (zip: JSZip, base64: string): void => {
+const getBase64 = async (zip: JSZip): Promise<string | undefined> => {
+    const mashup = await getDataMashupFile(zip);
+    return mashup.value;
+};
+
+const setBase64 = async (zip: JSZip, base64: string): Promise<void> => {
     const newXml = generateMashupXMLTemplate(base64);
     const encoded = iconv.encode(newXml, "UCS2", { addBOM: true });
-    zip.file(pqCustomXmlPath, encoded);
+    const mashup = await getDataMashupFile(zip);
+    zip.file(mashup?.path, encoded);
+};
+
+const getDataMashupFile = async (zip: JSZip): Promise<CustomXmlFile> => {
+    let mashup;
+
+    for (const url of URLS.PQ) {
+        const item = await getCustomXmlFile(zip, url);
+        if (item.found) {
+            mashup = item;
+            break;
+        }
+    }
+
+    if (!mashup) {
+        throw new Error("DataMashup XML is not found");
+    }
+
+    return mashup;
+};
+
+const getCustomXmlFile = async (
+    zip: JSZip,
+    url: string
+): Promise<CustomXmlFile> => {
+    const parser: DOMParser = new DOMParser();
+    const itemsArray = await zip.file(/customXml\/item\d.xml/);
+
+    if (!itemsArray || itemsArray.length === 0) {
+        throw new Error("No customXml files were found!");
+    }
+
+    let found = false;
+    let path: string;
+    let value: string;
+
+    for (let i = 1; i <= itemsArray.length; i++) {
+        path = generateCustomXmlFilePath(i);
+        const xmlValue = await zip.file(path)?.async("uint8array");
+
+        if (xmlValue === undefined) {
+            break;
+        }
+
+        const xmlString = iconv.decode(xmlValue.buffer as Buffer, "UTF-16");
+        const doc: Document = parser.parseFromString(xmlString, "text/xml");
+
+        found = doc?.documentElement?.namespaceURI === url;
+
+        if (found) {
+            value = doc.documentElement.innerHTML;
+            break;
+        }
+    }
+
+    return { found, path: path!, value: value! };
 };
 
 export default {
     getBase64,
     setBase64,
+    getCustomXmlFile,
 };

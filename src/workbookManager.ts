@@ -45,6 +45,11 @@ export class WorkbookManager {
         query: QueryInfo
     ): Promise<Blob> {
         const old_base64 = await pqUtils.getBase64(zip);
+
+        if (!old_base64) {
+            throw new Error("Base64 string is not found in zip file");
+        }
+
         const new_base64 = await this.mashupHandler.ReplaceSingleQuery(
             old_base64,
             query.queryMashup

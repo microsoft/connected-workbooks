@@ -12,3 +12,6 @@ export const generateSingleQueryMashup = (
     
     shared ${queryName} = 
     ${query};`;
+
+export const generateCustomXmlFilePath = (i: number): string =>
+    `customXml/item${i}.xml`;
