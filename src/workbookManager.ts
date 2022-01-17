@@ -21,7 +21,7 @@ import {
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
 
-    async generateQuery1Workbook(
+    async generateSingleQueryWorkbook(
         query: QueryInfo,
         templateFile?: File,
         docProps?: DocProps
@@ -37,10 +37,14 @@ export class WorkbookManager {
                   )
                 : await JSZip.loadAsync(templateFile);
 
-        return await this.generateQuery1WorkbookFromZip(zip, query, docProps);
+        return await this.generateSingleQueryWorkbookFromZip(
+            zip,
+            query,
+            docProps
+        );
     }
 
-    private async generateQuery1WorkbookFromZip(
+    private async generateSingleQueryWorkbookFromZip(
         zip: JSZip,
         query: QueryInfo,
         docProps?: DocProps
