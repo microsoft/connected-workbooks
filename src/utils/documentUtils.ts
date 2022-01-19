@@ -4,7 +4,7 @@
 import JSZip from "jszip";
 import { docPropsCoreXmlPath, docPropsRootElement } from "../constants";
 
-export const createOrUpdateProperty = (
+const createOrUpdateProperty = (
     doc: Document,
     parent: Element,
     property: string,
@@ -30,7 +30,7 @@ export const createOrUpdateProperty = (
     }
 };
 
-export const getDocPropsProperties = async (
+const getDocPropsProperties = async (
     zip: JSZip
 ): Promise<{ doc: Document; properties: Element }> => {
     const docPropsCoreXmlString = await zip

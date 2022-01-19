@@ -86,15 +86,6 @@ export class WorkbookManager {
         const nowTime = new Date().toISOString();
 
         docPropsAutoUpdatedElementsArr.forEach((tag) => {
-            if (
-                properties.getElementsByTagName(
-                    docPropsAutoUpdatedElements[tag]
-                ).length !== 1
-            ) {
-                throw new Error(
-                    `Invalid DocProps core.xml - ${tag} does not appear exactly once.`
-                );
-            }
             documentUtils.createOrUpdateProperty(
                 doc,
                 properties,
