@@ -1,30 +1,30 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import MashupHandler from "./mashupDocumentParser";
 import JSZip from "jszip";
-import { pqUtils } from "./utils";
+import { pqUtils, documentUtils } from "./utils";
+import WorkbookTemplate from "./workbookTemplate";
+import MashupHandler from "./mashupDocumentParser";
 import {
     connectionsXmlPath,
     queryTablesPath,
     pivotCachesPath,
+    docPropsCoreXmlPath,
 } from "./constants";
-import WorkbookTemplate from "./workbookTemplate";
+import {
+    DocProps,
+    QueryInfo,
+    docPropsAutoUpdatedElements,
+    docPropsModifiableElements,
+} from "./types";
 
-export class QueryInfo {
-    queryMashup: string;
-    refreshOnOpen: boolean;
-    constructor(queryMashup: string, refreshOnOpen: boolean) {
-        this.queryMashup = queryMashup;
-        this.refreshOnOpen = refreshOnOpen;
-    }
-}
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
 
     async generateSingleQueryWorkbook(
         query: QueryInfo,
-        templateFile?: File
+        templateFile?: File,
+        docProps?: DocProps
     ): Promise<Blob> {
         if (!query.queryMashup) {
             throw new Error("Query mashup can't be empty");
@@ -37,13 +37,29 @@ export class WorkbookManager {
                   )
                 : await JSZip.loadAsync(templateFile);
 
-        return await this.generateSingleQueryWorkbookFromZip(zip, query);
+        return await this.generateSingleQueryWorkbookFromZip(
+            zip,
+            query,
+            docProps
+        );
     }
 
     private async generateSingleQueryWorkbookFromZip(
         zip: JSZip,
-        query: QueryInfo
+        query: QueryInfo,
+        docProps?: DocProps
     ): Promise<Blob> {
+        await this.updatePowerQueryDocument(zip, query.queryMashup);
+        await this.updateSingleQueryRefreshOnOpen(zip, query.refreshOnOpen);
+        await this.updateDocProps(zip, docProps);
+
+        return await zip.generateAsync({
+            type: "blob",
+            mimeType: "application/xlsx",
+        });
+    }
+
+    private async updatePowerQueryDocument(zip: JSZip, queryMashup: string) {
         const old_base64 = await pqUtils.getBase64(zip);
 
         if (!old_base64) {
@@ -52,21 +68,60 @@ export class WorkbookManager {
 
         const new_base64 = await this.mashupHandler.ReplaceSingleQuery(
             old_base64,
-            query.queryMashup
+            queryMashup
         );
         await pqUtils.setBase64(zip, new_base64);
-
-        if (query.refreshOnOpen) {
-            await this.setSingleQueryRefreshOnOpen(zip);
-        }
-
-        return await zip.generateAsync({
-            type: "blob",
-            mimeType: "application/xlsx",
-        });
     }
 
-    private async setSingleQueryRefreshOnOpen(zip: JSZip) {
+    private async updateDocProps(zip: JSZip, docProps: DocProps = {}) {
+        const { doc, properties } = await documentUtils.getDocPropsProperties(
+            zip
+        );
+
+        //set auto updated elements
+        const docPropsAutoUpdatedElementsArr = Object.keys(
+            docPropsAutoUpdatedElements
+        ) as Array<keyof typeof docPropsAutoUpdatedElements>;
+
+        const nowTime = new Date().toISOString();
+
+        docPropsAutoUpdatedElementsArr.forEach((tag) => {
+            documentUtils.createOrUpdateProperty(
+                doc,
+                properties,
+                docPropsAutoUpdatedElements[tag],
+                nowTime
+            );
+        });
+
+        //set modifiable elements
+        const docPropsModifiableElementsArr = Object.keys(
+            docPropsModifiableElements
+        ) as Array<keyof typeof docPropsModifiableElements>;
+
+        docPropsModifiableElementsArr
+            .map((key) => ({
+                name: docPropsModifiableElements[key],
+                value: docProps[key],
+            }))
+            .forEach((kvp) => {
+                documentUtils.createOrUpdateProperty(
+                    doc,
+                    properties,
+                    kvp.name!,
+                    kvp.value
+                );
+            });
+
+        const serializer = new XMLSerializer();
+        const newDoc = serializer.serializeToString(doc);
+        zip.file(docPropsCoreXmlPath, newDoc);
+    }
+
+    private async updateSingleQueryRefreshOnOpen(
+        zip: JSZip,
+        refreshOnOpen: boolean
+    ) {
         const connectionsXmlString = await zip
             .file(connectionsXmlPath)
             ?.async("text");
@@ -75,27 +130,39 @@ export class WorkbookManager {
         }
         const parser: DOMParser = new DOMParser();
         const serializer = new XMLSerializer();
-
+        const refreshOnLoadValue = refreshOnOpen ? "1" : "0";
         const connectionsDoc: Document = parser.parseFromString(
             connectionsXmlString,
             "text/xml"
         );
-        let connectionId = "-1";
+
         const connectionsProperties =
             connectionsDoc.getElementsByTagName("dbPr");
-        for (const properties of connectionsProperties) {
-            if (
-                properties.getAttribute("command") == "SELECT * FROM [Query1]"
-            ) {
-                properties.parentElement?.setAttribute("refreshOnLoad", "1");
-                const attr = properties.parentElement?.getAttribute("id");
-                connectionId = attr!;
-                const newConn = serializer.serializeToString(connectionsDoc);
-                zip.file(connectionsXmlPath, newConn);
-                break;
-            }
+
+        const dbPr = connectionsProperties[0];
+        const connectionsAttributes = dbPr.attributes;
+        const connectionsAttributesArr = [...connectionsAttributes];
+
+        const queryProp = connectionsAttributesArr.find((prop) => {
+            return (
+                prop?.name === "command" &&
+                prop.nodeValue === "SELECT * FROM [Query1]"
+            );
+        });
+
+        if (!queryProp) {
+            throw new Error("No query was found!");
         }
-        if (connectionId == "-1") {
+
+        queryProp.parentElement?.setAttribute(
+            "refreshOnLoad",
+            refreshOnLoadValue
+        );
+        const connectionId = dbPr.parentElement?.getAttribute("id");
+        const newConn = serializer.serializeToString(connectionsDoc);
+        zip.file(connectionsXmlPath, newConn);
+
+        if (connectionId == "-1" || !connectionId) {
             throw new Error("No connection found for Query1");
         }
         let found = false;
@@ -131,7 +198,7 @@ export class WorkbookManager {
                 const element =
                     queryTableDoc.getElementsByTagName("queryTable")[0];
                 if (element.getAttribute("connectionId") == connectionId) {
-                    element.setAttribute("refreshOnLoad", "1");
+                    element.setAttribute("refreshOnLoad", refreshOnLoadValue);
                     const newQT = serializer.serializeToString(queryTableDoc);
                     zip.file(queryTablesPath + path, newQT);
                     found = true;
@@ -142,7 +209,7 @@ export class WorkbookManager {
             return;
         }
 
-        // Find Query Table
+        // Find Pivot Table
         const pivotCachePromises: Promise<{
             path: string;
             pivotCacheXmlString: string;
@@ -175,7 +242,10 @@ export class WorkbookManager {
                 const element =
                     pivotCacheDoc.getElementsByTagName("cacheSource")[0];
                 if (element.getAttribute("connectionId") == connectionId) {
-                    element.parentElement!.setAttribute("refreshOnLoad", "1");
+                    element.parentElement!.setAttribute(
+                        "refreshOnLoad",
+                        refreshOnLoadValue
+                    );
                     const newPC = serializer.serializeToString(pivotCacheDoc);
                     zip.file(pivotCachesPath + path, newPC);
                     found = true;
