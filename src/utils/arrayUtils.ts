@@ -11,20 +11,14 @@ class ArrayReader {
     }
 
     public getInt32(): number {
-        const retVal = new DataView(this._array, this._position, 4).getInt32(
-            0,
-            true
-        );
+        const retVal = new DataView(this._array, this._position, 4).getInt32(0, true);
         this._position += 4;
 
         return retVal;
     }
 
     getBytes(bytes?: number): Uint8Array {
-        const retVal = this._array.slice(
-            this._position,
-            bytes ? bytes! + this._position : bytes
-        );
+        const retVal = this._array.slice(this._position, bytes ? bytes! + this._position : bytes);
         this._position += retVal.byteLength;
         return new Uint8Array(retVal);
     }
