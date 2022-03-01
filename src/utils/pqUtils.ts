@@ -4,10 +4,7 @@
 import JSZip from "jszip";
 import iconv from "iconv-lite";
 import { URLS } from "../constants";
-import {
-    generateMashupXMLTemplate,
-    generateCustomXmlFilePath,
-} from "../generators";
+import { generateMashupXMLTemplate, generateCustomXmlFilePath } from "../generators";
 
 type CustomXmlFile = {
     found: boolean;
@@ -46,11 +43,7 @@ const getDataMashupFile = async (zip: JSZip): Promise<CustomXmlFile> => {
     return mashup;
 };
 
-const getCustomXmlFile = async (
-    zip: JSZip,
-    url: string,
-    encoding = "UTF-16"
-): Promise<CustomXmlFile> => {
+const getCustomXmlFile = async (zip: JSZip, url: string, encoding = "UTF-16"): Promise<CustomXmlFile> => {
     const parser: DOMParser = new DOMParser();
     const itemsArray = await zip.file(/customXml\/item\d.xml/);
 

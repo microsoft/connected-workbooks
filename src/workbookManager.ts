@@ -5,50 +5,25 @@ import JSZip from "jszip";
 import { pqUtils, documentUtils } from "./utils";
 import WorkbookTemplate from "./workbookTemplate";
 import MashupHandler from "./mashupDocumentParser";
-import {
-    connectionsXmlPath,
-    queryTablesPath,
-    pivotCachesPath,
-    docPropsCoreXmlPath,
-} from "./constants";
-import {
-    DocProps,
-    QueryInfo,
-    docPropsAutoUpdatedElements,
-    docPropsModifiableElements,
-} from "./types";
+import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath } from "./constants";
+import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements } from "./types";
 
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
 
-    async generateSingleQueryWorkbook(
-        query: QueryInfo,
-        templateFile?: File,
-        docProps?: DocProps
-    ): Promise<Blob> {
+    async generateSingleQueryWorkbook(query: QueryInfo, templateFile?: File, docProps?: DocProps): Promise<Blob> {
         if (!query.queryMashup) {
             throw new Error("Query mashup can't be empty");
         }
         const zip =
             templateFile === undefined
-                ? await JSZip.loadAsync(
-                      WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE,
-                      { base64: true }
-                  )
+                ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
                 : await JSZip.loadAsync(templateFile);
 
-        return await this.generateSingleQueryWorkbookFromZip(
-            zip,
-            query,
-            docProps
-        );
+        return await this.generateSingleQueryWorkbookFromZip(zip, query, docProps);
     }
 
-    private async generateSingleQueryWorkbookFromZip(
-        zip: JSZip,
-        query: QueryInfo,
-        docProps?: DocProps
-    ): Promise<Blob> {
+    private async generateSingleQueryWorkbookFromZip(zip: JSZip, query: QueryInfo, docProps?: DocProps): Promise<Blob> {
         await this.updatePowerQueryDocument(zip, query.queryMashup);
         await this.updateSingleQueryRefreshOnOpen(zip, query.refreshOnOpen);
         await this.updateDocProps(zip, docProps);
@@ -66,38 +41,28 @@ export class WorkbookManager {
             throw new Error("Base64 string is not found in zip file");
         }
 
-        const new_base64 = await this.mashupHandler.ReplaceSingleQuery(
-            old_base64,
-            queryMashup
-        );
+        const new_base64 = await this.mashupHandler.ReplaceSingleQuery(old_base64, queryMashup);
         await pqUtils.setBase64(zip, new_base64);
     }
 
     private async updateDocProps(zip: JSZip, docProps: DocProps = {}) {
-        const { doc, properties } = await documentUtils.getDocPropsProperties(
-            zip
-        );
+        const { doc, properties } = await documentUtils.getDocPropsProperties(zip);
 
         //set auto updated elements
-        const docPropsAutoUpdatedElementsArr = Object.keys(
-            docPropsAutoUpdatedElements
-        ) as Array<keyof typeof docPropsAutoUpdatedElements>;
+        const docPropsAutoUpdatedElementsArr = Object.keys(docPropsAutoUpdatedElements) as Array<
+            keyof typeof docPropsAutoUpdatedElements
+        >;
 
         const nowTime = new Date().toISOString();
 
         docPropsAutoUpdatedElementsArr.forEach((tag) => {
-            documentUtils.createOrUpdateProperty(
-                doc,
-                properties,
-                docPropsAutoUpdatedElements[tag],
-                nowTime
-            );
+            documentUtils.createOrUpdateProperty(doc, properties, docPropsAutoUpdatedElements[tag], nowTime);
         });
 
         //set modifiable elements
-        const docPropsModifiableElementsArr = Object.keys(
-            docPropsModifiableElements
-        ) as Array<keyof typeof docPropsModifiableElements>;
+        const docPropsModifiableElementsArr = Object.keys(docPropsModifiableElements) as Array<
+            keyof typeof docPropsModifiableElements
+        >;
 
         docPropsModifiableElementsArr
             .map((key) => ({
@@ -105,12 +70,7 @@ export class WorkbookManager {
                 value: docProps[key],
             }))
             .forEach((kvp) => {
-                documentUtils.createOrUpdateProperty(
-                    doc,
-                    properties,
-                    kvp.name!,
-                    kvp.value
-                );
+                documentUtils.createOrUpdateProperty(doc, properties, kvp.name!, kvp.value);
             });
 
         const serializer = new XMLSerializer();
@@ -118,46 +78,31 @@ export class WorkbookManager {
         zip.file(docPropsCoreXmlPath, newDoc);
     }
 
-    private async updateSingleQueryRefreshOnOpen(
-        zip: JSZip,
-        refreshOnOpen: boolean
-    ) {
-        const connectionsXmlString = await zip
-            .file(connectionsXmlPath)
-            ?.async("text");
+    private async updateSingleQueryRefreshOnOpen(zip: JSZip, refreshOnOpen: boolean) {
+        const connectionsXmlString = await zip.file(connectionsXmlPath)?.async("text");
         if (connectionsXmlString === undefined) {
             throw new Error("Connections were not found in template");
         }
         const parser: DOMParser = new DOMParser();
         const serializer = new XMLSerializer();
         const refreshOnLoadValue = refreshOnOpen ? "1" : "0";
-        const connectionsDoc: Document = parser.parseFromString(
-            connectionsXmlString,
-            "text/xml"
-        );
+        const connectionsDoc: Document = parser.parseFromString(connectionsXmlString, "text/xml");
 
-        const connectionsProperties =
-            connectionsDoc.getElementsByTagName("dbPr");
+        const connectionsProperties = connectionsDoc.getElementsByTagName("dbPr");
 
         const dbPr = connectionsProperties[0];
         const connectionsAttributes = dbPr.attributes;
         const connectionsAttributesArr = [...connectionsAttributes];
 
         const queryProp = connectionsAttributesArr.find((prop) => {
-            return (
-                prop?.name === "command" &&
-                prop.nodeValue === "SELECT * FROM [Query1]"
-            );
+            return prop?.name === "command" && prop.nodeValue === "SELECT * FROM [Query1]";
         });
 
         if (!queryProp) {
             throw new Error("No query was found!");
         }
 
-        queryProp.parentElement?.setAttribute(
-            "refreshOnLoad",
-            refreshOnLoadValue
-        );
+        queryProp.parentElement?.setAttribute("refreshOnLoad", refreshOnLoadValue);
         const connectionId = dbPr.parentElement?.getAttribute("id");
         const newConn = serializer.serializeToString(connectionsDoc);
         zip.file(connectionsXmlPath, newConn);
@@ -173,38 +118,28 @@ export class WorkbookManager {
             queryTableXmlString: string;
         }>[] = [];
 
-        zip.folder(queryTablesPath)?.forEach(
-            async (relativePath, queryTableFile) => {
-                queryTablePromises.push(
-                    (() => {
-                        return queryTableFile
-                            .async("text")
-                            .then((queryTableString) => {
-                                return {
-                                    path: relativePath,
-                                    queryTableXmlString: queryTableString,
-                                };
-                            });
-                    })()
-                );
+        zip.folder(queryTablesPath)?.forEach(async (relativePath, queryTableFile) => {
+            queryTablePromises.push(
+                (() => {
+                    return queryTableFile.async("text").then((queryTableString) => {
+                        return {
+                            path: relativePath,
+                            queryTableXmlString: queryTableString,
+                        };
+                    });
+                })()
+            );
+        });
+        (await Promise.all(queryTablePromises)).forEach(({ path, queryTableXmlString }) => {
+            const queryTableDoc: Document = parser.parseFromString(queryTableXmlString, "text/xml");
+            const element = queryTableDoc.getElementsByTagName("queryTable")[0];
+            if (element.getAttribute("connectionId") == connectionId) {
+                element.setAttribute("refreshOnLoad", refreshOnLoadValue);
+                const newQT = serializer.serializeToString(queryTableDoc);
+                zip.file(queryTablesPath + path, newQT);
+                found = true;
             }
-        );
-        (await Promise.all(queryTablePromises)).forEach(
-            ({ path, queryTableXmlString }) => {
-                const queryTableDoc: Document = parser.parseFromString(
-                    queryTableXmlString,
-                    "text/xml"
-                );
-                const element =
-                    queryTableDoc.getElementsByTagName("queryTable")[0];
-                if (element.getAttribute("connectionId") == connectionId) {
-                    element.setAttribute("refreshOnLoad", refreshOnLoadValue);
-                    const newQT = serializer.serializeToString(queryTableDoc);
-                    zip.file(queryTablesPath + path, newQT);
-                    found = true;
-                }
-            }
-        );
+        });
         if (found) {
             return;
         }
@@ -215,47 +150,32 @@ export class WorkbookManager {
             pivotCacheXmlString: string;
         }>[] = [];
 
-        zip.folder(pivotCachesPath)?.forEach(
-            async (relativePath, pivotCacheFile) => {
-                if (relativePath.startsWith("pivotCacheDefinition")) {
-                    pivotCachePromises.push(
-                        (() => {
-                            return pivotCacheFile
-                                .async("text")
-                                .then((pivotCacheString) => {
-                                    return {
-                                        path: relativePath,
-                                        pivotCacheXmlString: pivotCacheString,
-                                    };
-                                });
-                        })()
-                    );
-                }
-            }
-        );
-        (await Promise.all(pivotCachePromises)).forEach(
-            ({ path, pivotCacheXmlString }) => {
-                const pivotCacheDoc: Document = parser.parseFromString(
-                    pivotCacheXmlString,
-                    "text/xml"
+        zip.folder(pivotCachesPath)?.forEach(async (relativePath, pivotCacheFile) => {
+            if (relativePath.startsWith("pivotCacheDefinition")) {
+                pivotCachePromises.push(
+                    (() => {
+                        return pivotCacheFile.async("text").then((pivotCacheString) => {
+                            return {
+                                path: relativePath,
+                                pivotCacheXmlString: pivotCacheString,
+                            };
+                        });
+                    })()
                 );
-                const element =
-                    pivotCacheDoc.getElementsByTagName("cacheSource")[0];
-                if (element.getAttribute("connectionId") == connectionId) {
-                    element.parentElement!.setAttribute(
-                        "refreshOnLoad",
-                        refreshOnLoadValue
-                    );
-                    const newPC = serializer.serializeToString(pivotCacheDoc);
-                    zip.file(pivotCachesPath + path, newPC);
-                    found = true;
-                }
             }
-        );
+        });
+        (await Promise.all(pivotCachePromises)).forEach(({ path, pivotCacheXmlString }) => {
+            const pivotCacheDoc: Document = parser.parseFromString(pivotCacheXmlString, "text/xml");
+            const element = pivotCacheDoc.getElementsByTagName("cacheSource")[0];
+            if (element.getAttribute("connectionId") == connectionId) {
+                element.parentElement!.setAttribute("refreshOnLoad", refreshOnLoadValue);
+                const newPC = serializer.serializeToString(pivotCacheDoc);
+                zip.file(pivotCachesPath + path, newPC);
+                found = true;
+            }
+        });
         if (!found) {
-            throw new Error(
-                "No Query Table or Pivot Table found for Query1 in given template."
-            );
+            throw new Error("No Query Table or Pivot Table found for Query1 in given template.");
         }
     }
 }

@@ -8,27 +8,12 @@ import { arrayUtils } from "./utils";
 import { generateSingleQueryMashup } from "./generators";
 
 export default class MashupHandler {
-    async ReplaceSingleQuery(
-        base64Str: string,
-        query: string
-    ): Promise<string> {
-        const { packageOPC, startArray, endBuffer } =
-            this.getPackageComponents(base64Str);
+    async ReplaceSingleQuery(base64Str: string, query: string): Promise<string> {
+        const { packageOPC, startArray, endBuffer } = this.getPackageComponents(base64Str);
 
-        const newPackageBuffer = await this.editSingleQueryPackage(
-            packageOPC,
-            "Query1",
-            query
-        );
-        const packageSizeBuffer = arrayUtils.getInt32Buffer(
-            newPackageBuffer.byteLength
-        );
-        const newMashup = arrayUtils.concatArrays(
-            startArray,
-            packageSizeBuffer,
-            newPackageBuffer,
-            endBuffer
-        );
+        const newPackageBuffer = await this.editSingleQueryPackage(packageOPC, "Query1", query);
+        const packageSizeBuffer = arrayUtils.getInt32Buffer(newPackageBuffer.byteLength);
+        const newMashup = arrayUtils.concatArrays(startArray, packageSizeBuffer, newPackageBuffer, endBuffer);
         return base64.fromByteArray(newMashup);
     }
 
@@ -47,11 +32,7 @@ export default class MashupHandler {
         };
     }
 
-    private async editSingleQueryPackage(
-        packageOPC: ArrayBuffer,
-        queryName: string,
-        query: string
-    ) {
+    private async editSingleQueryPackage(packageOPC: ArrayBuffer, queryName: string, query: string) {
         const packageZip = await JSZip.loadAsync(packageOPC);
         this.getSection1m(packageZip);
         this.setSection1m(queryName, query, packageZip);
@@ -59,11 +40,7 @@ export default class MashupHandler {
         return await packageZip.generateAsync({ type: "uint8array" });
     }
 
-    private setSection1m = (
-        queryName: string,
-        query: string,
-        zip: JSZip
-    ): void => {
+    private setSection1m = (queryName: string, query: string, zip: JSZip): void => {
         const newSection1m = generateSingleQueryMashup(queryName, query);
 
         zip.file(section1mPath, newSection1m, {

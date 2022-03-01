@@ -17,14 +17,11 @@ const getZip = async (template: string) =>
     });
 
 describe("Single query template tests", () => {
-    const singleQueryDefaultTemplate =
-        workbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE;
+    const singleQueryDefaultTemplate = workbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE;
     let defaultZipFile;
 
     beforeAll(async () => {
-        expect(
-            async () => await getZip(singleQueryDefaultTemplate)
-        ).not.toThrow();
+        expect(async () => await getZip(singleQueryDefaultTemplate)).not.toThrow();
 
         defaultZipFile = await getZip(singleQueryDefaultTemplate);
     });
@@ -34,13 +31,9 @@ describe("Single query template tests", () => {
     });
 
     test("DataMashup XML exists, and valid PQ Base64 can be extracted", async () => {
-        expect(
-            async () => await pqUtils.getDataMashupFile(defaultZipFile)
-        ).not.toThrowError();
+        expect(async () => await pqUtils.getDataMashupFile(defaultZipFile)).not.toThrowError();
 
-        const { found, path, value } = await pqUtils.getDataMashupFile(
-            defaultZipFile
-        );
+        const { found, path, value } = await pqUtils.getDataMashupFile(defaultZipFile);
 
         expect(found).toBeTruthy();
         expect(value).toEqual(pqEmptySingleQueryBase64);
