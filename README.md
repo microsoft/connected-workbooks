@@ -139,16 +139,16 @@ let blob = await workbookManager.generateSingleQueryWorkbook(
 | refreshOnOpen | boolean | __required__ | Whether to refresh the data on opening workbook or not
 
 ### DocProps
-| param | type | required | 
-|---|---|---|
-| title | string | optional 
-| subject | string | optional 
-| keywords | string | optional 
-| createdBy | string | optional 
-| description | string | optional 
-| lastModifiedBy | string | optional 
-| category | string | optional 
-| revision | number | optional 
+| param | type | required | default
+|---|---|---|---|
+| title | string | optional | @microsoft/connected-workbooks workbook
+| subject | string | optional | -
+| keywords | string | optional | -
+| createdBy | string | optional | @microsoft/connected-workbooks
+| description | string | optional | -
+| lastModifiedBy | string | optional | @microsoft/connected-workbooks
+| category | string | optional | -
+| revision | number | optional | -
 
 ## Contributing
 
