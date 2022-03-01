@@ -1,28 +1,35 @@
 # Connected Workbooks
 [![Build Status](https://obilshield.visualstudio.com/ConnectedWorkbooks/_apis/build/status/microsoft.connected-workbooks?branchName=main)](https://obilshield.visualstudio.com/ConnectedWorkbooks/_build/latest?definitionId=14&branchName=main)
 
-## Using this project
+## Usage
 
-Use this project in your to generate workbooks with Power Query in them, mainly targeting 'Export to Excel' features you have in your application.
+Use `connected-workbooks` to generate Excel workbooks with Power Query in them, mainly targeting "Export to Excel" features you have in your application.
 
-### Basic Usage - using a predefined template:
+### Basic Usage
 
-The library comes with a workbook template built in, that loads a query named 'Query1' to a Query Table on the grid.
+#### Using a predefined template:
+`connected-workbooks` comes with a default empty workbook template built in, that loads a query named "Query1" to a Query Table on the grid.
 
 ```typescript
 let workbookManager = new WorkbookManager();
+
 let blob = await workbookManager.generateSingleQueryWorkbook({
-  queryMashup: query,
-  refreshOnOpen: refreshOnOpen,
+  query: {
+    queryMashup,
+    refreshOnOpen
+  }
 });
 
-Download(blob, filename);
+download(blob, filename);
 ```
 
-While a typical download method would be:
+<details>
+<summary>download function example</summary>
+
+Here's a typical way to download a file in browser with Typescript.
 
 ```typescript
-function Download(file: Blob, filename: string) {
+function download(file: Blob, filename: string) {
   if (window.navigator.msSaveOrOpenBlob)
     // IE10+
     window.navigator.msSaveOrOpenBlob(file, filename);
@@ -41,24 +48,29 @@ function Download(file: Blob, filename: string) {
   }
 }
 ```
+</details>
 
-### Advanced Usage - bring your own template:
+</br>
+
+### Advanced Usage
+
+#### Bring your own template:
 
 You can use the library with your own template, for that (currently) there should be a single query named **Query1** loaded to a **Query Table**, **Pivot Table**, or **Pivot Chart** in the template workbook, and pass it as a **File** to the templateWorkbook parameter of the API:
 
 ```typescript
-let workbookManager = new WorkbookManager();
 let blob = await workbookManager.generateSingleQueryWorkbook(
-  {
-    queryMashup: query,
-    refreshOnOpen: refreshOnOpen,
+  query: {
+    queryMashup,
+    refreshOnOpen
   },
   templateFile
 );
-
-Download(blob, filename);
 ```
 
+<details>
+<summary>React example: file input</summary>
+  
 A common way to get the template workbook with React via user interaction:
 
 ```typescript
@@ -67,19 +79,76 @@ A common way to get the template workbook with React via user interaction:
 ...
 
     <input
-    onChange={(e) => {
-        if (e?.target?.files?.item(0) == null) return;
-        setTemplateFile(e!.target!.files!.item(0));
-    }}
-    type="file"
-    id="file"
-    accept=".xlsx"
-    style={{ display: "none" }}
+      onChange={(e) => {
+          if (e?.target?.files?.item(0) == null) return;
+          setTemplateFile(e!.target!.files!.item(0));
+      }}
+      type="file"
+      id="file"
+      accept=".xlsx"
+      style={{ display: "none" }}
     />
 
 ```
+</details>
 
 Though expecation is that you have your product template baked and tested in your own product code, and not have the user provide it.
+
+#### Customize docProps:
+You can provide your own docProps (document properties) for the generated workbook, whether you are using the default or a custom template.
+
+```typescript
+let blob = await workbookManager.generateSingleQueryWorkbook(
+  query: {
+    queryMashup,
+    refreshOnOpen
+  },
+  docProps: {
+    title,
+    subject,
+    keywords,
+    createdBy,
+    description,
+    lastModifiedBy,
+    category,
+    revision,
+  }
+);
+```
+
+### API
+`connected-workbook` exposes __WorkbookManager__ class, which has (for now) a single method.
+
+
+#### async `generateSingleQueryWorkbook`: `Promise<Blob>`
+
+|param   | type   | required   | description   |
+|---      |---    |---          |---            |
+|query   | [QueryInfo](#queryinfo)   | __required__  | Power Query mashup  | 
+| templateFile  | File   | optional   | Custom Excel workbook  | 
+| docProps  | [DocProps](#docprops)   | optional  | Custom workbook properties |
+
+</br>
+
+### Types
+
+### QueryInfo
+| param | type | required | description |
+|---|---|---|---|
+| queryMashup | string | __required__ | mashup string
+| refreshOnOpen | boolean | __required__ | Whether to refresh the data on opening workbook or not
+
+### DocProps
+| param | type | required | 
+|---|---|---|
+| title | string | optional 
+| subject | string | optional 
+| keywords | string | optional 
+| createdBy | string | optional 
+| description | string | optional 
+| lastModifiedBy | string | optional 
+| category | string | optional 
+| revision | number | optional 
 
 ## Contributing
 
