@@ -29,6 +29,10 @@ class ArrayReader {
         return new Uint8Array(retVal);
     }
 
+    getPosition() {
+        return this._position;
+    }
+
     reset(): void {
         this._position = 0;
     }

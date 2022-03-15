@@ -10,6 +10,7 @@ import {
     queryTablesPath,
     pivotCachesPath,
     docPropsCoreXmlPath,
+    defaults,
 } from "./constants";
 import {
     DocProps,
@@ -28,6 +29,9 @@ export class WorkbookManager {
     ): Promise<Blob> {
         if (!query.queryMashup) {
             throw new Error("Query mashup can't be empty");
+        }
+        if (!query.queryName) {
+            query.queryName = defaults.queryName;
         }
         const zip =
             templateFile === undefined
@@ -50,7 +54,7 @@ export class WorkbookManager {
         docProps?: DocProps
     ): Promise<Blob> {
         await this.updatePowerQueryDocument(zip, query.queryMashup);
-        await this.updateSingleQueryRefreshOnOpen(zip, query.refreshOnOpen);
+        await this.updateSingleQueryRefreshOnOpen(zip, query);
         await this.updateDocProps(zip, docProps);
 
         return await zip.generateAsync({
@@ -61,11 +65,9 @@ export class WorkbookManager {
 
     private async updatePowerQueryDocument(zip: JSZip, queryMashup: string) {
         const old_base64 = await pqUtils.getBase64(zip);
-
         if (!old_base64) {
             throw new Error("Base64 string is not found in zip file");
         }
-
         const new_base64 = await this.mashupHandler.ReplaceSingleQuery(
             old_base64,
             queryMashup
@@ -118,10 +120,8 @@ export class WorkbookManager {
         zip.file(docPropsCoreXmlPath, newDoc);
     }
 
-    private async updateSingleQueryRefreshOnOpen(
-        zip: JSZip,
-        refreshOnOpen: boolean
-    ) {
+    private async updateSingleQueryRefreshOnOpen(zip: JSZip, query: QueryInfo) {
+        const { refreshOnOpen, queryName } = query;
         const connectionsXmlString = await zip
             .file(connectionsXmlPath)
             ?.async("text");
@@ -146,7 +146,7 @@ export class WorkbookManager {
         const queryProp = connectionsAttributesArr.find((prop) => {
             return (
                 prop?.name === "command" &&
-                prop.nodeValue === "SELECT * FROM [Query1]"
+                prop.nodeValue === `SELECT * FROM [${queryName}]`
             );
         });
 
@@ -163,7 +163,7 @@ export class WorkbookManager {
         zip.file(connectionsXmlPath, newConn);
 
         if (connectionId == "-1" || !connectionId) {
-            throw new Error("No connection found for Query1");
+            throw new Error(`No connection found for ${queryName}`);
         }
         let found = false;
 
@@ -254,7 +254,7 @@ export class WorkbookManager {
         );
         if (!found) {
             throw new Error(
-                "No Query Table or Pivot Table found for Query1 in given template."
+                `No Query Table or Pivot Table found for ${queryName} in given template.`
             );
         }
     }

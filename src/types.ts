@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 export interface QueryInfo {
+    queryName?: string;
     queryMashup: string;
     refreshOnOpen: boolean;
 }
@@ -17,6 +18,9 @@ export interface DocProps {
     revision?: string | null;
 }
 
+export interface Metadata {
+    queryName?: string;
+}
 export enum docPropsModifiableElements {
     title = "dc:title",
     subject = "dc:subject",
