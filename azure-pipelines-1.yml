@@ -31,15 +31,16 @@ steps:
     SourceFolder: '$(Build.SourcesDirectory)'
     Contents: '*.tgz'
     TargetFolder: '$(Build.SourcesDirectory)/out'
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(System.DefaultWorkingDirectory)/out'
-    ArtifactName: 'connected-workbooks-drop'
-    publishLocation: 'Container'
-  displayName: 'publish packed library'
 
 - task: PublishPipelineArtifact@1
   inputs:
     targetPath: '$(System.DefaultWorkingDirectory)/out'
     artifact: 'connected-workbooks-drop-2'
     publishLocation: 'pipeline'
+  displayName: 'publish packed library'
+
+- task: Npm@1
+  inputs:
+    command: 'publish'
+    publishRegistry: 'useFeed'
+    publishFeed: '3046f601-a835-471b-8758-5953e60cb1a1/4aa42cde-db13-4c30-91ab-e4b8bd1d09f8'
