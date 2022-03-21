@@ -37,3 +37,9 @@ steps:
     ArtifactName: 'connected-workbooks-drop'
     publishLocation: 'Container'
   displayName: 'publish packed library'
+
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: '$(System.DefaultWorkingDirectory)/out'
+    artifact: 'connected-workbooks-drop'
+    publishLocation: 'pipeline'
