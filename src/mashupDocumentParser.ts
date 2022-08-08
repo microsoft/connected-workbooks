@@ -8,10 +8,10 @@ import { arrayUtils } from "./utils";
 import { generateSingleQueryMashup } from "./generators";
 
 export default class MashupHandler {
-    async ReplaceSingleQuery(base64Str: string, query: string): Promise<string> {
+    async ReplaceSingleQuery(base64Str: string, queryName:string, query: string): Promise<string> {
         const { packageOPC, startArray, endBuffer } = this.getPackageComponents(base64Str);
 
-        const newPackageBuffer = await this.editSingleQueryPackage(packageOPC, "Query1", query);
+        const newPackageBuffer = await this.editSingleQueryPackage(packageOPC, queryName, query);
         const packageSizeBuffer = arrayUtils.getInt32Buffer(newPackageBuffer.byteLength);
         const newMashup = arrayUtils.concatArrays(startArray, packageSizeBuffer, newPackageBuffer, endBuffer);
         return base64.fromByteArray(newMashup);
