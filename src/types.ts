@@ -3,6 +3,7 @@
 
 export interface QueryInfo {
     queryMashup: string;
+    queryName: string;
     refreshOnOpen: boolean;
 }
 
