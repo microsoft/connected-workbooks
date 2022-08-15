@@ -24,8 +24,8 @@ export class WorkbookManager {
     }
 
     private async generateSingleQueryWorkbookFromZip(zip: JSZip, query: QueryInfo, docProps?: DocProps): Promise<Blob> {
-        await this.updatePowerQueryDocument(zip, query.queryName ,query.queryMashup);
-        await this.updateSingleQueryRefreshOnOpen(zip, query.refreshOnOpen);
+        await this.updatePowerQueryDocument(zip, query.queryName, query.queryMashup);
+        await this.updateSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
         await this.updateDocProps(zip, docProps);
 
         return await zip.generateAsync({
@@ -76,7 +76,7 @@ export class WorkbookManager {
         zip.file(docPropsCoreXmlPath, newDoc);
     }
 
-    private async updateSingleQueryRefreshOnOpen(zip: JSZip, refreshOnOpen: boolean) {
+    private async updateSingleQueryAttributes(zip: JSZip, queryName: string, refreshOnOpen: boolean) {
         const connectionsXmlString = await zip.file(connectionsXmlPath)?.async("text");
         if (connectionsXmlString === undefined) {
             throw new Error("Connections were not found in template");
@@ -100,13 +100,21 @@ export class WorkbookManager {
             throw new Error("No query was found!");
         }
 
+        // Update RefreshOnOpen
         queryProp.parentElement?.setAttribute("refreshOnLoad", refreshOnLoadValue);
+        
+        // Update query details to match queryName
+        dbPr.parentElement?.setAttribute("name", "Query - " + queryName);
+        dbPr.parentElement?.setAttribute("description", "Connection to the '" + queryName + "' query in the workbook.");
+        dbPr.setAttribute("connection", "Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=" + queryName +";");
+        dbPr.setAttribute("command","SELECT * FROM [" + queryName + "]");
+        
         const connectionId = dbPr.parentElement?.getAttribute("id");
         const newConn = serializer.serializeToString(connectionsDoc);
         zip.file(connectionsXmlPath, newConn);
 
         if (connectionId == "-1" || !connectionId) {
-            throw new Error("No connection found for Query1");
+            throw new Error("No connection found for " + queryName);
         }
         let found = false;
 
