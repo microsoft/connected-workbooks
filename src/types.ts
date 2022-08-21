@@ -3,7 +3,7 @@
 
 export interface QueryInfo {
     queryMashup: string;
-    queryName: string;
+    queryName?: string;
     refreshOnOpen: boolean;
 }
 
@@ -16,6 +16,10 @@ export interface DocProps {
     lastModifiedBy?: string | null;
     category?: string | null;
     revision?: string | null;
+}
+
+export interface Metadata {
+    queryName?: string;
 }
 
 export enum docPropsModifiableElements {

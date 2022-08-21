@@ -5,7 +5,7 @@ import JSZip from "jszip";
 import { pqUtils, documentUtils } from "./utils";
 import WorkbookTemplate from "./workbookTemplate";
 import MashupHandler from "./mashupDocumentParser";
-import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath } from "./constants";
+import { connectionsXmlPath, queryTablesPath, pivotCachesPath, defaults, docPropsCoreXmlPath } from "./constants";
 import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements } from "./types";
 
 export class WorkbookManager {
@@ -14,6 +14,9 @@ export class WorkbookManager {
     async generateSingleQueryWorkbook(query: QueryInfo, templateFile?: File, docProps?: DocProps): Promise<Blob> {
         if (!query.queryMashup) {
             throw new Error("Query mashup can't be empty");
+        }
+        if (!query.queryName) {
+            query.queryName = defaults.queryName;
         }
         const zip =
             templateFile === undefined
@@ -24,6 +27,9 @@ export class WorkbookManager {
     }
 
     private async generateSingleQueryWorkbookFromZip(zip: JSZip, query: QueryInfo, docProps?: DocProps): Promise<Blob> {
+        if (!query.queryName) {
+            query.queryName = defaults.queryName;
+        }
         await this.updatePowerQueryDocument(zip, query.queryName, query.queryMashup);
         await this.updateSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
         await this.updateDocProps(zip, docProps);
@@ -181,7 +187,7 @@ export class WorkbookManager {
             }
         });
         if (!found) {
-            throw new Error("No Query Table or Pivot Table found for Query1 in given template.");
+            throw new Error("No Query Table or Pivot Table found for ${ queryName } in given template.");
         }
     }
 }

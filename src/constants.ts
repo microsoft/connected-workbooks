@@ -8,6 +8,10 @@ export const section1mPath = "Formulas/Section1.m";
 export const docPropsCoreXmlPath = "docProps/core.xml";
 export const docPropsRootElement = "cp:coreProperties";
 
+export const defaults = {
+    queryName: "Query1",
+};
+
 export const URLS = {
     PQ: [
         "http://schemas.microsoft.com/DataMashup",

@@ -3,32 +3,42 @@
 
 import * as base64 from "base64-js";
 import JSZip from "jszip";
-import { section1mPath } from "./constants";
+import { section1mPath, defaults } from "./constants";
 import { arrayUtils } from "./utils";
+import { Metadata } from "./types";
 import { generateSingleQueryMashup } from "./generators";
 
 export default class MashupHandler {
     async ReplaceSingleQuery(base64Str: string, queryName:string, query: string): Promise<string> {
-        const { packageOPC, startArray, endBuffer } = this.getPackageComponents(base64Str);
-
+        const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } = this.getPackageComponents(base64Str);
         const newPackageBuffer = await this.editSingleQueryPackage(packageOPC, queryName, query);
         const packageSizeBuffer = arrayUtils.getInt32Buffer(newPackageBuffer.byteLength);
-        const newMashup = arrayUtils.concatArrays(startArray, packageSizeBuffer, newPackageBuffer, endBuffer);
+        const permissionsSizeBuffer = arrayUtils.getInt32Buffer(permissionsSize);
+        const newMetadataBuffer = this.editSingleQueryMetadata(metadata, { queryName });
+        const metadataSizeBuffer = arrayUtils.getInt32Buffer(newMetadataBuffer.byteLength);
+        const newMashup = arrayUtils.concatArrays(version, packageSizeBuffer, newPackageBuffer, permissionsSizeBuffer, permissions, metadataSizeBuffer, newMetadataBuffer, endBuffer);
         return base64.fromByteArray(newMashup);
     }
 
     private getPackageComponents(base64Str: string) {
         const buffer = base64.toByteArray(base64Str).buffer;
         const mashupArray = new arrayUtils.ArrayReader(buffer);
-        const startArray = mashupArray.getBytes(4);
+        const version = mashupArray.getBytes(4);
         const packageSize = mashupArray.getInt32();
         const packageOPC = mashupArray.getBytes(packageSize);
+        const permissionsSize = mashupArray.getInt32();
+        const permissions = mashupArray.getBytes(permissionsSize);
+        const metadataSize = mashupArray.getInt32();
+        const metadata = mashupArray.getBytes(metadataSize);
         const endBuffer = mashupArray.getBytes();
 
         return {
-            startArray,
+            version,
             packageOPC,
-            endBuffer,
+            permissionsSize,
+            permissions,
+            metadata,
+            endBuffer
         };
     }
 
@@ -56,4 +66,55 @@ export default class MashupHandler {
 
         return section1m;
     };
+
+
+    private editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Metadata) => {
+        //extract metadataXml
+        const mashupArray = new arrayUtils.ArrayReader(metadataArray.buffer);
+        const metadataVersion = mashupArray.getBytes(4);
+        const metadataXmlSize = mashupArray.getInt32();
+        const metadataXml = mashupArray.getBytes(metadataXmlSize);
+        const endBuffer = mashupArray.getBytes();
+        
+        //parse metdataXml
+        const metadataString = uintToString(metadataXml);
+        const parser = new DOMParser();
+        const serializer = new XMLSerializer();
+        const parsedMetadata = parser.parseFromString(metadataString, "text/xml");
+        
+        // Update InfoPaths to new QueryName
+        if (metadata.queryName) {
+            const itemPaths = parsedMetadata.getElementsByTagName("ItemPath");
+            if (itemPaths && itemPaths.length) {
+                for (let i = 0; i < itemPaths.length; i++) {
+                    const itemPath = itemPaths[i];
+                    const content = itemPath.innerHTML;
+                    if (content.includes("Section1/")) {
+                        const strArr = content.split("/");
+                        strArr[1] = metadata.queryName;
+                        const newContent = strArr.join("/");
+                        itemPath.innerHTML = newContent;
+                        //append child
+                        }    
+                    }
+                }
+        }
+        
+        // Convert new metadataXml to Uint8Array
+        const newMetadataString = serializer.serializeToString(parsedMetadata);
+        const encoder = new TextEncoder();
+        const newMetadataXml = encoder.encode(newMetadataString);
+        const newMetadataXmlSize = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
+        
+        const newMetadataArray = arrayUtils.concatArrays(metadataVersion, newMetadataXmlSize, newMetadataXml, endBuffer);
+        return newMetadataArray;
+    };
 }
+
+
+
+function uintToString(uintArray: Uint8Array) {
+    var encodedString = new TextDecoder("utf-8").decode(uintArray);
+    return encodedString;
+ }
+
