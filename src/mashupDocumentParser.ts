@@ -99,6 +99,30 @@ export default class MashupHandler {
                     }
                 }
         }
+
+        const entries = parsedMetadata.getElementsByTagName("Entry");
+            if (entries && entries.length) {
+                for (let i = 0; i < entries.length; i++) {
+                    const entry = entries[i];
+                    const entryAttributes = entry.attributes;
+                    const entryAttributesArr = [...entryAttributes]; 
+                    const entryProp = entryAttributesArr.find((prop) => {
+                    return prop?.name === "Type"});
+                    if (entryProp?.nodeValue == "RelationshipInfoContainer") {
+                        const newValue = entry.getAttribute("Value")?.replace(/Query1/g, metadata.queryName);
+                        if (newValue) {
+                            entry.setAttribute("Value", newValue);
+                        }
+                    }
+                    if (entryProp?.nodeValue == "ResultType") {
+                        entry.setAttribute("Value", "sTable");
+                    }
+                    if (entryProp?.nodeValue == "FillLastUpdated") {
+                        const nowTime = new Date().toISOString();
+                        entry.setAttribute("Value", ("d" + nowTime).replace(/Z/, '0000Z'));
+                    }   
+                }
+            }
         
         // Convert new metadataXml to Uint8Array
         const newMetadataString = serializer.serializeToString(parsedMetadata);

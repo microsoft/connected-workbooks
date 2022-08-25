@@ -19,7 +19,7 @@ export interface DocProps {
 }
 
 export interface Metadata {
-    queryName?: string;
+    queryName: string;
 }
 
 export enum docPropsModifiableElements {
