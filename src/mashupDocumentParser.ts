@@ -83,22 +83,20 @@ export default class MashupHandler {
         const parsedMetadata = parser.parseFromString(metadataString, "text/xml");
         
         // Update InfoPaths to new QueryName
-        if (metadata.queryName) {
-            const itemPaths = parsedMetadata.getElementsByTagName("ItemPath");
-            if (itemPaths && itemPaths.length) {
-                for (let i = 0; i < itemPaths.length; i++) {
-                    const itemPath = itemPaths[i];
-                    const content = itemPath.innerHTML;
-                    if (content.includes("Section1/")) {
-                        const strArr = content.split("/");
-                        strArr[1] = metadata.queryName;
-                        const newContent = strArr.join("/");
-                        itemPath.innerHTML = newContent;
-                        //append child
-                        }    
-                    }
+        const itemPaths = parsedMetadata.getElementsByTagName("ItemPath");
+        if (itemPaths && itemPaths.length) {
+            for (let i = 0; i < itemPaths.length; i++) {
+                const itemPath = itemPaths[i];
+                const content = itemPath.innerHTML;
+                if (content.includes("Section1/")) {
+                    const strArr = content.split("/");
+                    strArr[1] = metadata.queryName;
+                    const newContent = strArr.join("/");
+                    itemPath.innerHTML = newContent;
+                    //append child
+                    }    
                 }
-        }
+            }
 
         const entries = parsedMetadata.getElementsByTagName("Entry");
             if (entries && entries.length) {
