@@ -19,9 +19,8 @@ export class WorkbookManager {
         if (!query.queryName) {
             query.queryName = defaults.queryName;
         }
-        if (!query.initialData)
-        {
-            query.initialData = [["1", "2", "3"], ["0.1", "0.01", "0.001"],["0.02", "0.0002", "0.2"]];
+        if (!query.initialData) {
+            query.initialData = [['column1', 'column2'], ['111', '222']];
         }
         const zip =
             templateFile === undefined
@@ -84,7 +83,7 @@ export class WorkbookManager {
             const rowCellsArr = [...newRow.children];
             rowCellsArr.forEach((newCell) => {
                 newCell.setAttribute("r", String.fromCharCode(colIndex + 65)+(rowIndex+1).toString());
-                newCell.removeAttribute("t");
+                newCell.setAttribute("t", "str");
                 const cellData = [...newCell.children][0];
                 cellData.innerHTML = initialData[rowIndex][colIndex];
                 colIndex++;
