@@ -19,9 +19,9 @@ export class WorkbookManager {
         if (!query.queryName) {
             query.queryName = defaults.queryName;
         }
-        if (!query.initialData) {
-            query.initialData = [['column1', 'column2'], ['111', '222']];
-        }
+        // if (!query.initialData) {
+        //     query.initialData = [['column1', 'column2'], ['111', '222']];
+        // }
         const zip =
             templateFile === undefined
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
@@ -75,6 +75,7 @@ export class WorkbookManager {
         if (sheetData.lastChild) {
         sheetData.removeChild(sheetData.lastChild);
         }
+
         const rowsArr = [...sheetsDoc.getElementsByTagName("row")];
         var rowIndex = 0;
         rowsArr.forEach((newRow) => {
@@ -88,10 +89,11 @@ export class WorkbookManager {
                 cellData.innerHTML = initialData[rowIndex][colIndex];
                 colIndex++;
             });
+
             rowIndex++;
         });
 
-        sheetsDoc.getElementsByTagName("dimension")[0].setAttribute("ref", `A1:${String.fromCharCode(initialData[0].length + 64)}${(initialData.length).toString()}`); //fix the range 
+        sheetsDoc.getElementsByTagName("dimension")[0].setAttribute("ref", `A1:${String.fromCharCode(initialData[0].length + 64)}${(initialData.length).toString()}`);
         const newSheet = serializer.serializeToString(sheetsDoc);
         zip.file(sheetsXmlPath, newSheet);
         
@@ -100,6 +102,7 @@ export class WorkbookManager {
         if (workbookXmlString === undefined) {
             throw new Error("Sheets were not found in template");
         }
+
         const newParser: DOMParser = new DOMParser();
         const newSerializer = new XMLSerializer();
         const workbookDoc: Document = newParser.parseFromString(workbookXmlString, "text/xml");
@@ -121,6 +124,7 @@ export class WorkbookManager {
         for (var colIndex = 0; colIndex < columnNames.length; colIndex++) {
             tableElemValuesMap.set(colIndex, [(colIndex + 1).toString(), (colIndex + 1).toString(), columnNames[colIndex], (colIndex + 1).toString()]);
         }
+
         documentUtils.createNewElements(tableDoc, columnNames, "tableColumns", "tableColumn", tablePropArr, tableElemValuesMap);
         tableDoc.getElementsByTagName("tableColumns")[0].setAttribute("count", columnNames.length.toString());
         tableDoc.getElementsByTagName("table")[0].setAttribute("ref", `A1:${String.fromCharCode(initialData[0].length + 64)}${(initialData.length).toString()}`);
@@ -133,6 +137,7 @@ export class WorkbookManager {
         if (queryTableXmlString === undefined) {
             throw new Error("queryTables were not found in template");
         }
+
         // edit querytableXml columns
         const queryTableDoc: Document = parser.parseFromString(queryTableXmlString, "text/xml");
         const queryTablePropArr = ["id", "name", "tableColumnId"];
@@ -140,6 +145,7 @@ export class WorkbookManager {
         for (var fieldIndex = 0; fieldIndex < columnNames.length; fieldIndex++) {
             queryTableElemValuesMap.set(fieldIndex, [(fieldIndex + 1).toString(), columnNames[fieldIndex], (fieldIndex + 1).toString()]);
         }
+
         documentUtils.createNewElements(queryTableDoc, columnNames, "queryTableFields", "queryTableField", queryTablePropArr, queryTableElemValuesMap);
         queryTableDoc.getElementsByTagName("queryTableFields")[0].setAttribute("count", columnNames.length.toString()); 
         queryTableDoc.getElementsByTagName("queryTableRefresh")[0].setAttribute("nextId", (columnNames.length + 1).toString())
@@ -149,16 +155,16 @@ export class WorkbookManager {
 
     private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashup: string) {
         const old_base64 = await pqUtils.getBase64(zip);
-
         if (!old_base64) {
             throw new Error("Base64 string is not found in zip file");
         }
+
         const new_base64 = await this.mashupHandler.ReplaceSingleQuery(old_base64, queryName, queryMashup);
         await pqUtils.setBase64(zip, new_base64);
     }
+    
     private async updateDocProps(zip: JSZip, docProps: DocProps = {}) {
         const { doc, properties } = await documentUtils.getDocPropsProperties(zip);
-
         //set auto updated elements
         const docPropsAutoUpdatedElementsArr = Object.keys(docPropsAutoUpdatedElements) as Array<
             keyof typeof docPropsAutoUpdatedElements
@@ -194,6 +200,7 @@ export class WorkbookManager {
         if (connectionsXmlString === undefined) {
             throw new Error("Connections were not found in template");
         }
+
         const parser: DOMParser = new DOMParser();
         const serializer = new XMLSerializer();
         const refreshOnLoadValue = refreshOnOpen ? "1" : "0";
@@ -214,18 +221,19 @@ export class WorkbookManager {
         //queryProp.parentElement?.setAttribute("refreshOnLoad", refreshOnLoadValue);
         
         // Update query details to match queryName
-        dbPr.parentElement?.setAttribute("name", "Query - " + queryName);
-        dbPr.parentElement?.setAttribute("description", "Connection to the '" + queryName + "' query in the workbook.");
-        dbPr.setAttribute("connection", "Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=" + queryName +";");
-        dbPr.setAttribute("command","SELECT * FROM [" + queryName + "]");
+        dbPr.parentElement?.setAttribute("name", `Query - ${queryName}`);
+        dbPr.parentElement?.setAttribute("description", `Connection to the ${queryName} query in the workbook.`);
+        dbPr.setAttribute("connection", `Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=${queryName};`);
+        dbPr.setAttribute("command", `SELECT * FROM [${queryName}]`);
         
         const connectionId = dbPr.parentElement?.getAttribute("id");
         const newConn = serializer.serializeToString(connectionsDoc);
         zip.file(connectionsXmlPath, newConn);
 
         if (connectionId == "-1" || !connectionId) {
-            throw new Error("No connection found for " + queryName);
+            throw new Error(`No connection found for ${queryName}`);
         }
+        
         let found = false;
 
         // Find Query Table
@@ -291,7 +299,7 @@ export class WorkbookManager {
             }
         });
         if (!found) {
-            throw new Error("No Query Table or Pivot Table found for ${ queryName } in given template.");
+            throw new Error(`No Query Table or Pivot Table found for ${queryName} in given template.`);
         }
     }
 }
