@@ -40,4 +40,39 @@ const getDocPropsProperties = async (zip: JSZip): Promise<{ doc: Document; prope
     return { doc, properties };
 };
 
-export default { createOrUpdateProperty, getDocPropsProperties };
+const createNewElements = (doc: Document, data: string[], parentElem: string, element: string, properties: string[] | null, values: Map<number, string[]> | null) : void => {
+    // remove previous child nodes of parent except first child
+    const parentArr = [...doc.getElementsByTagName(parentElem)];
+    parentArr.forEach((parent) => {
+        while (parent.firstChild != parent.lastChild) {
+                if (parent.lastChild) {
+                    parent.removeChild(parent.lastChild);
+                }            
+            }
+        const oldElem = parent.firstChild;
+        if (!oldElem) {
+            throw new Error("Error in template");
+        }
+        // duplicate number of elements necessary
+        for (var elemId = 1; elemId < data.length; elemId++) {
+            const newElem = oldElem.cloneNode(true);
+            parent.appendChild(newElem);
+        }
+        const elemArr = [...doc.getElementsByTagName(element)];
+        // update element properties
+        for (var elemIndex = 0; elemIndex < elemArr.length; elemIndex++) {
+            const elem = elemArr[elemIndex];
+            if (properties && values) {
+            for (var propertyIndex = 0; propertyIndex < properties.length; propertyIndex++) {
+                const elemValues = values.get(elemIndex);
+                if (!elemValues) {
+                    throw new Error("Invalid ValuesMap.");
+                }
+                elem.setAttribute(properties[propertyIndex], elemValues[propertyIndex]);
+            } 
+        }          
+        }
+});
+}
+
+export default { createOrUpdateProperty, getDocPropsProperties, createNewElements };

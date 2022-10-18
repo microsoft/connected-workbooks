@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-
 export interface QueryInfo {
     queryMashup: string;
     queryName?: string;
     refreshOnOpen: boolean;
+    initialData?: string[][];
 }
 
 export interface DocProps {
