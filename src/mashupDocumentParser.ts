@@ -5,16 +5,16 @@ import * as base64 from "base64-js";
 import JSZip from "jszip";
 import { section1mPath, defaults } from "./constants";
 import { arrayUtils } from "./utils";
-import { Metadata } from "./types";
+import { Metadata, TableData } from "./types";
 import { generateSingleQueryMashup } from "./generators";
 
 export default class MashupHandler {
-    async ReplaceSingleQuery(base64Str: string, queryName:string, query: string): Promise<string> {
+    async ReplaceSingleQuery(base64Str: string, queryName:string, query: string, tableData?: TableData): Promise<string> {
         const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } = this.getPackageComponents(base64Str);
         const newPackageBuffer = await this.editSingleQueryPackage(packageOPC, queryName, query);
         const packageSizeBuffer = arrayUtils.getInt32Buffer(newPackageBuffer.byteLength);
         const permissionsSizeBuffer = arrayUtils.getInt32Buffer(permissionsSize);
-        const newMetadataBuffer = this.editSingleQueryMetadata(metadata, { queryName });
+        const newMetadataBuffer = this.editSingleQueryMetadata(metadata, { queryName }, tableData);
         const metadataSizeBuffer = arrayUtils.getInt32Buffer(newMetadataBuffer.byteLength);
         const newMashup = arrayUtils.concatArrays(version, packageSizeBuffer, newPackageBuffer, permissionsSizeBuffer, permissions, metadataSizeBuffer, newMetadataBuffer, endBuffer);
         return base64.fromByteArray(newMashup);
@@ -68,7 +68,7 @@ export default class MashupHandler {
     };
 
 
-    private editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Metadata) => {
+    private editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Metadata, tableData?: TableData) => {
         //extract metadataXml
         const mashupArray = new arrayUtils.ArrayReader(metadataArray.buffer);
         const metadataVersion = mashupArray.getBytes(4);
@@ -107,9 +107,29 @@ export default class MashupHandler {
                     const entryProp = entryAttributesArr.find((prop) => {
                     return prop?.name === "Type"});
                     if (entryProp?.nodeValue == "RelationshipInfoContainer") {
-                        const newValue = entry.getAttribute("Value")?.replace(/Query1/g, metadata.queryName);
-                        if (newValue) {
-                            entry.setAttribute("Value", newValue);
+                        if (tableData) {
+                            let newColumnValue = "";
+                            let colIndex = 0;
+                            tableData.columnNames.forEach((columnName) => {
+                                newColumnValue += `Section1/${metadata.queryName}/AutoRemovedColumns1.{${columnName},${colIndex}}`;
+                                colIndex++;
+                                if (colIndex < tableData.columnNames.length) {
+                                    newColumnValue += ",";
+                                }
+                            });
+                    
+                            let newValue = defaults.relationshipInfo.replace(`"Section1/Query1/AutoRemovedColumns1.{Query1,0}"`, newColumnValue);
+                            newValue = newValue?.replace(`"Section1/Query1/AutoRemovedColumns1.{Query1,0}"`, newColumnValue);
+                            newValue = newValue.replace(/:1/g, `:${tableData.columnNames.length}`);  
+                            if (newValue) {
+                                entry.setAttribute("Value", newValue);
+                            }
+                        }
+                        else {
+                            const newValue = entry.getAttribute("Value")?.replace(/Query1/g, metadata.queryName);
+                            if (newValue) {
+                                entry.setAttribute("Value", newValue);
+                            }
                         }
                     }
                     if (entryProp?.nodeValue == "ResultType") {

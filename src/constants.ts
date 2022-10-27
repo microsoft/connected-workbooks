@@ -14,6 +14,7 @@ export const docPropsRootElement = "cp:coreProperties";
 
 export const defaults = {
     queryName: "Query1",
+    relationshipInfo: `s{"columnCount":1,"keyColumnNames":[],"queryRelationships":[],"columnIdentities":["Section1/Query1/AutoRemovedColumns1.{Query1,0}"],"ColumnCount":1,"KeyColumnNames":[],"ColumnIdentities":["Section1/Query1/AutoRemovedColumns1.{Query1,0}"],"RelationshipInfo":[]}`
 };
 
 export const URLS = {

@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { types } from "@babel/core";
+
 export interface QueryInfo {
     queryMashup: string;
     queryName?: string;
     refreshOnOpen: boolean;
-    initialData?: string[][];
 }
 
 export interface DocProps {
@@ -21,6 +22,20 @@ export interface DocProps {
 
 export interface Metadata {
     queryName: string;
+}
+
+export interface TableData {
+    columnNames: string[];
+    columnTypes: number[];
+    columnwidth?: number;
+    data: string[][];
+}
+
+export enum dataTypes {
+    null = 0,
+    string = 1,
+    number = 2,
+    boolean = 3
 }
 
 export enum docPropsModifiableElements {

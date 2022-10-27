@@ -6,39 +6,36 @@ import { pqUtils, documentUtils } from "./utils";
 import WorkbookTemplate from "./workbookTemplate";
 import MashupHandler from "./mashupDocumentParser";
 import { connectionsXmlPath, workbookXmlPath, sheetsXmlPath, tableXmlPath, queryTableXmlPath, queryTablesPath, pivotCachesPath, defaults, docPropsCoreXmlPath } from "./constants";
-import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements } from "./types";
+import { DocProps, QueryInfo, TableData, dataTypes, docPropsAutoUpdatedElements, docPropsModifiableElements } from "./types";
 
 
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
 
-    async generateSingleQueryWorkbook(query: QueryInfo, templateFile?: File, docProps?: DocProps, initialData?: string[]): Promise<Blob> {
+    async generateSingleQueryWorkbook(query: QueryInfo, templateFile?: File, docProps?: DocProps, tableData?: TableData): Promise<Blob> {
         if (!query.queryMashup) {
             throw new Error("Query mashup can't be empty");
         }
         if (!query.queryName) {
             query.queryName = defaults.queryName;
         }
-        // if (!query.initialData) {
-        //     query.initialData = [['column1', 'column2'], ['111', '222']];
-        // }
         const zip =
             templateFile === undefined
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
                 : await JSZip.loadAsync(templateFile);
-        return await this.generateSingleQueryWorkbookFromZip(zip, query, docProps);
+        return await this.generateSingleQueryWorkbookFromZip(zip, query, tableData, docProps);
     }
 
 
-    private async generateSingleQueryWorkbookFromZip(zip: JSZip, query: QueryInfo, docProps?: DocProps): Promise<Blob> {
+    private async generateSingleQueryWorkbookFromZip(zip: JSZip, query: QueryInfo, tableData?: TableData, docProps?: DocProps): Promise<Blob> {
         if (!query.queryName) {
             query.queryName = defaults.queryName;
         }
-        await this.updatePowerQueryDocument(zip, query.queryName, query.queryMashup);
+        await this.updatePowerQueryDocument(zip, query.queryName, query.queryMashup, tableData);
         await this.updateSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
         await this.updateDocProps(zip, docProps);
-        if (query.initialData) {
-            await this.addSingleQueryInitialData(zip, query.initialData);
+        if (tableData) {
+            await this.addSingleQueryInitialData(zip, tableData);
         }
         
         return await zip.generateAsync({
@@ -47,7 +44,7 @@ export class WorkbookManager {
         });
     }
 
-    private async addSingleQueryInitialData(zip: JSZip, initialData: string[][]) {
+    private async addSingleQueryInitialData(zip: JSZip, tableData: TableData) {
         //extract sheetXml
         const sheetsXmlString = await zip.file(sheetsXmlPath)?.async("text");
         if (sheetsXmlString === undefined) {
@@ -56,19 +53,17 @@ export class WorkbookManager {
         const parser: DOMParser = new DOMParser();
         const serializer = new XMLSerializer();
         const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, "text/xml");
-        
         //edit SheetXml
         const sheetData = sheetsDoc.getElementsByTagName("sheetData")[0];
         const oldRow = sheetsDoc.getElementsByTagName("row")[0];
-        const columnNames = initialData[0];
         while (sheetData.firstChild != sheetData.lastChild) {
             if (sheetData.lastChild) {
                 sheetData.removeChild(sheetData.lastChild);
             }
         }
         
-        documentUtils.createNewElements(sheetsDoc, columnNames, "row", "c", null, null)
-        initialData.forEach((row) => {
+        documentUtils.createNewElements(sheetsDoc, tableData.columnNames, "row", "c", null, null)
+        tableData.data.forEach((row) => {
             const newRow = oldRow.cloneNode(true);
             sheetData.appendChild(newRow);                          
         });
@@ -86,14 +81,13 @@ export class WorkbookManager {
                 newCell.setAttribute("r", String.fromCharCode(colIndex + 65)+(rowIndex+1).toString());
                 newCell.setAttribute("t", "str");
                 const cellData = [...newCell.children][0];
-                cellData.innerHTML = initialData[rowIndex][colIndex];
+                cellData.innerHTML = tableData.data[rowIndex][colIndex];
                 colIndex++;
             });
-
             rowIndex++;
         });
 
-        sheetsDoc.getElementsByTagName("dimension")[0].setAttribute("ref", `A1:${String.fromCharCode(initialData[0].length + 64)}${(initialData.length).toString()}`);
+        sheetsDoc.getElementsByTagName("dimension")[0].setAttribute("ref", `A1:${String.fromCharCode(tableData.data[0].length + 64)}${(tableData.data.length).toString()}`);
         const newSheet = serializer.serializeToString(sheetsDoc);
         zip.file(sheetsXmlPath, newSheet);
         
@@ -107,7 +101,7 @@ export class WorkbookManager {
         const newSerializer = new XMLSerializer();
         const workbookDoc: Document = newParser.parseFromString(workbookXmlString, "text/xml");
         const definedName = workbookDoc.getElementsByTagName("definedName")[0];
-        definedName.innerHTML = "Query1!$A$1:$" + String.fromCharCode(initialData[0].length + 64) +"$" + (initialData.length).toString();
+        definedName.innerHTML = "Query1!$A$1:$" + String.fromCharCode(tableData.columnNames.length + 64) +"$" + (tableData.data.length).toString();
         const newWorkbook = newSerializer.serializeToString(workbookDoc);
         zip.file(workbookXmlPath, newWorkbook);
         
@@ -121,14 +115,14 @@ export class WorkbookManager {
         const tableDoc: Document = parser.parseFromString(tableXmlString, "text/xml");
         const tablePropArr = ["id", "uniqueName", "name", "queryTableFieldId"];
         const tableElemValuesMap = new Map;
-        for (var colIndex = 0; colIndex < columnNames.length; colIndex++) {
-            tableElemValuesMap.set(colIndex, [(colIndex + 1).toString(), (colIndex + 1).toString(), columnNames[colIndex], (colIndex + 1).toString()]);
+        for (var colIndex = 0; colIndex < tableData.columnNames.length; colIndex++) {
+            tableElemValuesMap.set(colIndex, [(colIndex + 1).toString(), (colIndex + 1).toString(), tableData.columnNames[colIndex], (colIndex + 1).toString()]);
         }
 
-        documentUtils.createNewElements(tableDoc, columnNames, "tableColumns", "tableColumn", tablePropArr, tableElemValuesMap);
-        tableDoc.getElementsByTagName("tableColumns")[0].setAttribute("count", columnNames.length.toString());
-        tableDoc.getElementsByTagName("table")[0].setAttribute("ref", `A1:${String.fromCharCode(initialData[0].length + 64)}${(initialData.length).toString()}`);
-        tableDoc.getElementsByTagName("autoFilter")[0].setAttribute("ref", `A1:${String.fromCharCode(initialData[0].length + 64)}${(initialData.length).toString()}`); 
+        documentUtils.createNewElements(tableDoc, tableData.columnNames, "tableColumns", "tableColumn", tablePropArr, tableElemValuesMap);
+        tableDoc.getElementsByTagName("tableColumns")[0].setAttribute("count", tableData.columnNames.length.toString());
+        tableDoc.getElementsByTagName("table")[0].setAttribute("ref", `A1:${String.fromCharCode(tableData.columnNames.length + 64)}${(tableData.data.length).toString()}`);
+        tableDoc.getElementsByTagName("autoFilter")[0].setAttribute("ref", `A1:${String.fromCharCode(tableData.columnNames.length + 64)}${(tableData.data.length).toString()}`); 
         const newTable = serializer.serializeToString(tableDoc);
         zip.file(tableXmlPath, newTable);
 
@@ -142,24 +136,24 @@ export class WorkbookManager {
         const queryTableDoc: Document = parser.parseFromString(queryTableXmlString, "text/xml");
         const queryTablePropArr = ["id", "name", "tableColumnId"];
         const queryTableElemValuesMap = new Map;
-        for (var fieldIndex = 0; fieldIndex < columnNames.length; fieldIndex++) {
-            queryTableElemValuesMap.set(fieldIndex, [(fieldIndex + 1).toString(), columnNames[fieldIndex], (fieldIndex + 1).toString()]);
+        for (var fieldIndex = 0; fieldIndex < tableData.columnNames.length; fieldIndex++) {
+            queryTableElemValuesMap.set(fieldIndex, [(fieldIndex + 1).toString(), tableData.columnNames[fieldIndex], (fieldIndex + 1).toString()]);
         }
 
-        documentUtils.createNewElements(queryTableDoc, columnNames, "queryTableFields", "queryTableField", queryTablePropArr, queryTableElemValuesMap);
-        queryTableDoc.getElementsByTagName("queryTableFields")[0].setAttribute("count", columnNames.length.toString()); 
-        queryTableDoc.getElementsByTagName("queryTableRefresh")[0].setAttribute("nextId", (columnNames.length + 1).toString())
+        documentUtils.createNewElements(queryTableDoc, tableData.columnNames, "queryTableFields", "queryTableField", queryTablePropArr, queryTableElemValuesMap);
+        queryTableDoc.getElementsByTagName("queryTableFields")[0].setAttribute("count", tableData.columnNames.length.toString()); 
+        queryTableDoc.getElementsByTagName("queryTableRefresh")[0].setAttribute("nextId", (tableData.columnNames.length + 1).toString())
         const newQueryTable = serializer.serializeToString(queryTableDoc);
         zip.file(queryTableXmlPath, newQueryTable);
     }
 
-    private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashup: string) {
+    private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashup: string, tableData?: TableData) {
         const old_base64 = await pqUtils.getBase64(zip);
         if (!old_base64) {
             throw new Error("Base64 string is not found in zip file");
         }
 
-        const new_base64 = await this.mashupHandler.ReplaceSingleQuery(old_base64, queryName, queryMashup);
+        const new_base64 = await this.mashupHandler.ReplaceSingleQuery(old_base64, queryName, queryMashup, tableData);
         await pqUtils.setBase64(zip, new_base64);
     }
     
@@ -218,7 +212,7 @@ export class WorkbookManager {
         }
 
         // Update RefreshOnOpen
-        //queryProp.parentElement?.setAttribute("refreshOnLoad", refreshOnLoadValue);
+        queryProp.parentElement?.setAttribute("refreshOnLoad", refreshOnLoadValue);
         
         // Update query details to match queryName
         dbPr.parentElement?.setAttribute("name", `Query - ${queryName}`);
@@ -258,7 +252,7 @@ export class WorkbookManager {
             const queryTableDoc: Document = parser.parseFromString(queryTableXmlString, "text/xml");
             const element = queryTableDoc.getElementsByTagName("queryTable")[0];
             if (element.getAttribute("connectionId") == connectionId) {
-                //element.setAttribute("refreshOnLoad", refreshOnLoadValue);
+                element.setAttribute("refreshOnLoad", refreshOnLoadValue);
                 const newQT = serializer.serializeToString(queryTableDoc);
                 zip.file(queryTablesPath + path, newQT);
                 found = true;
@@ -292,7 +286,7 @@ export class WorkbookManager {
             const pivotCacheDoc: Document = parser.parseFromString(pivotCacheXmlString, "text/xml");
             const element = pivotCacheDoc.getElementsByTagName("cacheSource")[0];
             if (element.getAttribute("connectionId") == connectionId) {
-                //element.parentElement!.setAttribute("refreshOnLoad", refreshOnLoadValue);
+                element.parentElement!.setAttribute("refreshOnLoad", refreshOnLoadValue);
                 const newPC = serializer.serializeToString(pivotCacheDoc);
                 zip.file(pivotCachesPath + path, newPC);
                 found = true;
