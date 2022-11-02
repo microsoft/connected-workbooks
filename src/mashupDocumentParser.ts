@@ -68,7 +68,7 @@ export default class MashupHandler {
     };
 
 
-    private editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Metadata) => {
+    protected editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Metadata) => {
         //extract metadataXml
         const mashupArray = new arrayUtils.ArrayReader(metadataArray.buffer);
         const metadataVersion = mashupArray.getBytes(4);
@@ -124,7 +124,8 @@ export default class MashupHandler {
         
         // Convert new metadataXml to Uint8Array
         const newMetadataString = serializer.serializeToString(parsedMetadata);
-        const encoder = new TextEncoder();
+        const util = require('util');
+        const encoder = new util.TextEncoder();
         const newMetadataXml = encoder.encode(newMetadataString);
         const newMetadataXmlSize = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
         
@@ -134,9 +135,10 @@ export default class MashupHandler {
 }
 
 
-
 function uintToString(uintArray: Uint8Array) {
-    var encodedString = new TextDecoder("utf-8").decode(uintArray);
+    const util= require('util');
+    const textDecoder = new util.TextDecoder();
+    const encodedString = textDecoder.decode(uintArray);
     return encodedString;
  }
 

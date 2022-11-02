@@ -3,3 +3,4 @@ export const pqEmptySingleQueryBase64 =
 
 export const item1Path = "customXml/item1.xml";
 export const item2Path = "customXml/item2.xml";
+export const relationshipInfo = `s{"columnCount":1,"keyColumnNames":[],"queryRelationships":[],"columnIdentities":["Section1/newQueryName/AutoRemovedColumns1.{newQueryName,0}"],"ColumnCount":1,"KeyColumnNames":[],"ColumnIdentities":["Section1/newQueryName/AutoRemovedColumns1.{newQueryName,0}"],"RelationshipInfo":[]}`;
