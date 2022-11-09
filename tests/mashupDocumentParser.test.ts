@@ -1,3 +1,6 @@
+import { TextDecoder, TextEncoder } from 'util';
+
+
 import MashupHandler from "../src/mashupDocumentParser";
 import { arrayUtils, pqUtils } from "../src/utils";
 import { simpleQueryMock, section1mSimpleQueryMock, section1mNewQueryNameSimpleMock, section1mNewQueryNameBlankMock, relationshipInfo} from "./mocks";
@@ -6,6 +9,12 @@ import JSZip from "jszip";
 import WorkbookTemplate from "../src/workbookTemplate";
 import { section1mPath } from "../src/constants";
 import { Metadata } from "../src/types";
+
+(global as any).TextDecoder = TextDecoder;
+(global as any).TextEncoder = TextEncoder;
+
+
+
 
 describe("Mashup Document Parser tests", () => {
     test("ReplaceSingleQuery test", async () => {

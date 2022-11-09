@@ -77,7 +77,9 @@ export default class MashupHandler {
         const endBuffer = mashupArray.getBytes();
         
         //parse metdataXml
-        const metadataString = uintToString(metadataXml);
+        //const metadataString = uintToString(metadataXml);
+        const textDecoder = new TextDecoder();
+        const metadataString = textDecoder.decode(metadataXml);
         const parser = new DOMParser();
         const serializer = new XMLSerializer();
         const parsedMetadata = parser.parseFromString(metadataString, "text/xml");
@@ -124,8 +126,7 @@ export default class MashupHandler {
         
         // Convert new metadataXml to Uint8Array
         const newMetadataString = serializer.serializeToString(parsedMetadata);
-        const util = require('util');
-        const encoder = new util.TextEncoder();
+        const encoder = new TextEncoder();
         const newMetadataXml = encoder.encode(newMetadataString);
         const newMetadataXmlSize = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
         
@@ -135,10 +136,9 @@ export default class MashupHandler {
 }
 
 
-function uintToString(uintArray: Uint8Array) {
-    const util= require('util');
-    const textDecoder = new util.TextDecoder();
-    const encodedString = textDecoder.decode(uintArray);
-    return encodedString;
- }
+// function uintToString(uintArray: Uint8Array) {
+//     const textDecoder = new TextDecoder();
+//     const encodedString = textDecoder.decode(uintArray);
+//     return encodedString;
+//  }
 
