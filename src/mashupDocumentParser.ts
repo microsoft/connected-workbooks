@@ -68,7 +68,7 @@ export default class MashupHandler {
     };
 
 
-    protected editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Metadata) => {
+    private editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Metadata) => {
         //extract metadataXml
         const mashupArray = new arrayUtils.ArrayReader(metadataArray.buffer);
         const metadataVersion = mashupArray.getBytes(4);
