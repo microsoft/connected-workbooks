@@ -30,7 +30,7 @@ export class WorkbookManager {
         if (!query.queryName) {
             query.queryName = defaults.queryName;
         }
-        await this.updatePowerQueryDocument(zip, query.queryMashup);
+        await this.updatePowerQueryDocument(zip, query.queryName, query.queryMashup);
         await this.updateSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
         await this.updateDocProps(zip, docProps);
 
@@ -40,14 +40,14 @@ export class WorkbookManager {
         });
     }
 
-    private async updatePowerQueryDocument(zip: JSZip, queryMashup: string) {
+    private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashup: string) {
         const old_base64 = await pqUtils.getBase64(zip);
 
         if (!old_base64) {
             throw new Error("Base64 string is not found in zip file");
         }
 
-        const new_base64 = await this.mashupHandler.ReplaceSingleQuery(old_base64, queryMashup);
+        const new_base64 = await this.mashupHandler.ReplaceSingleQuery(old_base64, queryName, queryMashup);
         await pqUtils.setBase64(zip, new_base64);
     }
 
