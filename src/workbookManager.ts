@@ -5,7 +5,7 @@ import JSZip from "jszip";
 import { pqUtils, documentUtils } from "./utils";
 import WorkbookTemplate from "./workbookTemplate";
 import MashupHandler from "./mashupDocumentParser";
-import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath } from "./constants";
+import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, defaults } from "./constants";
 import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements } from "./types";
 
 export class WorkbookManager {
@@ -14,6 +14,9 @@ export class WorkbookManager {
     async generateSingleQueryWorkbook(query: QueryInfo, templateFile?: File, docProps?: DocProps): Promise<Blob> {
         if (!query.queryMashup) {
             throw new Error("Query mashup can't be empty");
+        }
+        if (!query.queryName) {
+            query.queryName = defaults.queryName;
         }
         const zip =
             templateFile === undefined
@@ -24,8 +27,11 @@ export class WorkbookManager {
     }
 
     private async generateSingleQueryWorkbookFromZip(zip: JSZip, query: QueryInfo, docProps?: DocProps): Promise<Blob> {
+        if (!query.queryName) {
+            query.queryName = defaults.queryName;
+        }
         await this.updatePowerQueryDocument(zip, query.queryMashup);
-        await this.updateSingleQueryRefreshOnOpen(zip, query.refreshOnOpen);
+        await this.updateSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
         await this.updateDocProps(zip, docProps);
 
         return await zip.generateAsync({
@@ -78,7 +84,7 @@ export class WorkbookManager {
         zip.file(docPropsCoreXmlPath, newDoc);
     }
 
-    private async updateSingleQueryRefreshOnOpen(zip: JSZip, refreshOnOpen: boolean) {
+    private async updateSingleQueryAttributes(zip: JSZip, queryName: string, refreshOnOpen: boolean) {
         const connectionsXmlString = await zip.file(connectionsXmlPath)?.async("text");
         if (connectionsXmlString === undefined) {
             throw new Error("Connections were not found in template");
@@ -101,14 +107,21 @@ export class WorkbookManager {
         if (!queryProp) {
             throw new Error("No query was found!");
         }
-
+        
+        // Update RefreshOnOpen
         queryProp.parentElement?.setAttribute("refreshOnLoad", refreshOnLoadValue);
+        
+        // Update query details to match queryName
+        dbPr.parentElement?.setAttribute("name", `Query - ${queryName}`);
+        dbPr.parentElement?.setAttribute("description", `Connection to the '${queryName}' query in the workbook.`);
+        dbPr.setAttribute("connection", `Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=${queryName};`);
+        dbPr.setAttribute("command",`SELECT * FROM [${queryName}]`);
         const connectionId = dbPr.parentElement?.getAttribute("id");
         const newConn = serializer.serializeToString(connectionsDoc);
         zip.file(connectionsXmlPath, newConn);
 
         if (connectionId == "-1" || !connectionId) {
-            throw new Error("No connection found for Query1");
+            throw new Error(`No connection found for ${queryName}`);
         }
         let found = false;
 
@@ -175,7 +188,7 @@ export class WorkbookManager {
             }
         });
         if (!found) {
-            throw new Error("No Query Table or Pivot Table found for Query1 in given template.");
+            throw new Error(`No Query Table or Pivot Table found for ${queryName} in given template.`);
         }
     }
 }
