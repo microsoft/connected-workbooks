@@ -5,7 +5,7 @@ import JSZip from "jszip";
 import { pqUtils, documentUtils } from "./utils";
 import WorkbookTemplate from "./workbookTemplate";
 import MashupHandler from "./mashupDocumentParser";
-import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, defaults } from "./constants";
+import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, defaults, sharedStringsXmlPath } from "./constants";
 import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements } from "./types";
 
 export class WorkbookManager {
@@ -124,6 +124,17 @@ export class WorkbookManager {
             throw new Error(`No connection found for ${queryName}`);
         }
         let found = false;
+
+        const sharedStringsXmlString = await zip.file(sharedStringsXmlPath)?.async("text");
+        if (sharedStringsXmlString === undefined) {
+            throw new Error("SharedStrings were not found in template");
+        }
+
+        const sharedStringsDoc: Document = parser.parseFromString(sharedStringsXmlString, "text/xml");
+        const t = sharedStringsDoc.getElementsByTagName("t")[0];
+        t.innerHTML = queryName;
+        const newSharedStrings = serializer.serializeToString(sharedStringsDoc);
+        zip.file(sharedStringsXmlPath, newSharedStrings);
 
         // Find Query Table
         const queryTablePromises: Promise<{
