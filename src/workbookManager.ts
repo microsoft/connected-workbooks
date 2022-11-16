@@ -97,26 +97,13 @@ export class WorkbookManager {
         if (connectionsXmlString === undefined) {
             throw new Error("Connections were not found in template");
         }
+
         const parser: DOMParser = new DOMParser();
         const serializer = new XMLSerializer();
         const connectionsDoc: Document = parser.parseFromString(connectionsXmlString, "text/xml");
-
         const connectionsProperties = connectionsDoc.getElementsByTagName("dbPr");
-
         const dbPr = connectionsProperties[0];
-        const connectionsAttributes = dbPr.attributes;
-        const connectionsAttributesArr = [...connectionsAttributes];
-
-        const queryProp = connectionsAttributesArr.find((prop) => {
-            return prop?.name === "command" && prop.nodeValue === "SELECT * FROM [Query1]";
-        });
-
-        if (!queryProp) {
-            throw new Error("No query was found!");
-        }
-        
-        // Update RefreshOnOpen
-        queryProp.parentElement?.setAttribute("refreshOnLoad", refreshOnLoadValue);
+        dbPr.setAttribute("refreshOnLoad", refreshOnLoadValue);
         
         // Update query details to match queryName
         dbPr.parentElement?.setAttribute("name", `Query - ${queryName}`);
@@ -127,20 +114,21 @@ export class WorkbookManager {
         const newConn = serializer.serializeToString(connectionsDoc);
         zip.file(connectionsXmlPath, newConn);
 
-        if (connectionId == "-1" || !connectionId) {
+        if (connectionId == null) {
             throw new Error(`No connection found for ${queryName}`);
         }
+
         return connectionId;
     }
 
     private async editSharedStrings(zip: JSZip, queryName: string) {
-        // edit shared string
         const parser: DOMParser = new DOMParser();
         const serializer = new XMLSerializer();
         const sharedStringsXmlString = await zip.file(sharedStringsXmlPath)?.async("text");
         if (sharedStringsXmlString === undefined) {
             throw new Error("SharedStrings were not found in template");
         }
+
         const sharedStringsDoc: Document = parser.parseFromString(sharedStringsXmlString, "text/xml");
         const tItems = sharedStringsDoc.getElementsByTagName("t");
         let t = null;
@@ -157,13 +145,16 @@ export class WorkbookManager {
             const sst = sharedStringsDoc.getElementsByTagName("sst")[0];
             if (!sst) {
                 throw new Error("No shared string was found!");
-            }           
+            }   
+
             const oldSi = sst.firstChild;
             if (oldSi) {
                 sst.appendChild(oldSi.cloneNode(true));
                 sharedStringsDoc.getElementsByTagName("t")[tItems.length - 1].innerHTML = queryName;
-            }     
+            }  
+
         }
+
         const newSharedStrings = serializer.serializeToString(sharedStringsDoc);
         zip.file(sharedStringsXmlPath, newSharedStrings);
         return sharedStringIndex;
@@ -176,8 +167,8 @@ export class WorkbookManager {
         if (sheetsXmlString === undefined) {
             throw new Error("Sheets were not found in template");
         }
+        
         const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, "text/xml");
-        //edit columnName to correct shared string element 
         sheetsDoc.getElementsByTagName("v")[0].innerHTML = sharedStringIndex.toString();
         const newSheet = serializer.serializeToString(sheetsDoc);
         zip.file(sheetsXmlPath, newSheet);
