@@ -85,13 +85,19 @@ export class WorkbookManager {
     }
 
     private async updateSingleQueryAttributes(zip: JSZip, queryName: string, refreshOnOpen: boolean) {
+        const refreshOnLoadValue = refreshOnOpen ? "1" : "0";
+        const connectionId = await this.editConnections(zip, queryName, refreshOnLoadValue);
+        await this.editSharedStrings(zip, queryName);
+        await this.editPivotTable(zip, queryName, refreshOnLoadValue, connectionId);  
+    }
+
+    private async editConnections(zip: JSZip, queryName: string, refreshOnLoadValue: string) {
         const connectionsXmlString = await zip.file(connectionsXmlPath)?.async("text");
         if (connectionsXmlString === undefined) {
             throw new Error("Connections were not found in template");
         }
         const parser: DOMParser = new DOMParser();
         const serializer = new XMLSerializer();
-        const refreshOnLoadValue = refreshOnOpen ? "1" : "0";
         const connectionsDoc: Document = parser.parseFromString(connectionsXmlString, "text/xml");
 
         const connectionsProperties = connectionsDoc.getElementsByTagName("dbPr");
@@ -123,25 +129,32 @@ export class WorkbookManager {
         if (connectionId == "-1" || !connectionId) {
             throw new Error(`No connection found for ${queryName}`);
         }
-        let found = false;
+        return connectionId;
+    }
 
+    private async editSharedStrings(zip: JSZip, queryName: string) {
+        const parser: DOMParser = new DOMParser();
+        const serializer = new XMLSerializer();
         const sharedStringsXmlString = await zip.file(sharedStringsXmlPath)?.async("text");
         if (sharedStringsXmlString === undefined) {
             throw new Error("SharedStrings were not found in template");
         }
-
         const sharedStringsDoc: Document = parser.parseFromString(sharedStringsXmlString, "text/xml");
         const t = sharedStringsDoc.getElementsByTagName("t")[0];
         t.innerHTML = queryName;
         const newSharedStrings = serializer.serializeToString(sharedStringsDoc);
         zip.file(sharedStringsXmlPath, newSharedStrings);
+    }
 
+    private async editPivotTable(zip: JSZip, queryName: string, refreshOnLoadValue: string, connectionId: string) {
+        const parser: DOMParser = new DOMParser();
+        const serializer = new XMLSerializer();
         // Find Query Table
         const queryTablePromises: Promise<{
             path: string;
             queryTableXmlString: string;
         }>[] = [];
-
+        let found = false;
         zip.folder(queryTablesPath)?.forEach(async (relativePath, queryTableFile) => {
             queryTablePromises.push(
                 (() => {
@@ -202,4 +215,4 @@ export class WorkbookManager {
             throw new Error(`No Query Table or Pivot Table found for ${queryName} in given template.`);
         }
     }
-}
+} 

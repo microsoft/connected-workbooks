@@ -3,8 +3,8 @@
 
 export interface QueryInfo {
     queryMashup: string;
-    queryName?: string;
     refreshOnOpen: boolean;
+    queryName?: string;
 }
 
 export interface DocProps {

@@ -3,7 +3,7 @@
 
 import * as base64 from "base64-js";
 import JSZip from "jszip";
-import { section1mPath } from "./constants";
+import { section1mPath, defaults } from "./constants";
 import { arrayUtils } from "./utils";
 import { Metadata } from "./types";
 import { generateSingleQueryMashup } from "./generators";
@@ -77,7 +77,6 @@ export default class MashupHandler {
         const endBuffer = mashupArray.getBytes();
 
         //parse metdataXml
-        //const metadataString = uintToString(metadataXml);
         const textDecoder = new TextDecoder();
         const metadataString = textDecoder.decode(metadataXml);
         const parser = new DOMParser();
@@ -120,13 +119,13 @@ export default class MashupHandler {
                     if (entryProp?.nodeValue == "FillColumnNames") {
                         const oldValue = entry.getAttribute("Value");
                         if (oldValue) {
-                            entry.setAttribute("Value", oldValue.replace("Query1", metadata.queryName));
+                            entry.setAttribute("Value", oldValue.replace(defaults.queryName, metadata.queryName));
                         }    
                     }
                     if (entryProp?.nodeValue == "FillTarget") {
                         const oldValue = entry.getAttribute("Value");
                         if (oldValue) {
-                            entry.setAttribute("Value", oldValue.replace("Query1", metadata.queryName));
+                            entry.setAttribute("Value", oldValue.replace(defaults.queryName, metadata.queryName));
                         }    
                     }
                     if (entryProp?.nodeValue == "FillLastUpdated") {
