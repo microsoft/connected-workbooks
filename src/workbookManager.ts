@@ -5,7 +5,7 @@ import JSZip from "jszip";
 import { pqUtils, documentUtils } from "./utils";
 import WorkbookTemplate from "./workbookTemplate";
 import MashupHandler from "./mashupDocumentParser";
-import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, defaults, sharedStringsXmlPath } from "./constants";
+import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, defaults, sharedStringsXmlPath, sheetsXmlPath } from "./constants";
 import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements } from "./types";
 
 export class WorkbookManager {
@@ -87,7 +87,8 @@ export class WorkbookManager {
     private async updateSingleQueryAttributes(zip: JSZip, queryName: string, refreshOnOpen: boolean) {
         const refreshOnLoadValue = refreshOnOpen ? "1" : "0";
         const connectionId = await this.editConnections(zip, queryName, refreshOnLoadValue);
-        await this.editSharedStrings(zip, queryName);
+        const sharedStringId = (await this.editSharedStrings(zip, queryName)).toString();
+        await this.editWorksheet(zip, sharedStringId);
         await this.editPivotTable(zip, queryName, refreshOnLoadValue, connectionId);  
     }
 
@@ -133,6 +134,7 @@ export class WorkbookManager {
     }
 
     private async editSharedStrings(zip: JSZip, queryName: string) {
+        // edit shared string
         const parser: DOMParser = new DOMParser();
         const serializer = new XMLSerializer();
         const sharedStringsXmlString = await zip.file(sharedStringsXmlPath)?.async("text");
@@ -140,10 +142,45 @@ export class WorkbookManager {
             throw new Error("SharedStrings were not found in template");
         }
         const sharedStringsDoc: Document = parser.parseFromString(sharedStringsXmlString, "text/xml");
-        const t = sharedStringsDoc.getElementsByTagName("t")[0];
-        t.innerHTML = queryName;
+        const tItems = sharedStringsDoc.getElementsByTagName("t");
+        let t = null;
+        let sharedStringIndex = tItems.length;
+        if (tItems && tItems.length) {
+            for (let i = 0; i < tItems.length; i++) {
+                if (tItems[i].innerHTML === queryName) {
+                    t = tItems[i];
+                    sharedStringIndex = i;
+                } 
+            }
+        }
+        if (t === null) {
+            const sst = sharedStringsDoc.getElementsByTagName("sst")[0];
+            if (!sst) {
+                throw new Error("No shared string was found!");
+            }           
+            const oldSi = sst.firstChild;
+            if (oldSi) {
+                sst.appendChild(oldSi.cloneNode(true));
+                sharedStringsDoc.getElementsByTagName("t")[tItems.length - 1].innerHTML = queryName;
+            }     
+        }
         const newSharedStrings = serializer.serializeToString(sharedStringsDoc);
         zip.file(sharedStringsXmlPath, newSharedStrings);
+        return sharedStringIndex;
+    }
+
+    private async editWorksheet(zip: JSZip, sharedStringIndex: string) {
+        const parser: DOMParser = new DOMParser();
+        const serializer = new XMLSerializer();
+        const sheetsXmlString = await zip.file(sheetsXmlPath)?.async("text");
+        if (sheetsXmlString === undefined) {
+            throw new Error("Sheets were not found in template");
+        }
+        const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, "text/xml");
+        //edit columnName to correct shared string element 
+        sheetsDoc.getElementsByTagName("v")[0].innerHTML = sharedStringIndex.toString();
+        const newSheet = serializer.serializeToString(sheetsDoc);
+        zip.file(sheetsXmlPath, newSheet);
     }
 
     private async editPivotTable(zip: JSZip, queryName: string, refreshOnLoadValue: string, connectionId: string) {
