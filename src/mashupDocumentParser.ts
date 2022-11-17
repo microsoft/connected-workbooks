@@ -94,7 +94,6 @@ export default class MashupHandler {
                     strArr[1] = metadata.queryName;
                     const newContent = strArr.join("/");
                     itemPath.innerHTML = newContent;
-                    //append child
                     }    
                 }
             }
