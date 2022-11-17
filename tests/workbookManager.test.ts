@@ -1,6 +1,8 @@
 import workbookTemplate from "../src/workbookTemplate";
 import { WorkbookManager }  from "../src/workbookManager";
 import { connectionsXmlPath, sharedStringsXmlPath } from "../src/constants";
+import { sharedStringsXmlMock } from "./mocks";
+
 import JSZip from "jszip";
 
 describe("Workbook Manager tests", () => {
@@ -16,11 +18,14 @@ describe("Workbook Manager tests", () => {
         expect(hasQuery1).toBeFalsy;
     })
 
-    test("SharedStrings XML contain new query name", async () => {
+    test("SharedStrings XML contains new query name", async () => {
         const defaultZipFile = await JSZip.loadAsync(workbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true }) 
-        await workbookManager.updateSingleQueryAttributes(defaultZipFile, "newQueryName", true);
-        const sharedStringsXmlString = await defaultZipFile.file(sharedStringsXmlPath)?.async("text");
-        const hasQueryNewName = sharedStringsXmlString?.includes("newQueryName");
-        expect(hasQueryNewName).toBeTruthy();
+        const sharedStringId = await workbookManager.editSharedStrings(defaultZipFile, "newQueryName");
+        expect(sharedStringId).toEqual(2);
+        if (sharedStringsXmlMock) {
+            const sharedStringsXmlString = await defaultZipFile.file(sharedStringsXmlPath)?.async("text");
+            const mockSharedString = sharedStringsXmlMock.replace(/ /g, "");
+            expect(sharedStringsXmlString?.replace(/ /g, "")).toContain(mockSharedString);
+        }
     })
 });
