@@ -27,8 +27,8 @@ export interface Metadata {
 export interface TableData {
     columnNames: string[];
     columnTypes: number[];
-    columnwidth?: number;
     data: string[][];
+    columnwidth?: number;
 }
 
 export enum dataTypes {
