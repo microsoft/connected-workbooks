@@ -111,7 +111,7 @@ export class WorkbookManager {
         zip.file(sheetsXmlPath, worksheetString);
         
         //Update tables
-        await this.updatePivotTables(zip, queryName, refreshOnOpen, connectionId);  
+        await this.updatePivotTables(zip, queryName, refreshOnOpen, connectionId!);  
     }
 
     private async updateConnections(connectionsXmlString: string, queryName: string, refreshOnOpen: boolean) {
@@ -131,7 +131,7 @@ export class WorkbookManager {
         const connectionId = dbPr.parentElement?.getAttribute("id");
         const connectionString = serializer.serializeToString(connectionsDoc);
 
-        if (connectionId == null) {
+        if (connectionId === null) {
             throw new Error(`No connection found for ${queryName}`);
         }
 
