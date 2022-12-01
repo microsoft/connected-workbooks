@@ -93,7 +93,7 @@ export default class MashupHandler {
                     const strArr = content.split("/");
                     strArr[1] = metadata.queryName;
                     const newContent = strArr.join("/");
-                    itemPath.innerHTML = newContent;
+                    itemPath.textContent = newContent;
                     }    
                 }
             }

@@ -153,17 +153,18 @@ export class WorkbookManager {
                 } 
             }
         }
+        const sst = sharedStringsDoc.getElementsByTagName("sst")[0];
         if (t === null) {
-            const sst = sharedStringsDoc.getElementsByTagName("sst")[0];
             if (!sst) {
                 throw new Error("No shared string was found!");
             }   
-
-            const oldSi = sst.firstChild;
-            if (oldSi) {
-                sst.appendChild(oldSi.cloneNode(true));
-                sharedStringsDoc.getElementsByTagName("t")[tItems.length - 1].innerHTML = queryName;
-            }
+            if (sharedStringsDoc.documentElement.namespaceURI) {
+                const tElement = sharedStringsDoc.createElementNS(sharedStringsDoc.documentElement.namespaceURI, "t");
+                tElement.textContent = queryName;
+                const siElement = sharedStringsDoc.createElementNS(sharedStringsDoc.documentElement.namespaceURI, "si");
+                siElement.appendChild(tElement);
+                sharedStringsDoc.getElementsByTagName("sst")[0].appendChild(siElement);
+                        }
             const value = sst.getAttribute("count");
             if (value) {
                 sst.setAttribute("count", (parseInt(value)+1).toString()); 
