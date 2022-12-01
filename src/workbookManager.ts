@@ -111,7 +111,7 @@ export class WorkbookManager {
         zip.file(sheetsXmlPath, worksheetString);
         
         //Update tables
-        await this.updatePivotTables(zip, queryName, refreshOnOpen, connectionId!);  
+        await this.updatePivotTablesandQueryTables(zip, queryName, refreshOnOpen, connectionId!);  
     }
 
     private async updateConnections(connectionsXmlString: string, queryName: string, refreshOnOpen: boolean) {
@@ -176,7 +176,7 @@ export class WorkbookManager {
         }
         const newSharedStrings = serializer.serializeToString(sharedStringsDoc);
         return {sharedStringIndex, newSharedStrings};
-    
+
 }
 
     private async updateWorksheet(sheetsXmlString: string, sharedStringIndex: string) {
@@ -188,7 +188,7 @@ export class WorkbookManager {
         return newSheet;
     }
 
-    private async updatePivotTables(zip: JSZip, queryName: string, refreshOnOpen: boolean, connectionId: string) {
+    private async updatePivotTablesandQueryTables(zip: JSZip, queryName: string, refreshOnOpen: boolean, connectionId: string) {
         // Find Query Table
         let found = false;
         const queryTablePromises: Promise<{
