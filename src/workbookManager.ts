@@ -5,7 +5,7 @@ import JSZip from "jszip";
 import { pqUtils, documentUtils } from "./utils";
 import WorkbookTemplate from "./workbookTemplate";
 import MashupHandler from "./mashupDocumentParser";
-import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, sheetsXmlPath } from "./constants";
+import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, sheetsXmlPath, queryTableXmlPath, tableXmlPath } from "./constants";
 import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements, TableData, dataTypes } from "./types";
 
 export class WorkbookManager {
@@ -89,6 +89,69 @@ export class WorkbookManager {
         }
         const newSheet = await this.updateSheetsInitialData(sheetsXmlString, tableData);
         zip.file(sheetsXmlPath, newSheet)
+
+        const queryTableXmlString = await zip.file(queryTableXmlPath)?.async("text");
+        if (queryTableXmlString === undefined) {
+            throw new Error("queryTables were not found in template");
+        }
+        const newQueryTable = await this.updateQueryTablesInitialData(queryTableXmlString, tableData);
+        zip.file(queryTableXmlPath, newQueryTable);
+
+        const tableXmlString = await zip.file(tableXmlPath)?.async("text");
+        if (tableXmlString === undefined) {
+            throw new Error("Sheets were not found in template");
+        }
+
+        const newPivotTable = await this.updatePivotTablesInitialData(tableXmlString, tableData);
+        zip.file(tableXmlPath, newPivotTable);
+    }
+
+    private async updatePivotTablesInitialData(tableXmlString: string, tableData: TableData) {
+        const parser: DOMParser = new DOMParser();
+        const serializer = new XMLSerializer();
+        const tableDoc: Document = parser.parseFromString(tableXmlString, "text/xml");
+
+        const tableColumns = tableDoc.getElementsByTagName("tableColumns")[0];
+        while (tableColumns.lastChild) {
+            tableColumns.removeChild(tableColumns.lastChild);
+        }
+        var columnIndex = 1;
+        tableData.columnNames.forEach(columnName => {
+            const tableColumn = tableDoc.createElementNS(tableDoc.documentElement.namespaceURI, "tableColumn");
+            tableColumn.setAttribute("id", columnIndex.toString());
+            tableColumn.setAttribute("uniqueName", columnIndex.toString());
+            tableColumn.setAttribute("name", columnName);
+            tableColumn.setAttribute("queryTableFieldId", columnIndex.toString());
+            tableColumns.appendChild(tableColumn);
+            columnIndex++;
+        });
+
+        tableColumns.setAttribute("count", tableData.columnNames.length.toString());
+        tableDoc.getElementsByTagName("table")[0].setAttribute("ref", `A1:${String.fromCharCode(tableData.columnNames.length + 64)}${(tableData.data.length).toString()}`);
+        tableDoc.getElementsByTagName("autoFilter")[0].setAttribute("ref", `A1:${String.fromCharCode(tableData.columnNames.length + 64)}${(tableData.data.length).toString()}`);
+        return serializer.serializeToString(tableDoc);
+    }
+
+    private async updateQueryTablesInitialData(queryTableXmlString: string, tableData: TableData) {
+        const parser: DOMParser = new DOMParser();
+        const serializer = new XMLSerializer();
+        const queryTableDoc: Document = parser.parseFromString(queryTableXmlString, "text/xml");
+        const queryTableFields = queryTableDoc.getElementsByTagName("queryTableFields")[0];
+        while (queryTableFields.lastChild) {
+            queryTableFields.removeChild(queryTableFields.lastChild);
+        }
+        var columnIndex = 1;
+        tableData.columnNames.forEach(columnName => {
+            const queryTableField = queryTableDoc.createElementNS(queryTableDoc.documentElement.namespaceURI, "queryTableField");
+            queryTableField.setAttribute("id", columnIndex.toString());
+            queryTableField.setAttribute("name", columnName);
+            queryTableField.setAttribute("tableColumnId", columnIndex.toString());
+            queryTableFields.appendChild(queryTableField);
+            columnIndex++;
+        });
+        queryTableFields.setAttribute("count", tableData.columnNames.length.toString());
+        queryTableDoc.getElementsByTagName("queryTableRefresh")[0].setAttribute("nextId", (tableData.columnNames.length + 1).toString());
+        return serializer.serializeToString(queryTableDoc);
     }
 
     private async updateSheetsInitialData(sheetsXmlString: string, tableData: TableData) {
