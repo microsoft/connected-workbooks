@@ -40,32 +40,4 @@ const getDocPropsProperties = async (zip: JSZip): Promise<{ doc: Document; prope
     return { doc, properties };
 };
 
-const createNewElements = (doc: Document, data: string[], parentElem: Element, element: string, properties: string[] | null, values: Map<number, string[]> | null) : void => {
-    // remove previous child nodes of parent except first child
-    while (parentElem.firstChild != parentElem.lastChild) {
-                if (parentElem.lastChild) {
-                    parentElem.removeChild(parentElem.lastChild);
-                }            
-            }
-        const oldElem = parentElem.firstChild;
-        if (!oldElem) {
-            throw new Error("Error in template");
-        }
-
-        // create elements 
-        for (var elemIndex = 0; elemIndex < data.length; elemIndex++) {
-            const elem = doc.createElementNS(doc.documentElement.namespaceURI, element);
-            if (properties && values) {
-                for (var propertyIndex = 0; propertyIndex < properties.length; propertyIndex++) {
-                    const elemValues = values.get(elemIndex);
-                    if (!elemValues) {
-                        throw new Error("Invalid ValuesMap.");
-                    }
-                    elem.setAttribute(properties[propertyIndex], elemValues[propertyIndex]);
-                    
-                } 
-            }          
-        }
-}
-
-export default { createOrUpdateProperty, getDocPropsProperties, createNewElements };
+export default { createOrUpdateProperty, getDocPropsProperties };
