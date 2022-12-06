@@ -34,9 +34,6 @@ export class WorkbookManager {
         await this.updatePowerQueryDocument(zip, query.queryName, query.queryMashup, tableData);
         await this.updateSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
         await this.updateDocProps(zip, docProps);
-        if (!tableData) {
-           await this.addSingleQueryInitialData(zip, {columnNames: ["co1", "col2"], columnTypes: [1,2], data: [["Column1", "Column2"],["one", "string"], ["two", "2"]]});
-        }
         if (tableData) {
             await this.addSingleQueryInitialData(zip, tableData);
         }
@@ -92,7 +89,7 @@ export class WorkbookManager {
         tableData.columnNames.forEach(columnName => {
             const tableColumn = tableDoc.createElementNS(tableDoc.documentElement.namespaceURI, "tableColumn");
             tableColumn.setAttribute("id", columnIndex.toString());
-            tableColumn.setAttribute("uniqueName", columnName);
+            tableColumn.setAttribute("uniqueName", columnIndex.toString());
             tableColumn.setAttribute("name", columnName);
             tableColumn.setAttribute("queryTableFieldId", columnIndex.toString());
             tableColumns.appendChild(tableColumn);
@@ -132,10 +129,9 @@ export class WorkbookManager {
         const newParser: DOMParser = new DOMParser();
         const newSerializer = new XMLSerializer();
         const workbookDoc: Document = newParser.parseFromString(workbookXmlString, "text/xml");
-        const definedName = workbookDoc.getElementsByTagName("definedName")[0];
+        var definedName = workbookDoc.getElementsByTagName("definedName")[0];
         definedName.textContent = "Query1!$A$1:$" + String.fromCharCode(tableData.data[0].length + 64) + "$" + (tableData.data.length).toString();
         return newSerializer.serializeToString(workbookDoc);
-        
     }
 
     private async updateSheetsInitialData(sheetsXmlString: string, tableData: TableData) {
