@@ -17,6 +17,20 @@ export interface DocProps {
     revision?: string | null;
 }
 
+export interface TableData {
+    columnNames: string[];
+    columnTypes: number[];
+    data: string[][];
+    columnwidth?: number;
+}
+
+export enum dataTypes {
+    null = 0,
+    string = 1,
+    number = 2,
+    boolean = 3
+}
+
 export enum docPropsModifiableElements {
     title = "dc:title",
     subject = "dc:subject",
