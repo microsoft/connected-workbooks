@@ -48,124 +48,133 @@ export class WorkbookManager {
     }
 
     private async addSingleQueryInitialData(zip: JSZip, tableData: TableData) {
-        await this.updateSheetsInitialData(zip, tableData);
-        await this.updateWorkbookInitialData(zip, tableData);
-        await this.updatePivotTablesInitialData(zip, tableData);
-    }
+        const sheetsXmlString = await zip.file(sheetsXmlPath)?.async("text");
+        if (sheetsXmlString === undefined) {
+            throw new Error("Sheets were not found in template");
+        }
+        const newSheet = await this.updateSheetsInitialData(sheetsXmlString, tableData);
+        zip.file(sheetsXmlPath, newSheet)
+        
+        const workbookXmlString = await zip.file(workbookXmlPath)?.async("text");
+        if (workbookXmlString === undefined) {
+            throw new Error("Sheets were not found in template");
+        }
+        const newWorkbook = await this.updateWorkbookInitialData(workbookXmlString, tableData);
+        zip.file(workbookXmlPath, newWorkbook);
 
-    private async updatePivotTablesInitialData(zip: JSZip, tableData: TableData) {
-        //extract tableXml
+        const queryTableXmlString = await zip.file(queryTableXmlPath)?.async("text");
+        if (queryTableXmlString === undefined) {
+            throw new Error("queryTables were not found in template");
+        }
+        const newQueryTable = await this.updateQueryTablesInitialData(queryTableXmlString, tableData);
+        zip.file(queryTableXmlPath, newQueryTable);
+        
         const tableXmlString = await zip.file(tableXmlPath)?.async("text");
         if (tableXmlString === undefined) {
             throw new Error("Sheets were not found in template");
         }
 
+        const newPivotTable = await this.updatePivotTablesInitialData(tableXmlString, tableData);
+        zip.file(tableXmlPath, newPivotTable);
+    }
+
+    private async updatePivotTablesInitialData(tableXmlString: string, tableData: TableData) {
         // edit tableXml columns
         const parser: DOMParser = new DOMParser();
         const serializer = new XMLSerializer();
         const tableDoc: Document = parser.parseFromString(tableXmlString, "text/xml");
-        const tablePropArr = ["id", "uniqueName", "name", "queryTableFieldId"];
-        const tableElemValuesMap = new Map;
-        for (var colIndex = 0; colIndex < tableData.columnNames.length; colIndex++) {
-            tableElemValuesMap.set(colIndex, [(colIndex + 1).toString(), (colIndex + 1).toString(), tableData.columnNames[colIndex], (colIndex + 1).toString()]);
+        
+        const tableColumns = tableDoc.getElementsByTagName("tableColumns")[0];
+        while (tableColumns.lastChild) {
+            tableColumns.removeChild(tableColumns.lastChild);
         }
+        var columnIndex = 1;
+        tableData.columnNames.forEach(columnName => {
+            const tableColumn = tableDoc.createElementNS(tableDoc.documentElement.namespaceURI, "tableColumn");
+            tableColumn.setAttribute("id", columnIndex.toString());
+            tableColumn.setAttribute("uniqueName", columnName);
+            tableColumn.setAttribute("name", columnName);
+            tableColumn.setAttribute("queryTableFieldId", columnIndex.toString());
+            tableColumns.appendChild(tableColumn);
+            columnIndex++;
+        });
 
-        documentUtils.createNewElements(tableDoc, tableData.columnNames, "tableColumns", "tableColumn", tablePropArr, tableElemValuesMap);
-        tableDoc.getElementsByTagName("tableColumns")[0].setAttribute("count", tableData.columnNames.length.toString());
+        tableColumns.setAttribute("count", tableData.columnNames.length.toString());
         tableDoc.getElementsByTagName("table")[0].setAttribute("ref", `A1:${String.fromCharCode(tableData.columnNames.length + 64)}${(tableData.data.length).toString()}`);
         tableDoc.getElementsByTagName("autoFilter")[0].setAttribute("ref", `A1:${String.fromCharCode(tableData.columnNames.length + 64)}${(tableData.data.length).toString()}`);
-        const newTable = serializer.serializeToString(tableDoc);
-        zip.file(tableXmlPath, newTable);
-
-        //extract querytable
-        const queryTableXmlString = await zip.file(queryTableXmlPath)?.async("text");
-        if (queryTableXmlString === undefined) {
-            throw new Error("queryTables were not found in template");
-        }
-
-        // edit querytableXml columns
-        const queryTableDoc: Document = parser.parseFromString(queryTableXmlString, "text/xml");
-        const queryTablePropArr = ["id", "name", "tableColumnId"];
-        const queryTableElemValuesMap = new Map;
-        for (var fieldIndex = 0; fieldIndex < tableData.columnNames.length; fieldIndex++) {
-            queryTableElemValuesMap.set(fieldIndex, [(fieldIndex + 1).toString(), tableData.columnNames[fieldIndex], (fieldIndex + 1).toString()]);
-        }
-
-        documentUtils.createNewElements(queryTableDoc, tableData.columnNames, "queryTableFields", "queryTableField", queryTablePropArr, queryTableElemValuesMap);
-        queryTableDoc.getElementsByTagName("queryTableFields")[0].setAttribute("count", tableData.columnNames.length.toString());
-        queryTableDoc.getElementsByTagName("queryTableRefresh")[0].setAttribute("nextId", (tableData.columnNames.length + 1).toString());
-        const newQueryTable = serializer.serializeToString(queryTableDoc);
-        zip.file(queryTableXmlPath, newQueryTable);
+        return serializer.serializeToString(tableDoc);
+        
     }
 
-    private async updateWorkbookInitialData(zip: JSZip, tableData: TableData) {
-        const workbookXmlString = await zip.file(workbookXmlPath)?.async("text");
-        if (workbookXmlString === undefined) {
-            throw new Error("Sheets were not found in template");
+    private async updateQueryTablesInitialData(queryTableXmlString: string, tableData: TableData) {
+        const parser: DOMParser = new DOMParser();
+        const serializer = new XMLSerializer();
+        const queryTableDoc: Document = parser.parseFromString(queryTableXmlString, "text/xml");
+        const queryTableFields = queryTableDoc.getElementsByTagName("queryTableFields")[0];
+        while (queryTableFields.lastChild) {
+            queryTableFields.removeChild(queryTableFields.lastChild);
         }
+        var columnIndex = 1;
+        tableData.columnNames.forEach(columnName => {
+            const queryTableField = queryTableDoc.createElementNS(queryTableDoc.documentElement.namespaceURI, "queryTableField");
+            queryTableField.setAttribute("id", columnIndex.toString());
+            queryTableField.setAttribute("name", columnName);
+            queryTableField.setAttribute("tableColumnId", columnIndex.toString());
+            queryTableFields.appendChild(queryTableField);
+            columnIndex++;
+        });
+        queryTableFields.setAttribute("count", tableData.columnNames.length.toString());
+        queryTableDoc.getElementsByTagName("queryTableRefresh")[0].setAttribute("nextId", (tableData.columnNames.length + 1).toString());
+        return serializer.serializeToString(queryTableDoc);   
+    }
 
+    private async updateWorkbookInitialData(workbookXmlString: string, tableData: TableData) {
         const newParser: DOMParser = new DOMParser();
         const newSerializer = new XMLSerializer();
         const workbookDoc: Document = newParser.parseFromString(workbookXmlString, "text/xml");
         const definedName = workbookDoc.getElementsByTagName("definedName")[0];
-        definedName.innerHTML = "Query1!$A$1:$" + String.fromCharCode(tableData.data[0].length + 64) + "$" + (tableData.data.length).toString();
-        const newWorkbook = newSerializer.serializeToString(workbookDoc);
-        zip.file(workbookXmlPath, newWorkbook);
+        definedName.textContent = "Query1!$A$1:$" + String.fromCharCode(tableData.data[0].length + 64) + "$" + (tableData.data.length).toString();
+        return newSerializer.serializeToString(workbookDoc);
+        
     }
 
-    private async updateSheetsInitialData(zip: JSZip, tableData: TableData) {
-        //extract SheetXml
-        const sheetsXmlString = await zip.file(sheetsXmlPath)?.async("text");
-        if (sheetsXmlString === undefined) {
-            throw new Error("Sheets were not found in template");
-        }
+    private async updateSheetsInitialData(sheetsXmlString: string, tableData: TableData) {
         const parser: DOMParser = new DOMParser();
         const serializer = new XMLSerializer();
         const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, "text/xml");
-        //edit SheetXml
         const sheetData = sheetsDoc.getElementsByTagName("sheetData")[0];
-        const oldRow = sheetsDoc.getElementsByTagName("row")[0];
-        while (sheetData.firstChild != sheetData.lastChild) {
-            if (sheetData.lastChild) {
-                sheetData.removeChild(sheetData.lastChild);
-            }
-        }
-
-        documentUtils.createNewElements(sheetsDoc, tableData.columnNames, "row", "c", null, null);
-        tableData.data.forEach((row) => {
-            const newRow = oldRow.cloneNode(true);
-            sheetData.appendChild(newRow);
-        });
-        if (sheetData.lastChild) {
+        while (sheetData.lastChild) {
             sheetData.removeChild(sheetData.lastChild);
         }
-
-        const rowsArr = [...sheetsDoc.getElementsByTagName("row")];
         var rowIndex = 0;
-        rowsArr.forEach((newRow) => {
+        tableData.data.forEach((row) => {
+            const newRow = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, "row");
             newRow.setAttribute("r", (rowIndex + 1).toString());
-            newRow.setAttribute("spans", "1:"+(tableData.columnNames.length).toString());
+            newRow.setAttribute("spans", "1:" + (row.length));
+            newRow.setAttribute("x14ac:dyDescent", "0.3");
             var colIndex = 0;
-            const rowCellsArr = [...newRow.children];
-            rowCellsArr.forEach((newCell) => {
-                newCell.setAttribute("r", String.fromCharCode(colIndex + 65) + (rowIndex + 1).toString());
-                const cellData = [...newCell.children][0];
-                this.updateCellData(tableData, colIndex, rowIndex, newCell, cellData);
+            row.forEach(cellContent => {
+                const cell = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, "c");
+                cell.setAttribute("r", String.fromCharCode(colIndex + 65) + (rowIndex + 1).toString());
+                const cellData = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, "v");
+                this.updateCellData(tableData, rowIndex, colIndex, cell, cellData);
+                cell.appendChild(cellData);
+                newRow.appendChild(cell);
                 colIndex++;
             });
+            sheetData.appendChild(newRow);
             rowIndex++;
         });
 
         sheetsDoc.getElementsByTagName("dimension")[0].setAttribute("ref", `A1:${String.fromCharCode(tableData.data[0].length + 64)}${(tableData.data.length).toString()}`);
-        const newSheet = serializer.serializeToString(sheetsDoc);
-        zip.file(sheetsXmlPath, newSheet);
+        return serializer.serializeToString(sheetsDoc);
     }
 
-    private updateCellData(tableData: TableData, colIndex: number, rowIndex: number, newCell: Element, cellData: Element) {
+    private updateCellData(tableData: TableData, rowIndex: number, colIndex: number, newCell: Element, cellData: Element) {
         let data = tableData.data[rowIndex][colIndex];
         if ((tableData.columnTypes[colIndex] == dataTypes.string) || (rowIndex == 0)) {
             newCell.setAttribute("t", "str");
-            cellData.innerHTML = tableData.data[rowIndex][colIndex];
+            cellData.textContent = tableData.data[rowIndex][colIndex];
         }
         else {
             if (tableData.columnTypes[colIndex] == dataTypes.number) {          
@@ -173,7 +182,7 @@ export class WorkbookManager {
                     data = "0";
                 }
                 newCell.setAttribute("t", "1");
-                cellData.innerHTML = data;
+                cellData.textContent = data;
             }
 
             if (tableData.columnTypes[colIndex] == dataTypes.boolean) {
@@ -182,7 +191,7 @@ export class WorkbookManager {
                 }
 
                 newCell.setAttribute("t", "b");
-                cellData.innerHTML = data;
+                cellData.textContent = data;
             }
         }
     }
