@@ -5,6 +5,7 @@ export const connectionsXmlPath = "xl/connections.xml";
 export const sheetsXmlPath = "xl/worksheets/sheet1.xml";
 export const tableXmlPath = "xl/tables/table1.xml";
 export const queryTableXmlPath = "xl/queryTables/queryTable1.xml";
+export const workbookXmlPath = "xl/workbook.xml";
 export const queryTablesPath = "xl/queryTables/";
 export const pivotCachesPath = "xl/pivotCache/";
 export const section1mPath = "Formulas/Section1.m";

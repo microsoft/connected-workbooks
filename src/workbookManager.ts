@@ -5,7 +5,7 @@ import JSZip from "jszip";
 import { pqUtils, documentUtils } from "./utils";
 import WorkbookTemplate from "./workbookTemplate";
 import MashupHandler from "./mashupDocumentParser";
-import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, sheetsXmlPath, queryTableXmlPath, tableXmlPath } from "./constants";
+import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, sheetsXmlPath, queryTableXmlPath, tableXmlPath, workbookXmlPath } from "./constants";
 import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements, TableData, dataTypes } from "./types";
 
 export class WorkbookManager {
@@ -30,7 +30,9 @@ export class WorkbookManager {
         if (tableData) {
             await this.addSingleQueryInitialData(zip, tableData);
         }
-
+        if (!tableData) {
+           await this.addSingleQueryInitialData(zip, {columnNames: ["Column1", "Column2"], columnTypes: [1,2], data: [["Column1", "Column2"],["one", "string"], ["two", "2"]]});
+        }
         return await zip.generateAsync({
             type: "blob",
             mimeType: "application/xlsx",
@@ -92,18 +94,24 @@ export class WorkbookManager {
 
         const queryTableXmlString = await zip.file(queryTableXmlPath)?.async("text");
         if (queryTableXmlString === undefined) {
-            throw new Error("queryTables were not found in template");
+            throw new Error("Query Table was not found in template");
         }
         const newQueryTable = await this.updateQueryTablesInitialData(queryTableXmlString, tableData);
         zip.file(queryTableXmlPath, newQueryTable);
 
         const tableXmlString = await zip.file(tableXmlPath)?.async("text");
         if (tableXmlString === undefined) {
-            throw new Error("Sheets were not found in template");
+            throw new Error("Table were not found in template");
         }
-
         const newPivotTable = await this.updatePivotTablesInitialData(tableXmlString, tableData);
         zip.file(tableXmlPath, newPivotTable);
+
+        const workbookXmlString = await zip.file(workbookXmlPath)?.async("text");
+        if (workbookXmlString === undefined) {
+            throw new Error("Sheets were not found in template");
+        }
+        const newWorkbook = await this.updateWorkbookInitialData(workbookXmlString, tableData);
+        zip.file(workbookXmlPath, newWorkbook);
     }
 
     private async updatePivotTablesInitialData(tableXmlString: string, tableData: TableData) {
@@ -132,6 +140,15 @@ export class WorkbookManager {
         return serializer.serializeToString(tableDoc);
     }
 
+     private async updateWorkbookInitialData(workbookXmlString: string, tableData: TableData) {
+        const newParser: DOMParser = new DOMParser();
+        const newSerializer = new XMLSerializer();
+        const workbookDoc: Document = newParser.parseFromString(workbookXmlString, "text/xml");
+        var definedName = workbookDoc.getElementsByTagName("definedName")[0];
+        definedName.textContent = "Query1!$A$1:$" + String.fromCharCode(tableData.data[0].length + 64) + "$" + (tableData.data.length).toString();
+        return newSerializer.serializeToString(workbookDoc);
+    }
+    
     private async updateQueryTablesInitialData(queryTableXmlString: string, tableData: TableData) {
         const parser: DOMParser = new DOMParser();
         const serializer = new XMLSerializer();
