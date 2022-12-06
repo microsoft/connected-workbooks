@@ -5,7 +5,7 @@ import JSZip from "jszip";
 import { pqUtils, documentUtils } from "./utils";
 import WorkbookTemplate from "./workbookTemplate";
 import MashupHandler from "./mashupDocumentParser";
-import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath } from "./constants";
+import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, sheetsXmlPath } from "./constants";
 import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements, TableData, dataTypes } from "./types";
 
 export class WorkbookManager {
@@ -27,6 +27,9 @@ export class WorkbookManager {
         await this.updatePowerQueryDocument(zip, query.queryMashup);
         await this.updateSingleQueryRefreshOnOpen(zip, query.refreshOnOpen);
         await this.updateDocProps(zip, docProps);
+        if (tableData) {
+            await this.addSingleQueryInitialData(zip, tableData);
+        }
 
         return await zip.generateAsync({
             type: "blob",
@@ -78,6 +81,74 @@ export class WorkbookManager {
         zip.file(docPropsCoreXmlPath, newDoc);
     }
 
+    
+    private async addSingleQueryInitialData(zip: JSZip, tableData: TableData) {
+        const sheetsXmlString = await zip.file(sheetsXmlPath)?.async("text");
+        if (sheetsXmlString === undefined) {
+            throw new Error("Sheets were not found in template");
+        }
+        const newSheet = await this.updateSheetsInitialData(sheetsXmlString, tableData);
+        zip.file(sheetsXmlPath, newSheet)
+    }
+
+    private async updateSheetsInitialData(sheetsXmlString: string, tableData: TableData) {
+         const parser: DOMParser = new DOMParser();
+        const serializer = new XMLSerializer();
+        const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, "text/xml");
+        const sheetData = sheetsDoc.getElementsByTagName("sheetData")[0];
+        while (sheetData.lastChild) {
+            sheetData.removeChild(sheetData.lastChild);
+        }
+        var rowIndex = 0;
+        tableData.data.forEach((row) => {
+            const newRow = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, "row");
+            newRow.setAttribute("r", (rowIndex + 1).toString());
+            newRow.setAttribute("spans", "1:" + (row.length));
+            newRow.setAttribute("x14ac:dyDescent", "0.3");
+            var colIndex = 0;
+            row.forEach(cellContent => {
+                const cell = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, "c");
+                cell.setAttribute("r", String.fromCharCode(colIndex + 65) + (rowIndex + 1).toString());
+                const cellData = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, "v");
+                this.updateCellData(tableData, rowIndex, colIndex, cell, cellData);
+                cell.appendChild(cellData);
+                newRow.appendChild(cell);
+                colIndex++;
+            });
+            sheetData.appendChild(newRow);
+            rowIndex++;
+        });
+
+        sheetsDoc.getElementsByTagName("dimension")[0].setAttribute("ref", `A1:${String.fromCharCode(tableData.data[0].length + 64)}${(tableData.data.length).toString()}`);
+        return serializer.serializeToString(sheetsDoc);
+    }
+
+    private updateCellData(tableData: TableData, rowIndex: number, colIndex: number, newCell: Element, cellData: Element) {
+        let data = tableData.data[rowIndex][colIndex];
+        if ((tableData.columnTypes[colIndex] == dataTypes.string) || (rowIndex == 0)) {
+            newCell.setAttribute("t", "str");
+            cellData.textContent = tableData.data[rowIndex][colIndex];
+        }
+        else {
+            if (tableData.columnTypes[colIndex] == dataTypes.number) {          
+                if (isNaN(Number(tableData.data[rowIndex][colIndex]))) {
+                    data = "0";
+                }
+                newCell.setAttribute("t", "1");
+                cellData.textContent = data;
+            }
+
+            if (tableData.columnTypes[colIndex] == dataTypes.boolean) {
+                if ((tableData.data[rowIndex][colIndex] != "1") && (tableData.data[rowIndex][colIndex] != "0")) {
+                    data = "0";
+                }
+
+                newCell.setAttribute("t", "b");
+                cellData.textContent = data;
+            }
+        }
+    }
+    
     private async updateSingleQueryRefreshOnOpen(zip: JSZip, refreshOnOpen: boolean) {
         const connectionsXmlString = await zip.file(connectionsXmlPath)?.async("text");
         if (connectionsXmlString === undefined) {
