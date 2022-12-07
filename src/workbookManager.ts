@@ -30,9 +30,6 @@ export class WorkbookManager {
         if (tableData) {
             await this.addSingleQueryInitialData(zip, tableData);
         }
-        if (!tableData) {
-           await this.addSingleQueryInitialData(zip, {columnNames: ["Column1", "Column2"], columnTypes: [1,2], data: [["Column1", "Column2"],["one", "string"], ["two", "2"]]});
-        }
         return await zip.generateAsync({
             type: "blob",
             mimeType: "application/xlsx",
