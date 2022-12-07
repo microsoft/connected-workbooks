@@ -135,8 +135,8 @@ export class WorkbookManager {
         });
 
         tableColumns.setAttribute("count", tableData.columnNames.length.toString());
-        tableDoc.getElementsByTagName("table")[0].setAttribute("ref", `A1:${String.fromCharCode(tableData.columnNames.length + 64)}${(tableData.data.length).toString()}`);
-        tableDoc.getElementsByTagName("autoFilter")[0].setAttribute("ref", `A1:${String.fromCharCode(tableData.columnNames.length + 64)}${(tableData.data.length).toString()}`);
+        tableDoc.getElementsByTagName("table")[0].setAttribute("ref", `A1:${String.fromCharCode(tableData.columnNames.length + 64)}${(tableData.data.length + 1).toString()}`);
+        tableDoc.getElementsByTagName("autoFilter")[0].setAttribute("ref", `A1:${String.fromCharCode(tableData.columnNames.length + 64)}${(tableData.data.length + 1).toString()}`);
         return serializer.serializeToString(tableDoc);
     }
 
@@ -145,7 +145,7 @@ export class WorkbookManager {
         const newSerializer = new XMLSerializer();
         const workbookDoc: Document = newParser.parseFromString(workbookXmlString, "text/xml");
         var definedName = workbookDoc.getElementsByTagName("definedName")[0];
-        definedName.textContent = "Query1!$A$1:$" + String.fromCharCode(tableData.data[0].length + 64) + "$" + (tableData.data.length).toString();
+        definedName.textContent = "Query1!$A$1:$" + String.fromCharCode(tableData.columnNames.length + 64) + "$" + (tableData.data.length + 1).toString();
         return newSerializer.serializeToString(workbookDoc);
     }
     
@@ -180,6 +180,23 @@ export class WorkbookManager {
             sheetData.removeChild(sheetData.lastChild);
         }
         var rowIndex = 0;
+        const columnRow = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, "row");
+        columnRow.setAttribute("r", (rowIndex + 1).toString());
+        columnRow.setAttribute("spans", "1:" + (tableData.columnNames.length));
+        columnRow.setAttribute("x14ac:dyDescent", "0.3");
+        var colIndex = 0;
+        tableData.columnNames.forEach(column => {
+            const cell = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, "c");
+            cell.setAttribute("r", String.fromCharCode(colIndex + 65) + (rowIndex + 1).toString());
+            const cellData = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, "v");
+            cell.setAttribute("t", "str");
+            cellData.textContent = column;            
+            cell.appendChild(cellData);
+            columnRow.appendChild(cell);
+            colIndex++;
+        });
+        sheetData.appendChild(columnRow);
+        rowIndex++;
         tableData.data.forEach((row) => {
             const newRow = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, "row");
             newRow.setAttribute("r", (rowIndex + 1).toString());
@@ -190,7 +207,7 @@ export class WorkbookManager {
                 const cell = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, "c");
                 cell.setAttribute("r", String.fromCharCode(colIndex + 65) + (rowIndex + 1).toString());
                 const cellData = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, "v");
-                this.updateCellData(tableData, rowIndex, colIndex, cell, cellData);
+                this.updateCellData(tableData, rowIndex - 1, colIndex, cell, cellData);
                 cell.appendChild(cellData);
                 newRow.appendChild(cell);
                 colIndex++;
@@ -205,7 +222,7 @@ export class WorkbookManager {
 
     private updateCellData(tableData: TableData, rowIndex: number, colIndex: number, newCell: Element, cellData: Element) {
         let data = tableData.data[rowIndex][colIndex];
-        if ((tableData.columnTypes[colIndex] == dataTypes.string) || (rowIndex == 0)) {
+        if (tableData.columnTypes[colIndex] == dataTypes.string) {
             newCell.setAttribute("t", "str");
             cellData.textContent = tableData.data[rowIndex][colIndex];
         }
