@@ -91,8 +91,8 @@ export class WorkbookManager {
             throw new Error("Connections were not found in template");
         }  
         
-        const {connectionId, connectionString} = await this.updateConnections(connectionsXmlString, queryName, refreshOnOpen);
-        zip.file(connectionsXmlPath, connectionString);
+        const {connectionId, connectionXmlFileString } = await this.updateConnections(connectionsXmlString, queryName, refreshOnOpen);
+        zip.file(connectionsXmlPath, connectionXmlFileString );
         
         //Update sharedStrings
         const sharedStringsXmlString = await zip.file(sharedStringsXmlPath)?.async("text");
@@ -129,13 +129,13 @@ export class WorkbookManager {
         dbPr.setAttribute("connection", `Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=${queryName};`);
         dbPr.setAttribute("command",`SELECT * FROM [${queryName}]`);
         const connectionId = dbPr.parentElement?.getAttribute("id");
-        const connectionString = serializer.serializeToString(connectionsDoc);
+        const connectionXmlFileString  = serializer.serializeToString(connectionsDoc);
 
         if (connectionId === null) {
             throw new Error(`No connection found for ${queryName}`);
         }
 
-        return {connectionId, connectionString};
+        return {connectionId, connectionXmlFileString};
     }
 
     private async updateSharedStrings(sharedStringsXmlString: string, queryName: string) {
@@ -164,7 +164,7 @@ export class WorkbookManager {
                 const siElement = sharedStringsDoc.createElementNS(sharedStringsDoc.documentElement.namespaceURI, "si");
                 siElement.appendChild(tElement);
                 sharedStringsDoc.getElementsByTagName("sst")[0].appendChild(siElement);
-                        }
+            }
             const value = sst.getAttribute("count");
             if (value) {
                 sst.setAttribute("count", (parseInt(value)+1).toString()); 
@@ -209,9 +209,9 @@ export class WorkbookManager {
         });
         
         (await Promise.all(queryTablePromises)).forEach(({ path, queryTableXmlString }) => {
-            const {isTableUpdated, newTable} = this.updateTable(queryTableXmlString, connectionId, refreshOnOpen, "queryTable");
-            zip.file(queryTablesPath + path, newTable);
-            if (isTableUpdated) {
+            const {isQueryTableUpdated, newQueryTable} = this.updateQueryTable(queryTableXmlString, connectionId, refreshOnOpen);
+            zip.file(queryTablesPath + path, newQueryTable);
+            if (isQueryTableUpdated) {
                 found = true;
             }
         });
@@ -239,9 +239,9 @@ export class WorkbookManager {
             }
         });
         (await Promise.all(pivotCachePromises)).forEach(({ path, pivotCacheXmlString }) => {
-            const {isTableUpdated, newTable} = this.updateTable(pivotCacheXmlString, connectionId, refreshOnOpen, "cacheSource");
-            zip.file(pivotCachesPath + path, newTable);
-            if (isTableUpdated) {
+            const {isPivotTableUpdated, newPivotTable} = this.updatePivotTable(pivotCacheXmlString, connectionId, refreshOnOpen);
+            zip.file(pivotCachesPath + path, newPivotTable);
+            if (isPivotTableUpdated) {
                 found = true;
             }
         });
@@ -250,23 +250,37 @@ export class WorkbookManager {
         }
     }
 
-    private updateTable(tableXmlString: string, connectionId: string, refreshOnOpen: boolean, elementName: string) {
+    private updateQueryTable(tableXmlString: string, connectionId: string, refreshOnOpen: boolean) {
         const refreshOnLoadValue = refreshOnOpen ? "1" : "0";
-        let isTableUpdated = false;
+        let isQueryTableUpdated = false;
+        const parser: DOMParser = new DOMParser();
+        const serializer = new XMLSerializer();
+        const queryTableDoc: Document = parser.parseFromString(tableXmlString, "text/xml");
+        const element = queryTableDoc.getElementsByTagName("queryTable")[0];
+        var newQueryTable = "";
+        if (element.getAttribute("connectionId") == connectionId) {
+            element.setAttribute("refreshOnLoad", refreshOnLoadValue);
+            newQueryTable = serializer.serializeToString(queryTableDoc);
+            isQueryTableUpdated = true;
+        }
+        return {isQueryTableUpdated, newQueryTable};
+    }
+
+    private updatePivotTable(tableXmlString: string, connectionId: string, refreshOnOpen: boolean) {
+        const refreshOnLoadValue = refreshOnOpen ? "1" : "0";
+        let isPivotTableUpdated = false;
         const parser: DOMParser = new DOMParser();
         const serializer = new XMLSerializer();
         const pivotCacheDoc: Document = parser.parseFromString(tableXmlString, "text/xml");
-        let element = pivotCacheDoc.getElementsByTagName(elementName)[0];
-        var newTable = "";
+        let element = pivotCacheDoc.getElementsByTagName("cacheSource")[0];
+        var newPivotTable = "";
         if (element.getAttribute("connectionId") == connectionId) {
-            if (elementName === "cacheSource") {
-                element = element.parentElement!;
-            }
+            element = element.parentElement!;
             element.setAttribute("refreshOnLoad", refreshOnLoadValue);
-            newTable = serializer.serializeToString(pivotCacheDoc);
-            isTableUpdated = true;
+            newPivotTable = serializer.serializeToString(pivotCacheDoc);
+            isPivotTableUpdated = true;
         }
-        return {isTableUpdated, newTable};
+        return {isPivotTableUpdated, newPivotTable};
     }
 
 } 
