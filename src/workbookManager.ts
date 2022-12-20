@@ -142,6 +142,10 @@ export class WorkbookManager {
         const parser: DOMParser = new DOMParser();
         const serializer = new XMLSerializer();
         const sharedStringsDoc: Document = parser.parseFromString(sharedStringsXmlString, "text/xml");
+        const sst = sharedStringsDoc.getElementsByTagName("sst")[0];
+        if (!sst) {
+            throw new Error("No shared string was found!");
+        } 
         const tItems = sharedStringsDoc.getElementsByTagName("t");
         let t = null;
         let sharedStringIndex = tItems.length;
@@ -150,14 +154,11 @@ export class WorkbookManager {
                 if (tItems[i].innerHTML === queryName) {
                     t = tItems[i];
                     sharedStringIndex = i + 1;
+                    break;
                 } 
             }
         }
-        const sst = sharedStringsDoc.getElementsByTagName("sst")[0];
-        if (t === null) {
-            if (!sst) {
-                throw new Error("No shared string was found!");
-            }   
+        if (t === null) {  
             if (sharedStringsDoc.documentElement.namespaceURI) {
                 const tElement = sharedStringsDoc.createElementNS(sharedStringsDoc.documentElement.namespaceURI, "t");
                 tElement.textContent = queryName;
