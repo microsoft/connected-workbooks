@@ -19,7 +19,6 @@ const createOrUpdateProperty = (doc: Document, parent: Element, property: string
         throw new Error(`Invalid DocProps core.xml, multiple ${property} elements`);
     } else if (elements?.length > 0) {
         elements[0]!.textContent = value;
-        elements[0]!.innerHTML = value!;
     }
 };
 
