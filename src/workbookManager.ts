@@ -19,8 +19,10 @@ export class WorkbookManager {
             templateFile === undefined
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
                 : await JSZip.loadAsync(templateFile);
-
-        return await this.generateSingleQueryWorkbookFromZip(zip, query, docProps, tableData);
+        const initialData = 
+            templateFile === undefined
+                ? tableData : undefined;
+        return await this.generateSingleQueryWorkbookFromZip(zip, query, docProps, initialData);
     }
 
     private async generateSingleQueryWorkbookFromZip(zip: JSZip, query: QueryInfo, docProps?: DocProps, tableData?: TableData): Promise<Blob> {
@@ -80,7 +82,6 @@ export class WorkbookManager {
         zip.file(docPropsCoreXmlPath, newDoc);
     }
 
-    
     private async addSingleQueryInitialData(zip: JSZip, tableData: TableData) {
         const sheetsXmlString = await zip.file(sheetsXmlPath)?.async("text");
         if (sheetsXmlString === undefined) {
@@ -98,10 +99,10 @@ export class WorkbookManager {
 
         const tableXmlString = await zip.file(tableXmlPath)?.async("text");
         if (tableXmlString === undefined) {
-            throw new Error("Table were not found in template");
+            throw new Error("Table was not found in template");
         }
-        const newPivotTable = await this.updatePivotTablesInitialData(tableXmlString, tableData);
-        zip.file(tableXmlPath, newPivotTable);
+        const newTable = await this.updatePivotTablesInitialData(tableXmlString, tableData);
+        zip.file(tableXmlPath, newTable);
 
         const workbookXmlString = await zip.file(workbookXmlPath)?.async("text");
         if (workbookXmlString === undefined) {
@@ -115,7 +116,6 @@ export class WorkbookManager {
         const parser: DOMParser = new DOMParser();
         const serializer = new XMLSerializer();
         const tableDoc: Document = parser.parseFromString(tableXmlString, "text/xml");
-
         const tableColumns = tableDoc.getElementsByTagName("tableColumns")[0];
         while (tableColumns.lastChild) {
             tableColumns.removeChild(tableColumns.lastChild);
@@ -137,12 +137,16 @@ export class WorkbookManager {
         return serializer.serializeToString(tableDoc);
     }
 
-     private async updateWorkbookInitialData(workbookXmlString: string, tableData: TableData) {
+     private async updateWorkbookInitialData(workbookXmlString: string, tableData: TableData, queryName?: string) {
         const newParser: DOMParser = new DOMParser();
         const newSerializer = new XMLSerializer();
         const workbookDoc: Document = newParser.parseFromString(workbookXmlString, "text/xml");
         var definedName = workbookDoc.getElementsByTagName("definedName")[0];
-        definedName.textContent = "Query1!$A$1:$" + String.fromCharCode(tableData.columnNames.length + 64) + "$" + (tableData.data.length + 1).toString();
+        const prefix =
+            queryName === undefined
+                ? "Query1"
+                : queryName; 
+        definedName.textContent = prefix + "!$A$1:$" + String.fromCharCode(tableData.columnNames.length + 64) + "$" + (tableData.data.length + 1).toString();
         return newSerializer.serializeToString(workbookDoc);
     }
     
