@@ -8,9 +8,10 @@ import MashupHandler from "./mashupDocumentParser";
 import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, sheetsXmlPath, queryTableXmlPath, tableXmlPath, workbookXmlPath } from "./constants";
 import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements, TableData, dataTypes } from "./types";
 
+const A:number = 65;
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
-
+    
     async generateSingleQueryWorkbook(query: QueryInfo, templateFile?: File, docProps?: DocProps, tableData?: TableData): Promise<Blob> {
         if (!query.queryMashup) {
             throw new Error("Query mashup can't be empty");
@@ -120,20 +121,20 @@ export class WorkbookManager {
         while (tableColumns.lastChild) {
             tableColumns.removeChild(tableColumns.lastChild);
         }
-        var columnIndex = 1;
+        var columnIndex = 0;
         tableData.columnNames.forEach(columnName => {
             const tableColumn = tableDoc.createElementNS(tableDoc.documentElement.namespaceURI, "tableColumn");
-            tableColumn.setAttribute("id", columnIndex.toString());
-            tableColumn.setAttribute("uniqueName", columnIndex.toString());
+            tableColumn.setAttribute("id", (columnIndex + 1).toString());
+            tableColumn.setAttribute("uniqueName", (columnIndex + 1).toString());
             tableColumn.setAttribute("name", columnName);
-            tableColumn.setAttribute("queryTableFieldId", columnIndex.toString());
+            tableColumn.setAttribute("queryTableFieldId", (columnIndex + 1).toString());
             tableColumns.appendChild(tableColumn);
             columnIndex++;
         });
 
         tableColumns.setAttribute("count", tableData.columnNames.length.toString());
-        tableDoc.getElementsByTagName("table")[0].setAttribute("ref", `A1:${String.fromCharCode(tableData.columnNames.length + 64)}${(tableData.data.length + 1).toString()}`);
-        tableDoc.getElementsByTagName("autoFilter")[0].setAttribute("ref", `A1:${String.fromCharCode(tableData.columnNames.length + 64)}${(tableData.data.length + 1).toString()}`);
+        tableDoc.getElementsByTagName("table")[0].setAttribute("ref", `A1:${documentUtils.getCellReference(tableData.columnNames.length -1, tableData.data.length + 1)}`.replace('$', ''));
+        tableDoc.getElementsByTagName("autoFilter")[0].setAttribute("ref", `A1:${documentUtils.getCellReference(tableData.columnNames.length -1, tableData.data.length + 1)}`.replace('$', ''));
         return serializer.serializeToString(tableDoc);
     }
 
@@ -144,9 +145,8 @@ export class WorkbookManager {
         var definedName = workbookDoc.getElementsByTagName("definedName")[0];
         const prefix =
             queryName === undefined
-                ? "Query1"
-                : queryName; 
-        definedName.textContent = prefix + "!$A$1:$" + String.fromCharCode(tableData.columnNames.length + 64) + "$" + (tableData.data.length + 1).toString();
+                ? "Query1" : queryName; 
+        definedName.textContent = prefix + `!$A$1:$${documentUtils.getCellReference(tableData.columnNames.length - 1, tableData.data.length + 1)}`;
         return newSerializer.serializeToString(workbookDoc);
     }
     
@@ -187,13 +187,7 @@ export class WorkbookManager {
         columnRow.setAttribute("x14ac:dyDescent", "0.3");
         var colIndex = 0;
         tableData.columnNames.forEach(column => {
-            const cell = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, "c");
-            cell.setAttribute("r", String.fromCharCode(colIndex + 65) + (rowIndex + 1).toString());
-            const cellData = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, "v");
-            cell.setAttribute("t", "str");
-            cellData.textContent = column;            
-            cell.appendChild(cellData);
-            columnRow.appendChild(cell);
+            documentUtils.createCell(sheetsDoc, columnRow, colIndex, rowIndex, dataTypes.string, column);
             colIndex++;
         });
         sheetData.appendChild(columnRow);
@@ -205,46 +199,15 @@ export class WorkbookManager {
             newRow.setAttribute("x14ac:dyDescent", "0.3");
             var colIndex = 0;
             row.forEach(cellContent => {
-                const cell = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, "c");
-                cell.setAttribute("r", String.fromCharCode(colIndex + 65) + (rowIndex + 1).toString());
-                const cellData = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, "v");
-                this.updateCellData(tableData, rowIndex - 1, colIndex, cell, cellData);
-                cell.appendChild(cellData);
-                newRow.appendChild(cell);
+                documentUtils.createCell(sheetsDoc, newRow, colIndex, rowIndex, tableData.columnTypes[colIndex], cellContent);
                 colIndex++;
             });
             sheetData.appendChild(newRow);
             rowIndex++;
         });
 
-        sheetsDoc.getElementsByTagName("dimension")[0].setAttribute("ref", `A1:${String.fromCharCode(tableData.data[0].length + 64)}${(tableData.data.length).toString()}`);
+        sheetsDoc.getElementsByTagName("dimension")[0].setAttribute("ref", `A1:${String.fromCharCode(tableData.data[0].length - 1 + A)}${(tableData.data.length).toString()}`);
         return serializer.serializeToString(sheetsDoc);
-    }
-
-    private updateCellData(tableData: TableData, rowIndex: number, colIndex: number, newCell: Element, cellData: Element) {
-        let data = tableData.data[rowIndex][colIndex];
-        if (tableData.columnTypes[colIndex] == dataTypes.string) {
-            newCell.setAttribute("t", "str");
-            cellData.textContent = tableData.data[rowIndex][colIndex];
-        }
-        else {
-            if (tableData.columnTypes[colIndex] == dataTypes.number) {          
-                if (isNaN(Number(tableData.data[rowIndex][colIndex]))) {
-                    data = "0";
-                }
-                newCell.setAttribute("t", "1");
-                cellData.textContent = data;
-            }
-
-            if (tableData.columnTypes[colIndex] == dataTypes.boolean) {
-                if ((tableData.data[rowIndex][colIndex] != "1") && (tableData.data[rowIndex][colIndex] != "0")) {
-                    data = "0";
-                }
-
-                newCell.setAttribute("t", "b");
-                cellData.textContent = data;
-            }
-        }
     }
     
     private async updateSingleQueryRefreshOnOpen(zip: JSZip, refreshOnOpen: boolean) {

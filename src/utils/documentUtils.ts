@@ -3,6 +3,9 @@
 
 import JSZip from "jszip";
 import { docPropsCoreXmlPath, docPropsRootElement } from "../constants";
+import { dataTypes } from "../types";
+
+const A:number = 65;
 
 const createOrUpdateProperty = (doc: Document, parent: Element, property: string, value?: string | null): void => {
     if (value === undefined) {
@@ -40,4 +43,44 @@ const getDocPropsProperties = async (zip: JSZip): Promise<{ doc: Document; prope
     return { doc, properties };
 };
 
-export default { createOrUpdateProperty, getDocPropsProperties };
+const getCellReference = (col: number, row: number): string => {
+    return String.fromCharCode(col + A) + "$" + (row).toString();
+} 
+
+const createCell = (doc: Document, parent: Element, colIndex: number, rowIndex: number, dataType: number, data: string): void => {
+    const cell = doc.createElementNS(doc.documentElement.namespaceURI, "c");
+    cell.setAttribute("r", getCellReference(colIndex, rowIndex + 1).replace("$", ''));
+    const cellData = doc.createElementNS(doc.documentElement.namespaceURI, "v");
+    updateCellData(dataType, data , cell, cellData);
+    cell.appendChild(cellData);
+    parent.appendChild(cell);
+    colIndex++;
+}
+
+const updateCellData = (dataType: number, data: string, newCell: Element, cellData: Element) => {
+    if (dataType == dataTypes.string) {
+        newCell.setAttribute("t", "str");
+        cellData.textContent = data;
+    }
+    else {
+        if (dataType == dataTypes.number) {          
+            if (isNaN(Number(data))) {
+                data = "0";
+            }
+            newCell.setAttribute("t", "1");
+            cellData.textContent = data;
+        }
+
+        if (dataType == dataTypes.boolean) {
+            if ((data != "1") && (data != "0")) {
+                data = "0";
+            }
+
+            newCell.setAttribute("t", "b");
+            cellData.textContent = data;
+        }
+    }
+}
+
+
+export default { createOrUpdateProperty, getDocPropsProperties, getCellReference, createCell };
