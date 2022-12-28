@@ -118,9 +118,7 @@ export class WorkbookManager {
         const serializer = new XMLSerializer();
         const tableDoc: Document = parser.parseFromString(tableXmlString, "text/xml");
         const tableColumns = tableDoc.getElementsByTagName("tableColumns")[0];
-        while (tableColumns.lastChild) {
-            tableColumns.removeChild(tableColumns.lastChild);
-        }
+        tableColumns.textContent = '';
         var columnIndex = 0;
         tableData.columnNames.forEach(columnName => {
             const tableColumn = tableDoc.createElementNS(tableDoc.documentElement.namespaceURI, "tableColumn");
@@ -155,9 +153,7 @@ export class WorkbookManager {
         const serializer = new XMLSerializer();
         const queryTableDoc: Document = parser.parseFromString(queryTableXmlString, "text/xml");
         const queryTableFields = queryTableDoc.getElementsByTagName("queryTableFields")[0];
-        while (queryTableFields.lastChild) {
-            queryTableFields.removeChild(queryTableFields.lastChild);
-        }
+        queryTableFields.textContent = '';
         var columnIndex = 1;
         tableData.columnNames.forEach(columnName => {
             const queryTableField = queryTableDoc.createElementNS(queryTableDoc.documentElement.namespaceURI, "queryTableField");
@@ -177,9 +173,7 @@ export class WorkbookManager {
         const serializer = new XMLSerializer();
         const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, "text/xml");
         const sheetData = sheetsDoc.getElementsByTagName("sheetData")[0];
-        while (sheetData.lastChild) {
-            sheetData.removeChild(sheetData.lastChild);
-        }
+        sheetData.textContent = '';
         var rowIndex = 0;
         const columnRow = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, "row");
         columnRow.setAttribute("r", (rowIndex + 1).toString());
@@ -206,7 +200,7 @@ export class WorkbookManager {
             rowIndex++;
         });
 
-        sheetsDoc.getElementsByTagName("dimension")[0].setAttribute("ref", `A1:${String.fromCharCode(tableData.data[0].length - 1 + A)}${(tableData.data.length).toString()}`);
+        sheetsDoc.getElementsByTagName("dimension")[0].setAttribute("ref", `A1:${documentUtils.getCellReference(tableData.data[0].length - 1, tableData.data.length)}`.replace('$', ''));
         return serializer.serializeToString(sheetsDoc);
     }
     
