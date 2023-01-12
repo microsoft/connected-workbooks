@@ -12,6 +12,7 @@ export const docPropsRootElement = "cp:coreProperties";
 
 export const defaults = {
     queryName: "Query1",
+    connectionOnlyQueryName: "ConnectionOnly"
 };
 
 export const URLS = {
