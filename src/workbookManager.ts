@@ -30,7 +30,7 @@ export class WorkbookManager {
     }
 
     private async generateSingleQueryWorkbookFromZip(zip: JSZip, query: QueryInfo, connectionOnlyQuery?: QueryInfo, docProps?: DocProps): Promise<Blob> {
-        await this.updatePowerQueryDocument(zip, query.queryName!, query.queryMashup);
+        await this.updatePowerQueryDocument(zip, query.queryName!, query.queryMashup, connectionOnlyQuery);
         await this.updateSingleQueryAttributes(zip, query.queryName!, query.refreshOnOpen);
         if (connectionOnlyQuery) {
             await this.addConnectionOnlyQueryAttributes(zip, connectionOnlyQuery.queryName!);
@@ -43,14 +43,15 @@ export class WorkbookManager {
         });
     }
 
-    private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashup: string) {
+    private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashup: string, connectionOnlyQuery?: QueryInfo) {
         const old_base64 = await pqUtils.getBase64(zip);
-
         if (!old_base64) {
             throw new Error("Base64 string is not found in zip file");
         }
-
-        const new_base64 = await this.mashupHandler.ReplaceSingleQuery(old_base64, queryName, queryMashup);
+        let new_base64 = await this.mashupHandler.ReplaceSingleQuery(old_base64, queryName, queryMashup);
+        if (connectionOnlyQuery) {
+            new_base64 = await this.mashupHandler.AddConnectionOnlyQuery(new_base64, queryName, queryMashup, connectionOnlyQuery.queryName!, connectionOnlyQuery.queryMashup);
+        }       
         await pqUtils.setBase64(zip, new_base64);
     }
 
@@ -156,7 +157,7 @@ export class WorkbookManager {
             for (let i = 0; i < tItems.length; i++) {
                 if (tItems[i].innerHTML === queryName) {
                     t = tItems[i];
-                    sharedStringIndex = i + 1;
+                    sharedStringIndex = i;
                     break;
                 } 
             }
@@ -187,7 +188,7 @@ export class WorkbookManager {
         const parser: DOMParser = new DOMParser();
         const serializer = new XMLSerializer();
         const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, "text/xml");
-        sheetsDoc.getElementsByTagName("v")[0].innerHTML = sharedStringIndex.toString();
+        sheetsDoc.getElementsByTagName("v")[0].textContent = sharedStringIndex.toString();
         const newSheet = serializer.serializeToString(sheetsDoc);
         return newSheet;
     }

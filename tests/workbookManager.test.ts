@@ -38,7 +38,7 @@ describe("Workbook Manager tests", () => {
     
     test("SharedStrings XML returns existing index", async () => {
         const {sharedStringIndex} = await workbookManager.updateSharedStrings('<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="1" uniqueCount="1"><si><t>newQueryName</t></si><si><t/></si></sst>', "newQueryName");
-        expect(sharedStringIndex).toEqual(1);
+        expect(sharedStringIndex).toEqual(0);
     })
 
     test("Table XML contains refrshonload value", async () => {
