@@ -5,7 +5,7 @@ import JSZip from "jszip";
 import { pqUtils, documentUtils } from "./utils";
 import WorkbookTemplate from "./workbookTemplate";
 import MashupHandler from "./mashupDocumentParser";
-import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, defaults, sharedStringsXmlPath, sheetsXmlPath } from "./constants";
+import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, defaults, sharedStringsXmlPath, sheetsXmlPath, queryTableXmlPath } from "./constants";
 import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements } from "./types";
 
 export class WorkbookManager {
@@ -294,6 +294,12 @@ export class WorkbookManager {
         }
         const newConnectionStr = this.addNewQueryConnection(connectionsXmlString, queryName);
         zip.file(connectionsXmlPath, newConnectionStr);
+        const queryTableXmlString = await zip.file(queryTableXmlPath)?.async("text");
+        if (queryTableXmlString === undefined) {
+            throw new Error("Query Table was not found in template");
+        }
+        const newQT = this.updateConnectionOnlyQueryTables(queryTableXmlString);
+        zip.file(queryTableXmlPath, newQT);
         return;
     }
 
@@ -318,5 +324,15 @@ export class WorkbookManager {
         newDbPr.setAttribute("command", `SELECT * FROM [${queryName}]`);
         newConnection.appendChild(newDbPr);
         return serializer.serializeToString(connectionsDoc);
+    }
+
+    private updateConnectionOnlyQueryTables(queryTableXmlString: string) {
+        const parser: DOMParser = new DOMParser();
+        const serializer = new XMLSerializer();
+        const queryTableDoc: Document = parser.parseFromString(queryTableXmlString, "text/xml");
+        const queryTableRefresh = queryTableDoc.getElementsByTagName("queryTableRefresh")[0];
+        queryTableRefresh.setAttribute("nextId", (Number(queryTableRefresh.getAttribute("nextId")) + 1).toString());
+        const newQT = serializer.serializeToString(queryTableDoc);
+        return newQT;
     }
 } 
