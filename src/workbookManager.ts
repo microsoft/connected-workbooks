@@ -8,7 +8,6 @@ import MashupHandler from "./mashupDocumentParser";
 import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, sheetsXmlPath, queryTableXmlPath, tableXmlPath, workbookXmlPath } from "./constants";
 import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements, TableData, dataTypes } from "./types";
 
-const A:number = 65;
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
     
@@ -102,7 +101,7 @@ export class WorkbookManager {
         if (tableXmlString === undefined) {
             throw new Error("Table was not found in template");
         }
-        const newTable = await this.updatePivotTablesInitialData(tableXmlString, tableData);
+        const newTable = await this.updateTablesInitialData(tableXmlString, tableData);
         zip.file(tableXmlPath, newTable);
 
         const workbookXmlString = await zip.file(workbookXmlPath)?.async("text");
@@ -113,21 +112,19 @@ export class WorkbookManager {
         zip.file(workbookXmlPath, newWorkbook);
     }
 
-    private async updatePivotTablesInitialData(tableXmlString: string, tableData: TableData) {
+    private async updateTablesInitialData(tableXmlString: string, tableData: TableData) {
         const parser: DOMParser = new DOMParser();
         const serializer = new XMLSerializer();
         const tableDoc: Document = parser.parseFromString(tableXmlString, "text/xml");
         const tableColumns = tableDoc.getElementsByTagName("tableColumns")[0];
         tableColumns.textContent = '';
-        var columnIndex = 0;
-        tableData.columnNames.forEach(columnName => {
+        tableData.columnNames.forEach((columnName: string, columnIndex: number) => {
             const tableColumn = tableDoc.createElementNS(tableDoc.documentElement.namespaceURI, "tableColumn");
             tableColumn.setAttribute("id", (columnIndex + 1).toString());
             tableColumn.setAttribute("uniqueName", (columnIndex + 1).toString());
             tableColumn.setAttribute("name", columnName);
             tableColumn.setAttribute("queryTableFieldId", (columnIndex + 1).toString());
             tableColumns.appendChild(tableColumn);
-            columnIndex++;
         });
 
         tableColumns.setAttribute("count", tableData.columnNames.length.toString());
@@ -154,14 +151,12 @@ export class WorkbookManager {
         const queryTableDoc: Document = parser.parseFromString(queryTableXmlString, "text/xml");
         const queryTableFields = queryTableDoc.getElementsByTagName("queryTableFields")[0];
         queryTableFields.textContent = '';
-        var columnIndex = 1;
-        tableData.columnNames.forEach(columnName => {
+        tableData.columnNames.forEach((columnName:string, columnIndex: number) => {
             const queryTableField = queryTableDoc.createElementNS(queryTableDoc.documentElement.namespaceURI, "queryTableField");
-            queryTableField.setAttribute("id", columnIndex.toString());
+            queryTableField.setAttribute("id", (columnIndex + 1).toString());
             queryTableField.setAttribute("name", columnName);
-            queryTableField.setAttribute("tableColumnId", columnIndex.toString());
+            queryTableField.setAttribute("tableColumnId", (columnIndex + 1).toString());
             queryTableFields.appendChild(queryTableField);
-            columnIndex++;
         });
         queryTableFields.setAttribute("count", tableData.columnNames.length.toString());
         queryTableDoc.getElementsByTagName("queryTableRefresh")[0].setAttribute("nextId", (tableData.columnNames.length + 1).toString());
@@ -179,10 +174,8 @@ export class WorkbookManager {
         columnRow.setAttribute("r", (rowIndex + 1).toString());
         columnRow.setAttribute("spans", "1:" + (tableData.columnNames.length));
         columnRow.setAttribute("x14ac:dyDescent", "0.3");
-        var colIndex = 0;
-        tableData.columnNames.forEach(column => {
+        tableData.columnNames.forEach((column, colIndex) => {
             documentUtils.createCell(sheetsDoc, columnRow, colIndex, rowIndex, dataTypes.string, column);
-            colIndex++;
         });
         sheetData.appendChild(columnRow);
         rowIndex++;
@@ -191,16 +184,15 @@ export class WorkbookManager {
             newRow.setAttribute("r", (rowIndex + 1).toString());
             newRow.setAttribute("spans", "1:" + (row.length));
             newRow.setAttribute("x14ac:dyDescent", "0.3");
-            var colIndex = 0;
-            row.forEach(cellContent => {
+            row.forEach((cellContent, colIndex) => {
                 documentUtils.createCell(sheetsDoc, newRow, colIndex, rowIndex, tableData.columnTypes[colIndex], cellContent);
-                colIndex++;
             });
             sheetData.appendChild(newRow);
             rowIndex++;
         });
 
-        sheetsDoc.getElementsByTagName("dimension")[0].setAttribute("ref", `A1:${documentUtils.getCellReference(tableData.data[0].length - 1, tableData.data.length)}`.replace('$', ''));
+        sheetsDoc.getElementsByTagName("dimension")[0].setAttribute("ref", 
+            documentUtils.getTableReference(tableData.data[0].length - 1, tableData.data.length));
         return serializer.serializeToString(sheetsDoc);
     }
     

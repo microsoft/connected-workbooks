@@ -47,6 +47,10 @@ const getCellReference = (col: number, row: number): string => {
     return String.fromCharCode(col + A) + "$" + (row).toString();
 } 
 
+const getTableReference = (numberOfCols: number, numberOfRows: number) => {
+    return `A1:${getCellReference(numberOfCols, numberOfRows)}`.replace('$', '');
+}
+
 const createCell = (doc: Document, parent: Element, colIndex: number, rowIndex: number, dataType: number, data: string): void => {
     const cell = doc.createElementNS(doc.documentElement.namespaceURI, "c");
     cell.setAttribute("r", getCellReference(colIndex, rowIndex + 1).replace("$", ''));
@@ -83,4 +87,5 @@ const updateCellData = (dataType: number, data: string, newCell: Element, cellDa
 }
 
 
-export default { createOrUpdateProperty, getDocPropsProperties, getCellReference, createCell };
+
+export default { createOrUpdateProperty, getDocPropsProperties, getCellReference, createCell, getTableReference };

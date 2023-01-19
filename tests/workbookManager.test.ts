@@ -28,7 +28,7 @@ describe("Workbook Manager tests", () => {
 
     test("tests Pivot Tables contain initial data", async () => {
         const defaultString = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\r\n<table xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" mc:Ignorable=\"xr xr3\" xmlns:xr=\"http://schemas.microsoft.com/office/spreadsheetml/2014/revision\" xmlns:xr3=\"http://schemas.microsoft.com/office/spreadsheetml/2016/revision3\" id=\"1\" xr:uid=\"{D8539CF6-04E5-464D-9950-5A36C5A1FCFE}\" name=\"Query1\" displayName=\"Query1\" ref=\"A1:A2\" tableType=\"queryTable\" totalsRowShown=\"0\"><autoFilter ref=\"A1:A2\" xr:uid=\"{D8539CF6-04E5-464D-9950-5A36C5A1FCFE}\"/><tableColumns count=\"1\"><tableColumn id=\"1\" xr3:uid=\"{D1084858-8AE5-4728-A9BE-FE78821CDFFF}\" uniqueName=\"1\" name=\"Query1\" queryTableFieldId=\"1\" dataDxfId=\"0\"/></tableColumns><tableStyleInfo name=\"TableStyleMedium7\" showFirstColumn=\"0\" showLastColumn=\"0\" showRowStripes=\"1\" showColumnStripes=\"0\"/></table>";
-        const tableXmlSheet = await workbookManager.updatePivotTablesInitialData(defaultString, {columnNames: ['Column1', 'Column2'], columnTypes: [dataTypes.string, dataTypes.number], 
+        const tableXmlSheet = await workbookManager.updateTablesInitialData(defaultString, {columnNames: ['Column1', 'Column2'], columnTypes: [dataTypes.string, dataTypes.number], 
                 data: [['1', '2']]});
         expect(tableXmlSheet).toContain('count="2"');
         expect(tableXmlSheet).toContain('ref="A1:B2');
