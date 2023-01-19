@@ -19,10 +19,10 @@ export class WorkbookManager {
             templateFile === undefined
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
                 : await JSZip.loadAsync(templateFile);
-        const initialData = 
-            templateFile === undefined
-                ? tableData : undefined;
-        return await this.generateSingleQueryWorkbookFromZip(zip, query, docProps, initialData);
+        if (templateFile !== undefined && tableData !== undefined) {
+            throw new Error("Cannot receive template file with initial data");
+        }
+        return await this.generateSingleQueryWorkbookFromZip(zip, query, docProps, tableData);
     }
 
     private async generateSingleQueryWorkbookFromZip(zip: JSZip, query: QueryInfo, docProps?: DocProps, tableData?: TableData): Promise<Blob> {
