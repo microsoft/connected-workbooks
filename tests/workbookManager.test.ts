@@ -46,4 +46,13 @@ describe("Workbook Manager tests", () => {
         expect(sharedStringIndex).toEqual(2);
         expect(newSharedStrings.replace(/ /g, "")).toContain(sharedStringsXmlMock.replace(/ /g, ""));
     })
+
+    test("Adding a new connection to ConnectionXML", async () => {
+        const newConnectionStr = await workbookManager.addNewQueryConnection(mockConnectionString, "newConnection");
+        expect(newConnectionStr.replace(/ /g, "")).toContain(('id="2"').replace(/ /g, "")); 
+        expect(newConnectionStr.replace(/ /g, "")).toContain(('id="2"').replace(/ /g, "")); 
+        expect(newConnectionStr.replace(/ /g, "")).toContain('name=\"Query - newConnection\"'.replace(/ /g, ""));
+        expect(newConnectionStr.replace(/ /g, "")).toContain('name="Query - newConnection"'.replace(/ /g, ""));
+        expect(newConnectionStr.replace(/ /g, "")).toContain(`description="Connection to the 'newConnection' query in the workbook."`.replace(/ /g, ""));
+    })
 });
