@@ -175,7 +175,7 @@ export class WorkbookManager {
         columnRow.setAttribute("spans", "1:" + (tableData.columnNames.length));
         columnRow.setAttribute("x14ac:dyDescent", "0.3");
         tableData.columnNames.forEach((column, colIndex) => {
-            documentUtils.createCell(sheetsDoc, columnRow, colIndex, rowIndex, dataTypes.string, column);
+            columnRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, dataTypes.string, column));
         });
         sheetData.appendChild(columnRow);
         rowIndex++;
@@ -185,7 +185,7 @@ export class WorkbookManager {
             newRow.setAttribute("spans", "1:" + (row.length));
             newRow.setAttribute("x14ac:dyDescent", "0.3");
             row.forEach((cellContent, colIndex) => {
-                documentUtils.createCell(sheetsDoc, newRow, colIndex, rowIndex, tableData.columnTypes[colIndex], cellContent);
+                newRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, tableData.columnTypes[colIndex], cellContent));
             });
             sheetData.appendChild(newRow);
             rowIndex++;

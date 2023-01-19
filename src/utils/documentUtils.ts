@@ -5,8 +5,6 @@ import JSZip from "jszip";
 import { docPropsCoreXmlPath, docPropsRootElement } from "../constants";
 import { dataTypes } from "../types";
 
-const A:number = 65;
-
 const createOrUpdateProperty = (doc: Document, parent: Element, property: string, value?: string | null): void => {
     if (value === undefined) {
         return;
@@ -44,21 +42,21 @@ const getDocPropsProperties = async (zip: JSZip): Promise<{ doc: Document; prope
 };
 
 const getCellReference = (col: number, row: number): string => {
-    return String.fromCharCode(col + A) + "$" + (row).toString();
+    // 65 is the ascii value of first column 'A'   
+    return String.fromCharCode(col + 65) + "$" + (row).toString();
 } 
 
 const getTableReference = (numberOfCols: number, numberOfRows: number) => {
     return `A1:${getCellReference(numberOfCols, numberOfRows)}`.replace('$', '');
 }
 
-const createCell = (doc: Document, parent: Element, colIndex: number, rowIndex: number, dataType: number, data: string): void => {
+const createCell = (doc: Document, colIndex: number, rowIndex: number, dataType: number, data: string) => {
     const cell = doc.createElementNS(doc.documentElement.namespaceURI, "c");
     cell.setAttribute("r", getCellReference(colIndex, rowIndex + 1).replace("$", ''));
     const cellData = doc.createElementNS(doc.documentElement.namespaceURI, "v");
     updateCellData(dataType, data , cell, cellData);
     cell.appendChild(cellData);
-    parent.appendChild(cell);
-    colIndex++;
+    return cell;
 }
 
 const updateCellData = (dataType: number, data: string, newCell: Element, cellData: Element) => {
