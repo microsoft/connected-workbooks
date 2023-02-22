@@ -15,6 +15,7 @@ import {
     sheetsXmlPath,
     queryTableXmlPath,
 } from "./constants";
+import { generateSingleQueryMashup } from "./generators";
 import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements } from "./types";
 
 export class WorkbookManager {
@@ -40,7 +41,9 @@ export class WorkbookManager {
             templateFile === undefined
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
                 : await JSZip.loadAsync(templateFile);
-
+        if (!formula) {
+            formula = generateSingleQueryMashup(query.queryName, query.queryMashup);
+        }
         return await this.generateSingleQueryWorkbookFromZip(zip, query, formula, connectionOnlyQuery, docProps);
     }
 
