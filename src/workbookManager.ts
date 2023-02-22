@@ -44,7 +44,7 @@ export class WorkbookManager {
         if (!formula) {
             formula = this.createNewFormula(query, connectionOnlyQuery);
         }
-        return await this.generateSingleQueryWorkbookFromZip(zip, query, formula, connectionOnlyQuery, docProps);
+        return await this.generateQueryWorkbookFromZip(zip, query, formula, connectionOnlyQuery, docProps);
     }
 
     private createNewFormula(query: QueryInfo, connectionOnlyQuery?: QueryInfo) {
@@ -55,7 +55,7 @@ export class WorkbookManager {
         return formula;
     }
 
-    private async generateSingleQueryWorkbookFromZip(
+    private async generateQueryWorkbookFromZip(
         zip: JSZip,
         query: QueryInfo,
         formula: string,
