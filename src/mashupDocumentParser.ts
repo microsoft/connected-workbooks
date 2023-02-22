@@ -6,43 +6,62 @@ import JSZip from "jszip";
 import { section1mPath, defaults } from "./constants";
 import { arrayUtils } from "./utils";
 import { Metadata } from "./types";
-import { generateSingleQueryMashup, generateConnectionOnlyQueryMashup } from "./generators";
 
 export default class MashupHandler {
-    async ReplaceSingleQuery(base64Str: string, queryName: string, query: string): Promise<string> {
-        const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } = this.getPackageComponents(base64Str);
-        const newPackageBuffer = await this.editSingleQueryPackage(packageOPC, queryName, query);
+    async ReplaceSingleQuery(base64Str: string, queryName: string, formula: string): Promise<string> {
+        const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } =
+            this.getPackageComponents(base64Str);
+        const newPackageBuffer = await this.editSingleQueryPackage(packageOPC, formula);
         const packageSizeBuffer = arrayUtils.getInt32Buffer(newPackageBuffer.byteLength);
         const permissionsSizeBuffer = arrayUtils.getInt32Buffer(permissionsSize);
         const newMetadataBuffer = this.editSingleQueryMetadata(metadata, { queryName });
         const metadataSizeBuffer = arrayUtils.getInt32Buffer(newMetadataBuffer.byteLength);
-        const newMashup = arrayUtils.concatArrays(version, packageSizeBuffer, newPackageBuffer, permissionsSizeBuffer, permissions, metadataSizeBuffer, newMetadataBuffer, endBuffer);
+        const newMashup = arrayUtils.concatArrays(
+            version,
+            packageSizeBuffer,
+            newPackageBuffer,
+            permissionsSizeBuffer,
+            permissions,
+            metadataSizeBuffer,
+            newMetadataBuffer,
+            endBuffer
+        );
         return base64.fromByteArray(newMashup);
     }
 
-     async AddConnectionOnlyQuery(base64Str: string, queryName: string, query: string, connectionOnlyName: string, connectionOnlyQuery: string): Promise<string> {
-        const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } = this.getPackageComponents(base64Str);
-        const newPackageBuffer = await this.addConnectionOnlyQueryPackage(packageOPC, queryName, query, connectionOnlyName, connectionOnlyQuery);
-        const packageSizeBuffer = arrayUtils.getInt32Buffer(newPackageBuffer.byteLength);
+    async AddConnectionOnlyQuery(base64Str: string, connectionOnlyName: string, formula?: string): Promise<string> {
+        var { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } =
+            this.getPackageComponents(base64Str);
+        if (formula) {
+            packageOPC = await this.addFormulaToQueryPackage(packageOPC, formula);
+        }
+        const packageSizeBuffer = arrayUtils.getInt32Buffer(packageOPC.byteLength);
         const permissionsSizeBuffer = arrayUtils.getInt32Buffer(permissionsSize);
         const newMetadataBuffer = this.addConnectionOnlyMetadata(metadata, connectionOnlyName);
         const metadataSizeBuffer = arrayUtils.getInt32Buffer(newMetadataBuffer.byteLength);
-        const newMashup = arrayUtils.concatArrays(version, packageSizeBuffer, newPackageBuffer, permissionsSizeBuffer, 
-            permissions, metadataSizeBuffer, newMetadataBuffer, endBuffer);
+        const newMashup = arrayUtils.concatArrays(
+            version,
+            packageSizeBuffer,
+            packageOPC,
+            permissionsSizeBuffer,
+            permissions,
+            metadataSizeBuffer,
+            newMetadataBuffer,
+            endBuffer
+        );
         return base64.fromByteArray(newMashup);
     }
 
-       private async addConnectionOnlyQueryPackage(packageOPC: ArrayBuffer, queryName: string, query: string, connectionOnlyName: string, connectionOnlyQuery: string) {
+    private async addFormulaToQueryPackage(packageOPC: ArrayBuffer, formula: string) {
         const packageZip = await JSZip.loadAsync(packageOPC);
         this.getSection1m(packageZip);
-        this.updateSection1mWithConnectionOnly(queryName, query, connectionOnlyName, connectionOnlyQuery, packageZip);
+        this.setFormula(formula, packageZip);
 
         return await packageZip.generateAsync({ type: "uint8array" });
     }
 
-    private updateSection1mWithConnectionOnly = async (queryName: string, query: string, connectionOnlyName: string, connectionOnlyQuery: string, zip: JSZip): Promise<void> => {
-        const newSection1m = generateConnectionOnlyQueryMashup(queryName, query, connectionOnlyName, connectionOnlyQuery);
-        zip.file(section1mPath, newSection1m, {
+    private setFormula = async (formula: string, zip: JSZip): Promise<void> => {
+        zip.file(section1mPath, formula, {
             compression: "",
         });
     };
@@ -59,34 +78,32 @@ export default class MashupHandler {
         const metadata = mashupArray.getBytes(metadataSize);
         const endBuffer = mashupArray.getBytes();
 
-         return {
+        return {
             version,
             packageOPC,
             permissionsSize,
             permissions,
             metadata,
-            endBuffer
+            endBuffer,
         };
     }
 
-    private async editSingleQueryPackage(packageOPC: ArrayBuffer, queryName: string, query: string) {
+    private async editSingleQueryPackage(packageOPC: ArrayBuffer, formula: string) {
         const packageZip = await JSZip.loadAsync(packageOPC);
         this.getSection1m(packageZip);
-        this.setSection1m(queryName, query, packageZip);
+        this.setSection1m(formula, packageZip);
 
         return await packageZip.generateAsync({ type: "uint8array" });
     }
 
-    private setSection1m = (queryName: string, query: string, zip: JSZip): void => {
-        const newSection1m = generateSingleQueryMashup(queryName, query);
-
-        zip.file(section1mPath, newSection1m, {
+    private setSection1m = (formula: string, zip: JSZip): void => {
+        zip.file(section1mPath, formula, {
             compression: "",
         });
     };
 
     private getSection1m = async (zip: JSZip): Promise<string> => {
-        const section1m = zip.file(section1mPath)?.async("text");
+        const section1m = await zip.file(section1mPath)?.async("text");
         if (!section1m) {
             throw new Error("Formula section wasn't found in template");
         }
@@ -94,7 +111,6 @@ export default class MashupHandler {
         return section1m;
     };
 
-    
     private editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Metadata) => {
         //extract metadataXml
         const mashupArray = new arrayUtils.ArrayReader(metadataArray.buffer);
@@ -121,45 +137,46 @@ export default class MashupHandler {
                     strArr[1] = metadata.queryName;
                     const newContent = strArr.join("/");
                     itemPath.textContent = newContent;
-                    }    
                 }
             }
+        }
 
         const entries = parsedMetadata.getElementsByTagName("Entry");
-            if (entries && entries.length) {
-                for (let i = 0; i < entries.length; i++) {
-                    const entry = entries[i];
-                    const entryAttributes = entry.attributes;
-                    const entryAttributesArr = [...entryAttributes]; 
-                    const entryProp = entryAttributesArr.find((prop) => {
-                    return prop?.name === "Type"});
-                    if (entryProp?.nodeValue == "RelationshipInfoContainer") {
-                        const newValue = entry.getAttribute("Value")?.replace(/Query1/g, metadata.queryName);
-                        if (newValue) {
-                            entry.setAttribute("Value", newValue);
-                        }
+        if (entries && entries.length) {
+            for (let i = 0; i < entries.length; i++) {
+                const entry = entries[i];
+                const entryAttributes = entry.attributes;
+                const entryAttributesArr = [...entryAttributes];
+                const entryProp = entryAttributesArr.find((prop) => {
+                    return prop?.name === "Type";
+                });
+                if (entryProp?.nodeValue == "RelationshipInfoContainer") {
+                    const newValue = entry.getAttribute("Value")?.replace(/Query1/g, metadata.queryName);
+                    if (newValue) {
+                        entry.setAttribute("Value", newValue);
                     }
-                    if (entryProp?.nodeValue == "ResultType") {
-                        entry.setAttribute("Value", "sTable");
+                }
+                if (entryProp?.nodeValue == "ResultType") {
+                    entry.setAttribute("Value", "sTable");
+                }
+                if (entryProp?.nodeValue == "FillColumnNames") {
+                    const oldValue = entry.getAttribute("Value");
+                    if (oldValue) {
+                        entry.setAttribute("Value", oldValue.replace(defaults.queryName, metadata.queryName));
                     }
-                    if (entryProp?.nodeValue == "FillColumnNames") {
-                        const oldValue = entry.getAttribute("Value");
-                        if (oldValue) {
-                            entry.setAttribute("Value", oldValue.replace(defaults.queryName, metadata.queryName));
-                        }    
+                }
+                if (entryProp?.nodeValue == "FillTarget") {
+                    const oldValue = entry.getAttribute("Value");
+                    if (oldValue) {
+                        entry.setAttribute("Value", oldValue.replace(defaults.queryName, metadata.queryName));
                     }
-                    if (entryProp?.nodeValue == "FillTarget") {
-                        const oldValue = entry.getAttribute("Value");
-                        if (oldValue) {
-                            entry.setAttribute("Value", oldValue.replace(defaults.queryName, metadata.queryName));
-                        }    
-                    }
-                    if (entryProp?.nodeValue == "FillLastUpdated") {
-                        const nowTime = new Date().toISOString();
-                        entry.setAttribute("Value", ("d" + nowTime).replace(/Z/, '0000Z'));
-                    }   
+                }
+                if (entryProp?.nodeValue == "FillLastUpdated") {
+                    const nowTime = new Date().toISOString();
+                    entry.setAttribute("Value", ("d" + nowTime).replace(/Z/, "0000Z"));
                 }
             }
+        }
 
         // Convert new metadataXml to Uint8Array
         const newMetadataString = serializer.serializeToString(parsedMetadata);
@@ -167,7 +184,12 @@ export default class MashupHandler {
         const newMetadataXml = encoder.encode(newMetadataString);
         const newMetadataXmlSize = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
 
-        const newMetadataArray = arrayUtils.concatArrays(metadataVersion, newMetadataXmlSize, newMetadataXml, endBuffer);
+        const newMetadataArray = arrayUtils.concatArrays(
+            metadataVersion,
+            newMetadataXmlSize,
+            newMetadataXml,
+            endBuffer
+        );
         return newMetadataArray;
     };
 
@@ -178,31 +200,69 @@ export default class MashupHandler {
         const metadataXmlSize = mashupArray.getInt32();
         const metadataXml = mashupArray.getBytes(metadataXmlSize);
         const endBuffer = mashupArray.getBytes();
-        
+
         //parse metdataXml
         const metadataString = uintToString(metadataXml);
         const parser = new DOMParser();
         const serializer = new XMLSerializer();
         const metadataDoc = parser.parseFromString(metadataString, "text/xml");
-        
+
         // Add new Item to metadataXml
-        const oldItem = metadataDoc.getElementsByTagName("Item")[1];
-        const oldPathItem = metadataDoc.getElementsByTagName("Item")[2];
         const items = metadataDoc.getElementsByTagName("Items")[0];
+        const newItemLocation = this.createNewItem(metadataDoc);
+        items.appendChild(newItemLocation);
+        const oldPathItem = metadataDoc.getElementsByTagName("Item")[2];
+        const newPathItem = oldPathItem.cloneNode(true);
+        items.appendChild(newPathItem);
+        const itemPaths = metadataDoc.getElementsByTagName("ItemPath");
+        if (itemPaths && itemPaths.length) {
+            for (let i = 0; i < itemPaths.length; i++) {
+                const itemPath = itemPaths[i];
+                if (
+                    itemPath.parentElement?.parentElement === newPathItem ||
+                    itemPath.parentElement === newItemLocation
+                ) {
+                    const content = itemPath.innerHTML;
+                    if (content.includes("Section1/")) {
+                        const strArr = content.split("/");
+                        strArr[1] = queryName;
+                        const newContent = strArr.join("/");
+                        itemPath.textContent = newContent;
+                    }
+                }
+            }
+        }
+        // Convert new metadataXml to Uint8Array
+        const newMetadataString = serializer.serializeToString(metadataDoc);
+        const encoder = new TextEncoder();
+        const newMetadataXml = encoder.encode(newMetadataString);
+        const newMetadataXmlSize = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
+        const newMetadataArray = arrayUtils.concatArrays(
+            metadataVersion,
+            newMetadataXmlSize,
+            newMetadataXml,
+            endBuffer
+        );
+        return newMetadataArray;
+    };
+
+    private createNewItem(metadataDoc: Document) {
+        const oldItem = metadataDoc.getElementsByTagName("Item")[1];
         const newItem = oldItem.cloneNode(false);
-        const itemLocation = metadataDoc.getElementsByTagName("ItemLocation")[1].cloneNode(true);
-        newItem.appendChild(itemLocation);
-        const stableEntries = metadataDoc.getElementsByTagName("StableEntries")[1].cloneNode(true);
-        newItem.appendChild(stableEntries);
-        items.appendChild(newItem);
+        const newItemLocation = metadataDoc.getElementsByTagName("ItemLocation")[1].cloneNode(true);
+        newItem.appendChild(newItemLocation);
+        const newStableEntries = metadataDoc.getElementsByTagName("StableEntries")[1].cloneNode(true);
+        newItem.appendChild(newStableEntries);
         const entries = metadataDoc.getElementsByTagName("Entry");
         if (entries && entries.length) {
             for (let i = 0; i < entries.length; i++) {
                 const entry = entries[i];
-                if (entry.parentElement === stableEntries) {
-                    const entryAttributesArr = [...entry.attributes]; 
+                // update certain entries values in new connectionOnly Item
+                if (entry.parentElement === newStableEntries) {
+                    const entryAttributesArr = [...entry.attributes];
                     const entryProp = entryAttributesArr.find((prop) => {
-                        return prop?.name === "Type"});
+                        return prop?.name === "Type";
+                    });
                     if (entryProp?.nodeValue == "ResultType") {
                         entry.setAttribute("Value", "sTable");
                     }
@@ -214,45 +274,22 @@ export default class MashupHandler {
                     }
                     if (entryProp?.nodeValue == "FillLastUpdated") {
                         const nowTime = new Date().toISOString();
-                        entry.setAttribute("Value", ("d" + nowTime).replace(/Z/, '0000Z'));
+                        entry.setAttribute("Value", ("d" + nowTime).replace(/Z/, "0000Z"));
                     }
                     if (entryProp?.nodeValue == "FillColumnNames") {
-                        stableEntries.removeChild(entry);
+                        newStableEntries.removeChild(entry);
                     }
                     if (entryProp?.nodeValue == "FillTarget") {
-                        stableEntries.removeChild(entry);
+                        newStableEntries.removeChild(entry);
                     }
-                }                  
+                }
             }
         }
-        const newPathItem = oldPathItem.cloneNode(true);
-        items.appendChild(newPathItem);
-        const itemPaths = metadataDoc.getElementsByTagName("ItemPath");
-        if (itemPaths && itemPaths.length) {
-            for (let i = 0; i < itemPaths.length; i++) {
-                const itemPath = itemPaths[i];
-                if ((itemPath.parentElement?.parentElement === newPathItem) || (itemPath.parentElement === itemLocation)) {
-                    const content = itemPath.innerHTML;
-                    if (content.includes("Section1/")) {
-                        const strArr = content.split("/");
-                        strArr[1] = queryName;
-                        const newContent = strArr.join("/");
-                        itemPath.textContent = newContent;
-                    }    
-                } 
-            }
-        }
-        // Convert new metadataXml to Uint8Array
-        const newMetadataString = serializer.serializeToString(metadataDoc);
-        const encoder = new TextEncoder();
-        const newMetadataXml = encoder.encode(newMetadataString);
-        const newMetadataXmlSize = arrayUtils.getInt32Buffer(newMetadataXml.byteLength); 
-        const newMetadataArray = arrayUtils.concatArrays(metadataVersion, newMetadataXmlSize, newMetadataXml, endBuffer);
-        return newMetadataArray;
-    };
+        return newItemLocation;
+    }
 }
 
 function uintToString(uintArray: Uint8Array) {
     var encodedString = new TextDecoder("utf-8").decode(uintArray);
     return encodedString;
- }
+}
