@@ -209,8 +209,7 @@ export default class MashupHandler {
 
         // Add new Item to metadataXml
         const items = metadataDoc.getElementsByTagName("Items")[0];
-        const newItemLocation = this.createNewItem(metadataDoc);
-        items.appendChild(newItemLocation);
+        const newItem = this.createNewItem(metadataDoc);
         const oldPathItem = metadataDoc.getElementsByTagName("Item")[2];
         const newPathItem = oldPathItem.cloneNode(true);
         items.appendChild(newPathItem);
@@ -220,7 +219,7 @@ export default class MashupHandler {
                 const itemPath = itemPaths[i];
                 if (
                     itemPath.parentElement?.parentElement === newPathItem ||
-                    itemPath.parentElement === newItemLocation
+                    itemPath.parentElement?.parentElement === newItem
                 ) {
                     const content = itemPath.innerHTML;
                     if (content.includes("Section1/")) {
@@ -247,10 +246,12 @@ export default class MashupHandler {
     };
 
     private createNewItem(metadataDoc: Document) {
+        const items = metadataDoc.getElementsByTagName("Items")[0];
         const oldItem = metadataDoc.getElementsByTagName("Item")[1];
         const newItem = oldItem.cloneNode(false);
         const newItemLocation = metadataDoc.getElementsByTagName("ItemLocation")[1].cloneNode(true);
         newItem.appendChild(newItemLocation);
+        items.append(newItem);
         const newStableEntries = metadataDoc.getElementsByTagName("StableEntries")[1].cloneNode(true);
         newItem.appendChild(newStableEntries);
         const entries = metadataDoc.getElementsByTagName("Entry");
@@ -285,7 +286,7 @@ export default class MashupHandler {
                 }
             }
         }
-        return newItemLocation;
+        return newItem;
     }
 }
 
