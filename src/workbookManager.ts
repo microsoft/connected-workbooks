@@ -15,7 +15,7 @@ import {
     sheetsXmlPath,
     queryTableXmlPath,
 } from "./constants";
-import { generateSingleQueryMashup } from "./generators";
+import { generateSingleQueryMashup, generateNewQueryMashup } from "./generators";
 import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements } from "./types";
 
 export class WorkbookManager {
@@ -42,9 +42,17 @@ export class WorkbookManager {
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
                 : await JSZip.loadAsync(templateFile);
         if (!formula) {
-            formula = generateSingleQueryMashup(query.queryName, query.queryMashup);
+            formula = this.createNewFormula(query, connectionOnlyQuery);
         }
         return await this.generateSingleQueryWorkbookFromZip(zip, query, formula, connectionOnlyQuery, docProps);
+    }
+
+    private createNewFormula(query: QueryInfo, connectionOnlyQuery?: QueryInfo) {
+        let formula = generateSingleQueryMashup(query.queryName!, query.queryMashup);
+        if (connectionOnlyQuery) {
+            formula = generateNewQueryMashup(formula, connectionOnlyQuery.queryName!, connectionOnlyQuery.queryMashup);
+        }
+        return formula;
     }
 
     private async generateSingleQueryWorkbookFromZip(
@@ -54,7 +62,12 @@ export class WorkbookManager {
         connectionOnlyQuery?: QueryInfo,
         docProps?: DocProps
     ): Promise<Blob> {
-        await this.updatePowerQueryDocument(zip, query.queryName!, formula, connectionOnlyQuery);
+        await this.updatePowerQueryDocument(
+            zip,
+            query.queryName!,
+            formula,
+            connectionOnlyQuery ? connectionOnlyQuery.queryName : undefined
+        );
         await this.updateSingleQueryAttributes(zip, query.queryName!, query.refreshOnOpen);
         if (connectionOnlyQuery) {
             await this.addConnectionOnlyQueryAttributes(zip, connectionOnlyQuery.queryName!);
@@ -71,7 +84,7 @@ export class WorkbookManager {
         zip: JSZip,
         queryName: string,
         formula: string,
-        connectionOnlyQuery?: QueryInfo
+        connectionOnlyQueryName?: string
     ) {
         const old_base64 = await pqUtils.getBase64(zip);
         if (!old_base64) {
@@ -79,8 +92,8 @@ export class WorkbookManager {
         }
 
         let new_base64 = await this.mashupHandler.ReplaceSingleQuery(old_base64, queryName, formula);
-        if (connectionOnlyQuery) {
-            new_base64 = await this.mashupHandler.AddConnectionOnlyQuery(new_base64, connectionOnlyQuery.queryName!);
+        if (connectionOnlyQueryName) {
+            new_base64 = await this.mashupHandler.AddConnectionOnlyQuery(new_base64, connectionOnlyQueryName);
         }
         await pqUtils.setBase64(zip, new_base64);
     }
