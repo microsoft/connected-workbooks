@@ -5,13 +5,34 @@ import JSZip from "jszip";
 import { pqUtils, documentUtils } from "./utils";
 import WorkbookTemplate from "./workbookTemplate";
 import MashupHandler from "./mashupDocumentParser";
-import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, sheetsXmlPath, queryTableXmlPath, tableXmlPath, workbookXmlPath } from "./constants";
-import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements, TableData, dataTypes } from "./types";
+import {
+    connectionsXmlPath,
+    queryTablesPath,
+    pivotCachesPath,
+    docPropsCoreXmlPath,
+    sheetsXmlPath,
+    queryTableXmlPath,
+    tableXmlPath,
+    workbookXmlPath,
+} from "./constants";
+import {
+    DocProps,
+    QueryInfo,
+    docPropsAutoUpdatedElements,
+    docPropsModifiableElements,
+    TableData,
+    dataTypes,
+} from "./types";
 
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
-    
-    async generateSingleQueryWorkbook(query: QueryInfo, templateFile?: File, docProps?: DocProps, tableData?: TableData): Promise<Blob> {
+
+    async generateSingleQueryWorkbook(
+        query: QueryInfo,
+        JSONInitialData?: File,
+        templateFile?: File,
+        docProps?: DocProps
+    ): Promise<Blob> {
         if (!query.queryMashup) {
             throw new Error("Query mashup can't be empty");
         }
@@ -19,13 +40,73 @@ export class WorkbookManager {
             templateFile === undefined
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
                 : await JSZip.loadAsync(templateFile);
-        if (templateFile !== undefined && tableData !== undefined) {
+        if (templateFile !== undefined && JSONInitialData !== undefined) {
             throw new Error("Cannot receive template file with initial data");
         }
+        const tableData = await this.parseJSONInitialData(JSONInitialData);
         return await this.generateSingleQueryWorkbookFromZip(zip, query, docProps, tableData);
     }
 
-    private async generateSingleQueryWorkbookFromZip(zip: JSZip, query: QueryInfo, docProps?: DocProps, tableData?: TableData): Promise<Blob> {
+    private async parseJSONInitialData(JSONInitialData?: File): Promise<TableData | undefined> {
+        if (!JSONInitialData) {
+            return undefined;
+        }
+        const dataObj = JSON.parse(await JSONInitialData.text());
+        const gridData = dataObj.GridData;
+        if (!gridData) {
+            throw new Error("Invalid JSON file, grid data is missing");
+        }
+        const { columnNames, columnTypes } = this.parseJSONHeader(dataObj);
+        const data = this.parseJSONGrid(gridData, columnTypes);
+        return { columnNames: columnNames, columnTypes: columnTypes, data: data };
+    }
+
+    private parseJSONGrid(gridData: any, columnTypes: number[]) {
+        const tableData: string[][] = [];
+        for (const rowData of gridData) {
+            const row: string[] = [];
+            var colIndex = 0;
+            for (const prop in rowData) {
+                const dataType = columnTypes[colIndex];
+                const cellValue = rowData[prop];
+                if (dataType == dataTypes.number) {
+                    if (isNaN(Number(cellValue))) {
+                        throw new Error("Invalid cell value in number column");
+                    }
+                }
+                if (dataType == dataTypes.boolean) {
+                    if (cellValue != "1" && cellValue != "0") {
+                        throw new Error("Invalid cell value in boolean column");
+                    }
+                }
+                row.push(rowData[prop]);
+                colIndex++;
+            }
+            tableData.push(row);
+        }
+        return tableData;
+    }
+
+    private parseJSONHeader(data: any) {
+        const columnNames: string[] = [];
+        const columnTypes: number[] = [];
+        const headerData = data.Header;
+        if (!headerData) {
+            throw new Error("Invalid JSON file, header is missing");
+        }
+        for (const prop in headerData) {
+            columnNames.push(prop);
+            columnTypes.push(headerData[prop]);
+        }
+        return { columnNames, columnTypes };
+    }
+
+    private async generateSingleQueryWorkbookFromZip(
+        zip: JSZip,
+        query: QueryInfo,
+        docProps?: DocProps,
+        tableData?: TableData
+    ): Promise<Blob> {
         await this.updatePowerQueryDocument(zip, query.queryMashup);
         await this.updateSingleQueryRefreshOnOpen(zip, query.refreshOnOpen);
         await this.updateDocProps(zip, docProps);
@@ -88,7 +169,7 @@ export class WorkbookManager {
             throw new Error("Sheets were not found in template");
         }
         const newSheet = await this.updateSheetsInitialData(sheetsXmlString, tableData);
-        zip.file(sheetsXmlPath, newSheet)
+        zip.file(sheetsXmlPath, newSheet);
 
         const queryTableXmlString = await zip.file(queryTableXmlPath)?.async("text");
         if (queryTableXmlString === undefined) {
@@ -117,7 +198,7 @@ export class WorkbookManager {
         const serializer = new XMLSerializer();
         const tableDoc: Document = parser.parseFromString(tableXmlString, "text/xml");
         const tableColumns = tableDoc.getElementsByTagName("tableColumns")[0];
-        tableColumns.textContent = '';
+        tableColumns.textContent = "";
         tableData.columnNames.forEach((columnName: string, columnIndex: number) => {
             const tableColumn = tableDoc.createElementNS(tableDoc.documentElement.namespaceURI, "tableColumn");
             tableColumn.setAttribute("id", (columnIndex + 1).toString());
@@ -128,51 +209,72 @@ export class WorkbookManager {
         });
 
         tableColumns.setAttribute("count", tableData.columnNames.length.toString());
-        tableDoc.getElementsByTagName("table")[0].setAttribute("ref", `A1:${documentUtils.getCellReference(tableData.columnNames.length -1, tableData.data.length + 1)}`.replace('$', ''));
-        tableDoc.getElementsByTagName("autoFilter")[0].setAttribute("ref", `A1:${documentUtils.getCellReference(tableData.columnNames.length -1, tableData.data.length + 1)}`.replace('$', ''));
+        tableDoc
+            .getElementsByTagName("table")[0]
+            .setAttribute(
+                "ref",
+                `A1:${documentUtils.getCellReference(
+                    tableData.columnNames.length - 1,
+                    tableData.data.length + 1
+                )}`.replace("$", "")
+            );
+        tableDoc
+            .getElementsByTagName("autoFilter")[0]
+            .setAttribute(
+                "ref",
+                `A1:${documentUtils.getCellReference(
+                    tableData.columnNames.length - 1,
+                    tableData.data.length + 1
+                )}`.replace("$", "")
+            );
         return serializer.serializeToString(tableDoc);
     }
 
-     private async updateWorkbookInitialData(workbookXmlString: string, tableData: TableData, queryName?: string) {
+    private async updateWorkbookInitialData(workbookXmlString: string, tableData: TableData, queryName?: string) {
         const newParser: DOMParser = new DOMParser();
         const newSerializer = new XMLSerializer();
         const workbookDoc: Document = newParser.parseFromString(workbookXmlString, "text/xml");
         var definedName = workbookDoc.getElementsByTagName("definedName")[0];
-        const prefix =
-            queryName === undefined
-                ? "Query1" : queryName; 
-        definedName.textContent = prefix + `!$A$1:$${documentUtils.getCellReference(tableData.columnNames.length - 1, tableData.data.length + 1)}`;
+        const prefix = queryName === undefined ? "Query1" : queryName;
+        definedName.textContent =
+            prefix +
+            `!$A$1:$${documentUtils.getCellReference(tableData.columnNames.length - 1, tableData.data.length + 1)}`;
         return newSerializer.serializeToString(workbookDoc);
     }
-    
+
     private async updateQueryTablesInitialData(queryTableXmlString: string, tableData: TableData) {
         const parser: DOMParser = new DOMParser();
         const serializer = new XMLSerializer();
         const queryTableDoc: Document = parser.parseFromString(queryTableXmlString, "text/xml");
         const queryTableFields = queryTableDoc.getElementsByTagName("queryTableFields")[0];
-        queryTableFields.textContent = '';
-        tableData.columnNames.forEach((columnName:string, columnIndex: number) => {
-            const queryTableField = queryTableDoc.createElementNS(queryTableDoc.documentElement.namespaceURI, "queryTableField");
+        queryTableFields.textContent = "";
+        tableData.columnNames.forEach((columnName: string, columnIndex: number) => {
+            const queryTableField = queryTableDoc.createElementNS(
+                queryTableDoc.documentElement.namespaceURI,
+                "queryTableField"
+            );
             queryTableField.setAttribute("id", (columnIndex + 1).toString());
             queryTableField.setAttribute("name", columnName);
             queryTableField.setAttribute("tableColumnId", (columnIndex + 1).toString());
             queryTableFields.appendChild(queryTableField);
         });
         queryTableFields.setAttribute("count", tableData.columnNames.length.toString());
-        queryTableDoc.getElementsByTagName("queryTableRefresh")[0].setAttribute("nextId", (tableData.columnNames.length + 1).toString());
+        queryTableDoc
+            .getElementsByTagName("queryTableRefresh")[0]
+            .setAttribute("nextId", (tableData.columnNames.length + 1).toString());
         return serializer.serializeToString(queryTableDoc);
     }
 
     private async updateSheetsInitialData(sheetsXmlString: string, tableData: TableData) {
-         const parser: DOMParser = new DOMParser();
+        const parser: DOMParser = new DOMParser();
         const serializer = new XMLSerializer();
         const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, "text/xml");
         const sheetData = sheetsDoc.getElementsByTagName("sheetData")[0];
-        sheetData.textContent = '';
+        sheetData.textContent = "";
         var rowIndex = 0;
         const columnRow = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, "row");
         columnRow.setAttribute("r", (rowIndex + 1).toString());
-        columnRow.setAttribute("spans", "1:" + (tableData.columnNames.length));
+        columnRow.setAttribute("spans", "1:" + tableData.columnNames.length);
         columnRow.setAttribute("x14ac:dyDescent", "0.3");
         tableData.columnNames.forEach((column, colIndex) => {
             columnRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, dataTypes.string, column));
@@ -182,20 +284,29 @@ export class WorkbookManager {
         tableData.data.forEach((row) => {
             const newRow = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, "row");
             newRow.setAttribute("r", (rowIndex + 1).toString());
-            newRow.setAttribute("spans", "1:" + (row.length));
+            newRow.setAttribute("spans", "1:" + row.length);
             newRow.setAttribute("x14ac:dyDescent", "0.3");
             row.forEach((cellContent, colIndex) => {
-                newRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, tableData.columnTypes[colIndex], cellContent));
+                newRow.appendChild(
+                    documentUtils.createCell(
+                        sheetsDoc,
+                        colIndex,
+                        rowIndex,
+                        tableData.columnTypes[colIndex],
+                        cellContent
+                    )
+                );
             });
             sheetData.appendChild(newRow);
             rowIndex++;
         });
 
-        sheetsDoc.getElementsByTagName("dimension")[0].setAttribute("ref", 
-            documentUtils.getTableReference(tableData.data[0].length - 1, tableData.data.length));
+        sheetsDoc
+            .getElementsByTagName("dimension")[0]
+            .setAttribute("ref", documentUtils.getTableReference(tableData.data[0].length - 1, tableData.data.length));
         return serializer.serializeToString(sheetsDoc);
     }
-    
+
     private async updateSingleQueryRefreshOnOpen(zip: JSZip, refreshOnOpen: boolean) {
         const connectionsXmlString = await zip.file(connectionsXmlPath)?.async("text");
         if (connectionsXmlString === undefined) {

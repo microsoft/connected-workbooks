@@ -42,48 +42,35 @@ const getDocPropsProperties = async (zip: JSZip): Promise<{ doc: Document; prope
 };
 
 const getCellReference = (col: number, row: number): string => {
-    // 65 is the ascii value of first column 'A'   
-    return String.fromCharCode(col + 65) + "$" + (row).toString();
-} 
+    // 65 is the ascii value of first column 'A'
+    return String.fromCharCode(col + 65) + "$" + row.toString();
+};
 
 const getTableReference = (numberOfCols: number, numberOfRows: number) => {
-    return `A1:${getCellReference(numberOfCols, numberOfRows)}`.replace('$', '');
-}
+    return `A1:${getCellReference(numberOfCols, numberOfRows)}`.replace("$", "");
+};
 
 const createCell = (doc: Document, colIndex: number, rowIndex: number, dataType: number, data: string) => {
     const cell = doc.createElementNS(doc.documentElement.namespaceURI, "c");
-    cell.setAttribute("r", getCellReference(colIndex, rowIndex + 1).replace("$", ''));
+    cell.setAttribute("r", getCellReference(colIndex, rowIndex + 1).replace("$", ""));
     const cellData = doc.createElementNS(doc.documentElement.namespaceURI, "v");
-    updateCellData(dataType, data , cell, cellData);
+    updateCellData(dataType, data, cell, cellData);
     cell.appendChild(cellData);
     return cell;
-}
+};
 
 const updateCellData = (dataType: number, data: string, newCell: Element, cellData: Element) => {
     if (dataType == dataTypes.string) {
         newCell.setAttribute("t", "str");
-        cellData.textContent = data;
     }
-    else {
-        if (dataType == dataTypes.number) {          
-            if (isNaN(Number(data))) {
-                data = "0";
-            }
-            newCell.setAttribute("t", "1");
-            cellData.textContent = data;
-        }
-
-        if (dataType == dataTypes.boolean) {
-            if ((data != "1") && (data != "0")) {
-                data = "0";
-            }
-
-            newCell.setAttribute("t", "b");
-            cellData.textContent = data;
-        }
+    if (dataType == dataTypes.number) {
+        newCell.setAttribute("t", "1");
     }
-}
 
-
+    if (dataType == dataTypes.boolean) {
+        newCell.setAttribute("t", "b");
+    }
+    cellData.textContent = data;
+};
 
 export default { createOrUpdateProperty, getDocPropsProperties, getCellReference, createCell, getTableReference };
