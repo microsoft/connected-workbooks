@@ -59,16 +59,16 @@ const createCell = (doc: Document, colIndex: number, rowIndex: number, dataType:
     return cell;
 };
 
-const updateCellData = (dataType: number, data: string, newCell: Element, cellData: Element) => {
+const updateCellData = (dataType: number, data: string, cell: Element, cellData: Element) => {
     if (dataType == dataTypes.string) {
-        newCell.setAttribute("t", "str");
+        cell.setAttribute("t", "str");
     }
     if (dataType == dataTypes.number) {
-        newCell.setAttribute("t", "1");
+        cell.setAttribute("t", "1");
     }
 
     if (dataType == dataTypes.boolean) {
-        newCell.setAttribute("t", "b");
+        cell.setAttribute("t", "b");
     }
     cellData.textContent = data;
 };
