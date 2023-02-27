@@ -24,9 +24,14 @@ export interface TableData {
     columnwidth?: number;
 }
 
+export interface columnMetadata {
+    name: string;
+    type: number;
+}
+
 export interface Grid {
-    Header: any;
-    GridData: any;
+    Header: columnMetadata[];
+    GridData: (string|number|boolean)[][];
 }
 
 export enum dataTypes {

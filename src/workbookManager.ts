@@ -79,7 +79,7 @@ export class WorkbookManager {
                         throw new Error("Invalid cell value in boolean column");
                     }
                 }
-                row.push(rowData[prop]);
+                row.push(rowData[prop].toString());
                 colIndex++;
             }
             tableData.push(row);
