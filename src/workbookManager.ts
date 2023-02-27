@@ -22,6 +22,7 @@ import {
     docPropsModifiableElements,
     TableData,
     dataTypes,
+    Grid,
 } from "./types";
 
 export class WorkbookManager {
@@ -29,7 +30,7 @@ export class WorkbookManager {
 
     async generateSingleQueryWorkbook(
         query: QueryInfo,
-        JSONInitialData?: File,
+        initialDataGrid?: Grid,
         templateFile?: File,
         docProps?: DocProps
     ): Promise<Blob> {
@@ -40,28 +41,27 @@ export class WorkbookManager {
             templateFile === undefined
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
                 : await JSZip.loadAsync(templateFile);
-        if (templateFile !== undefined && JSONInitialData !== undefined) {
+        if (templateFile !== undefined && initialDataGrid !== undefined) {
             throw new Error("Cannot receive template file with initial data");
         }
-        const tableData = await this.parseJSONInitialData(JSONInitialData);
+        const tableData = await this.parseInitialDataGrid(initialDataGrid);
         return await this.generateSingleQueryWorkbookFromZip(zip, query, docProps, tableData);
     }
 
-    private async parseJSONInitialData(JSONInitialData?: File): Promise<TableData | undefined> {
-        if (!JSONInitialData) {
+    private async parseInitialDataGrid(initialDataGrid?: Grid): Promise<TableData | undefined> {
+        if (!initialDataGrid) {
             return undefined;
         }
-        const dataObj = JSON.parse(await JSONInitialData.text());
-        const gridData = dataObj.GridData;
-        if (!gridData) {
-            throw new Error("Invalid JSON file, grid data is missing");
-        }
-        const { columnNames, columnTypes } = this.parseJSONHeader(dataObj);
-        const data = this.parseJSONGrid(gridData, columnTypes);
+        const { columnNames, columnTypes } = this.parseGridHeader(initialDataGrid);
+        const data = this.parseGridData(initialDataGrid, columnTypes);
         return { columnNames: columnNames, columnTypes: columnTypes, data: data };
     }
 
-    private parseJSONGrid(gridData: any, columnTypes: number[]) {
+    private parseGridData(initialDataGrid: Grid, columnTypes: number[]) {
+        const gridData = initialDataGrid.GridData;
+        if (!gridData) {
+            throw new Error("Invalid JSON file, grid data is missing");
+        }
         const tableData: string[][] = [];
         for (const rowData of gridData) {
             const row: string[] = [];
@@ -87,7 +87,7 @@ export class WorkbookManager {
         return tableData;
     }
 
-    private parseJSONHeader(data: any) {
+    private parseGridHeader(data: any) {
         const columnNames: string[] = [];
         const columnTypes: number[] = [];
         const headerData = data.Header;

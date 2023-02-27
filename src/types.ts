@@ -24,11 +24,16 @@ export interface TableData {
     columnwidth?: number;
 }
 
+export interface Grid {
+    Header: any;
+    GridData: any;
+}
+
 export enum dataTypes {
     null = 0,
     string = 1,
     number = 2,
-    boolean = 3
+    boolean = 3,
 }
 
 export enum docPropsModifiableElements {
