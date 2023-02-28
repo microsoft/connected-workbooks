@@ -10,4 +10,9 @@ export const generateSingleQueryMashup = (queryName: string, query: string): str
     shared ${queryName} = 
     ${query};`;
 
+export const generateNewQueryMashup = (formula: string, connectionOnlyName: string, connectionOnlyQuery: string): string =>
+    `${formula}
+    shared ${connectionOnlyName} = 
+    ${connectionOnlyQuery};`;
+
 export const generateCustomXmlFilePath = (i: number): string => `customXml/item${i}.xml`;
