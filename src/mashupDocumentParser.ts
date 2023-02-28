@@ -6,12 +6,11 @@ import JSZip from "jszip";
 import { section1mPath, defaults } from "./constants";
 import { arrayUtils } from "./utils";
 import { Metadata } from "./types";
-import { generateSingleQueryMashup } from "./generators";
 
 export default class MashupHandler {
-    async ReplaceSingleQuery(base64Str: string, queryName: string, query: string): Promise<string> {
+    async ReplaceSingleQuery(base64Str: string, queryName: string, query: string, formula: string): Promise<string> {
         const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } = this.getPackageComponents(base64Str);
-        const newPackageBuffer = await this.editSingleQueryPackage(packageOPC, queryName, query);
+        const newPackageBuffer = await this.editSingleQueryPackage(packageOPC, formula);
         const packageSizeBuffer = arrayUtils.getInt32Buffer(newPackageBuffer.byteLength);
         const permissionsSizeBuffer = arrayUtils.getInt32Buffer(permissionsSize);
         const newMetadataBuffer = this.editSingleQueryMetadata(metadata, { queryName });
@@ -42,24 +41,22 @@ export default class MashupHandler {
         };
     }
 
-    private async editSingleQueryPackage(packageOPC: ArrayBuffer, queryName: string, query: string) {
+    private async editSingleQueryPackage(packageOPC: ArrayBuffer, formula: string) {
         const packageZip = await JSZip.loadAsync(packageOPC);
         this.getSection1m(packageZip);
-        this.setSection1m(queryName, query, packageZip);
+        this.setSection1m(formula, packageZip);
 
         return await packageZip.generateAsync({ type: "uint8array" });
     }
 
-    private setSection1m = (queryName: string, query: string, zip: JSZip): void => {
-        const newSection1m = generateSingleQueryMashup(queryName, query);
-
-        zip.file(section1mPath, newSection1m, {
+    private setSection1m = (formula: string, zip: JSZip): void => {       
+        zip.file(section1mPath, formula, {
             compression: "",
         });
     };
 
     private getSection1m = async (zip: JSZip): Promise<string> => {
-        const section1m = zip.file(section1mPath)?.async("text");
+        const section1m = await zip.file(section1mPath)?.async("text");
         if (!section1m) {
             throw new Error("Formula section wasn't found in template");
         }
