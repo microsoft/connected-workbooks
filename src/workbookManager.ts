@@ -5,39 +5,97 @@ import JSZip from "jszip";
 import { pqUtils, documentUtils } from "./utils";
 import WorkbookTemplate from "./workbookTemplate";
 import MashupHandler from "./mashupDocumentParser";
-import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, defaults, sharedStringsXmlPath, sheetsXmlPath } from "./constants";
+import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, defaults, sharedStringsXmlPath, sheetsXmlPath, queryTableXmlPath } from "./constants";
 import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements } from "./types";
 
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
 
-    async generateSingleQueryWorkbook(query: QueryInfo, templateFile?: File, docProps?: DocProps): Promise<Blob> {
-        if (!query.queryMashup) {
+    async generateQueryWorkbook(query: QueryInfo, connectionOnlyQuery?: QueryInfo, templateFile?: File, docProps?: DocProps): Promise<Blob> {
+        if (!query.queryMashup || (connectionOnlyQuery && !connectionOnlyQuery.queryMashup)) {
             throw new Error("Query mashup can't be empty");
         }
         if (!query.queryName) {
             query.queryName = defaults.queryName;
+        }
+        if (connectionOnlyQuery && !connectionOnlyQuery.queryName) {
+            connectionOnlyQuery.queryName = defaults.connectionOnlyQueryName;
         }
         const zip =
             templateFile === undefined
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
                 : await JSZip.loadAsync(templateFile);
 
-        return await this.generateSingleQueryWorkbookFromZip(zip, query, docProps);
+        return await this.generateQueryWorkbookFromZip(zip, query, connectionOnlyQuery, docProps);
     }
 
-    private async generateSingleQueryWorkbookFromZip(zip: JSZip, query: QueryInfo, docProps?: DocProps): Promise<Blob> {
+    private async generateQueryWorkbookFromZip(zip: JSZip, query: QueryInfo,  connectionOnlyQuery?: QueryInfo, docProps?: DocProps): Promise<Blob> {
         if (!query.queryName) {
             query.queryName = defaults.queryName;
         }
         await this.updatePowerQueryDocument(zip, query.queryName, query.queryMashup);
         await this.updateSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
+        if (connectionOnlyQuery) {
+            await this.addConnectionOnlyQueryAttributes(zip, connectionOnlyQuery.queryName!);
+        }
         await this.updateDocProps(zip, docProps);
 
         return await zip.generateAsync({
             type: "blob",
             mimeType: "application/xlsx",
         });
+    }
+
+    private async addConnectionOnlyQueryAttributes(zip: JSZip, queryName: string) {
+        const connectionsXmlString = await zip.file(connectionsXmlPath)?.async("text");
+        if (connectionsXmlString === undefined) {
+            throw new Error("Connections were not found in template");
+        }
+        const newConnectionStr = this.updateConnectionOnlyQueryConnection(connectionsXmlString, queryName);
+        zip.file(connectionsXmlPath, newConnectionStr);
+        const queryTableXmlString = await zip.file(queryTableXmlPath)?.async("text");
+        if (queryTableXmlString === undefined) {
+            throw new Error("Query Table was not found in template");
+        }
+        const newQT = this.updateConnectionOnlyQueryTables(queryTableXmlString);
+        zip.file(queryTableXmlPath, newQT);
+        return;
+    }
+
+    private updateConnectionOnlyQueryTables(queryTableXmlString: string) {
+        const parser: DOMParser = new DOMParser();
+        const serializer = new XMLSerializer();
+        const queryTableDoc: Document = parser.parseFromString(queryTableXmlString, "text/xml");
+        const queryTableRefresh = queryTableDoc.getElementsByTagName("queryTableRefresh")[0];
+        queryTableRefresh.setAttribute("nextId", (Number(queryTableRefresh.getAttribute("nextId")) + 1).toString());
+        const newQT = serializer.serializeToString(queryTableDoc);
+        return newQT;
+    }
+
+    private async updateConnectionOnlyQueryConnection(connectionsXmlString: string, queryName: string) {
+        const parser: DOMParser = new DOMParser();
+        const serializer = new XMLSerializer();
+        const connectionsDoc: Document = parser.parseFromString(connectionsXmlString, "text/xml");
+        const connections = connectionsDoc.getElementsByTagName("connections")[0];
+        const newConnection = connectionsDoc.createElementNS(connectionsDoc.documentElement.namespaceURI, "connection");
+        connections.append(newConnection);
+        newConnection.setAttribute("id", [...connectionsDoc.getElementsByTagName("connection")].length.toString());
+        newConnection.setAttribute("xr16:uid", "{2F7BF78B-F90B-4A5D-BE55-3F9886038D5A}");
+        newConnection.setAttribute("keepAlive", "1");
+        newConnection.setAttribute("name", `Query - ${queryName}`);
+        newConnection.setAttribute("description", `Connection to the '${queryName}' query in the workbook.`);
+        newConnection.setAttribute("type", "5");
+        newConnection.setAttribute("refreshedVersion", "0");
+        newConnection.setAttribute("background", "1");
+        newConnection.removeAttribute("saveData");
+        const newDbPr = connectionsDoc.createElementNS(connectionsDoc.documentElement.namespaceURI, "dbPr");
+        newDbPr.setAttribute(
+            "connection",
+            `Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=${queryName};`
+        );
+        newDbPr.setAttribute("command", `SELECT * FROM [${queryName}]`);
+        newConnection.appendChild(newDbPr);
+        return serializer.serializeToString(connectionsDoc);
     }
 
     private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashup: string) {
@@ -153,7 +211,7 @@ export class WorkbookManager {
             for (let i = 0; i < tItems.length; i++) {
                 if (tItems[i].innerHTML === queryName) {
                     t = tItems[i];
-                    sharedStringIndex = i + 1;
+                    sharedStringIndex = i;
                     break;
                 } 
             }
