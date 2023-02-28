@@ -42,7 +42,7 @@ export class WorkbookManager {
         if (!query.queryName) {
             query.queryName = defaults.queryName;
         }
-        await this.updatePowerQueryDocument(zip, query.queryName, query.queryMashup, formula, connectionOnlyQuery ? connectionOnlyQuery.queryName : undefined);
+        await this.updatePowerQueryDocument(zip, query.queryName, query.queryMashup, formula);
         await this.updateSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
         await this.updateDocProps(zip, docProps);
 
@@ -52,7 +52,7 @@ export class WorkbookManager {
         });
     }
 
-    private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashup: string, formula: string, connectionOnlyQueryName?: string) {
+    private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashup: string, formula: string) {
         const old_base64 = await pqUtils.getBase64(zip);
 
         if (!old_base64) {
@@ -60,9 +60,6 @@ export class WorkbookManager {
         }
 
         let new_base64 = await this.mashupHandler.ReplaceSingleQuery(old_base64, queryName, queryMashup, formula);
-        if (connectionOnlyQueryName) {
-            new_base64 = await this.mashupHandler.AddConnectionOnlyQuery(new_base64, connectionOnlyQueryName);
-        }
         await pqUtils.setBase64(zip, new_base64);
     }
 
