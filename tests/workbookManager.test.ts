@@ -38,12 +38,21 @@ describe("Workbook Manager tests", () => {
     
     test("SharedStrings XML returns existing index", async () => {
         const {sharedStringIndex} = await workbookManager.updateSharedStrings('<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="1" uniqueCount="1"><si><t>newQueryName</t></si><si><t/></si></sst>', "newQueryName");
-        expect(sharedStringIndex).toEqual(1);
+        expect(sharedStringIndex).toEqual(0);
     })
 
     test("Table XML contains refrshonload value", async () => {
         const {sharedStringIndex, newSharedStrings} = await workbookManager.updateSharedStrings('<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="1" uniqueCount="1"><si><t>Query1</t></si><si><t/></si></sst>', "newQueryName");
         expect(sharedStringIndex).toEqual(2);
         expect(newSharedStrings.replace(/ /g, "")).toContain(sharedStringsXmlMock.replace(/ /g, ""));
+    })
+
+    test("Adding a new connection to ConnectionXML", async () => {
+        const newConnectionStr = await workbookManager.updateConnectionOnlyQueryConnection(mockConnectionString, "newConnection");
+        expect(newConnectionStr.replace(/ /g, "")).toContain(('id="2"').replace(/ /g, "")); 
+        expect(newConnectionStr.replace(/ /g, "")).toContain(('id="2"').replace(/ /g, "")); 
+        expect(newConnectionStr.replace(/ /g, "")).toContain('name=\"Query - newConnection\"'.replace(/ /g, ""));
+        expect(newConnectionStr.replace(/ /g, "")).toContain('name="Query - newConnection"'.replace(/ /g, ""));
+        expect(newConnectionStr.replace(/ /g, "")).toContain(`description="Connection to the 'newConnection' query in the workbook."`.replace(/ /g, ""));
     })
 });
