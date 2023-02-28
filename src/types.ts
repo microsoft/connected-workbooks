@@ -18,20 +18,23 @@ export interface DocProps {
 }
 
 export interface TableData {
-    columnNames: string[];
-    columnTypes: number[];
+    columnMetadata: ColumnMetadata[];
     data: string[][];
     columnwidth?: number;
 }
 
-export interface columnMetadata {
+export interface ColumnMetadata {
     name: string;
     type: number;
 }
 
 export interface Grid {
-    Header: columnMetadata[];
+    Header: ColumnMetadata[];
     GridData: (string|number|boolean)[][];
+}
+
+export interface TableDataParser {
+    parseToTableData: (grid: any) => TableData | undefined;
 }
 
 export enum dataTypes {

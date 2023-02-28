@@ -23,7 +23,9 @@ import {
     TableData,
     dataTypes,
     Grid,
+    ColumnMetadata,
 } from "./types";
+import TableDataParserFactory from "./TableDataParserFactory";
 
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
@@ -52,54 +54,11 @@ export class WorkbookManager {
         if (!initialDataGrid) {
             return undefined;
         }
-        const { columnNames, columnTypes } = this.parseGridHeader(initialDataGrid);
-        const data = this.parseGridData(initialDataGrid, columnTypes);
-        return { columnNames: columnNames, columnTypes: columnTypes, data: data };
-    }
-
-    private parseGridData(initialDataGrid: Grid, columnTypes: number[]) {
-        const gridData = initialDataGrid.GridData;
-        if (!gridData) {
-            throw new Error("Invalid JSON file, grid data is missing");
-        }
-        const tableData: string[][] = [];
-        for (const rowData of gridData) {
-            const row: string[] = [];
-            var colIndex = 0;
-            for (const prop in rowData) {
-                const dataType = columnTypes[colIndex];
-                const cellValue = rowData[prop];
-                if (dataType == dataTypes.number) {
-                    if (isNaN(Number(cellValue))) {
-                        throw new Error("Invalid cell value in number column");
-                    }
-                }
-                if (dataType == dataTypes.boolean) {
-                    if (cellValue != "1" && cellValue != "0") {
-                        throw new Error("Invalid cell value in boolean column");
-                    }
-                }
-                row.push(rowData[prop].toString());
-                colIndex++;
-            }
-            tableData.push(row);
-        }
+        const parser = TableDataParserFactory.createParser(initialDataGrid);
+        const tableData = parser.parseToTableData(initialDataGrid);
         return tableData;
     }
 
-    private parseGridHeader(data: any) {
-        const columnNames: string[] = [];
-        const columnTypes: number[] = [];
-        const headerData = data.Header;
-        if (!headerData) {
-            throw new Error("Invalid JSON file, header is missing");
-        }
-        for (const prop in headerData) {
-            columnNames.push(prop);
-            columnTypes.push(headerData[prop]);
-        }
-        return { columnNames, columnTypes };
-    }
 
     private async generateSingleQueryWorkbookFromZip(
         zip: JSZip,
@@ -199,22 +158,22 @@ export class WorkbookManager {
         const tableDoc: Document = parser.parseFromString(tableXmlString, "text/xml");
         const tableColumns = tableDoc.getElementsByTagName("tableColumns")[0];
         tableColumns.textContent = "";
-        tableData.columnNames.forEach((columnName: string, columnIndex: number) => {
+        tableData.columnMetadata.forEach((col: ColumnMetadata, columnIndex: number) => {
             const tableColumn = tableDoc.createElementNS(tableDoc.documentElement.namespaceURI, "tableColumn");
             tableColumn.setAttribute("id", (columnIndex + 1).toString());
             tableColumn.setAttribute("uniqueName", (columnIndex + 1).toString());
-            tableColumn.setAttribute("name", columnName);
+            tableColumn.setAttribute("name", col.name);
             tableColumn.setAttribute("queryTableFieldId", (columnIndex + 1).toString());
             tableColumns.appendChild(tableColumn);
         });
 
-        tableColumns.setAttribute("count", tableData.columnNames.length.toString());
+        tableColumns.setAttribute("count", tableData.columnMetadata.length.toString());
         tableDoc
             .getElementsByTagName("table")[0]
             .setAttribute(
                 "ref",
                 `A1:${documentUtils.getCellReference(
-                    tableData.columnNames.length - 1,
+                    tableData.columnMetadata.length - 1,
                     tableData.data.length + 1
                 )}`.replace("$", "")
             );
@@ -223,7 +182,7 @@ export class WorkbookManager {
             .setAttribute(
                 "ref",
                 `A1:${documentUtils.getCellReference(
-                    tableData.columnNames.length - 1,
+                    tableData.columnMetadata.length - 1,
                     tableData.data.length + 1
                 )}`.replace("$", "")
             );
@@ -238,7 +197,7 @@ export class WorkbookManager {
         const prefix = queryName === undefined ? "Query1" : queryName;
         definedName.textContent =
             prefix +
-            `!$A$1:$${documentUtils.getCellReference(tableData.columnNames.length - 1, tableData.data.length + 1)}`;
+            `!$A$1:$${documentUtils.getCellReference(tableData.columnMetadata.length - 1, tableData.data.length + 1)}`;
         return newSerializer.serializeToString(workbookDoc);
     }
 
@@ -248,20 +207,20 @@ export class WorkbookManager {
         const queryTableDoc: Document = parser.parseFromString(queryTableXmlString, "text/xml");
         const queryTableFields = queryTableDoc.getElementsByTagName("queryTableFields")[0];
         queryTableFields.textContent = "";
-        tableData.columnNames.forEach((columnName: string, columnIndex: number) => {
+        tableData.columnMetadata.forEach((col: ColumnMetadata, columnIndex: number) => {
             const queryTableField = queryTableDoc.createElementNS(
                 queryTableDoc.documentElement.namespaceURI,
                 "queryTableField"
             );
             queryTableField.setAttribute("id", (columnIndex + 1).toString());
-            queryTableField.setAttribute("name", columnName);
+            queryTableField.setAttribute("name", col.name);
             queryTableField.setAttribute("tableColumnId", (columnIndex + 1).toString());
             queryTableFields.appendChild(queryTableField);
         });
-        queryTableFields.setAttribute("count", tableData.columnNames.length.toString());
+        queryTableFields.setAttribute("count", tableData.columnMetadata.length.toString());
         queryTableDoc
             .getElementsByTagName("queryTableRefresh")[0]
-            .setAttribute("nextId", (tableData.columnNames.length + 1).toString());
+            .setAttribute("nextId", (tableData.columnMetadata.length + 1).toString());
         return serializer.serializeToString(queryTableDoc);
     }
 
@@ -274,10 +233,10 @@ export class WorkbookManager {
         var rowIndex = 0;
         const columnRow = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, "row");
         columnRow.setAttribute("r", (rowIndex + 1).toString());
-        columnRow.setAttribute("spans", "1:" + tableData.columnNames.length);
+        columnRow.setAttribute("spans", "1:" + tableData.columnMetadata.length);
         columnRow.setAttribute("x14ac:dyDescent", "0.3");
-        tableData.columnNames.forEach((column, colIndex) => {
-            columnRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, dataTypes.string, column));
+        tableData.columnMetadata.forEach((col, colIndex) => {
+            columnRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, dataTypes.string, col.name));
         });
         sheetData.appendChild(columnRow);
         rowIndex++;
@@ -292,7 +251,7 @@ export class WorkbookManager {
                         sheetsDoc,
                         colIndex,
                         rowIndex,
-                        tableData.columnTypes[colIndex],
+                        tableData.columnMetadata[colIndex].type,
                         cellContent
                     )
                 );
