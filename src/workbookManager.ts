@@ -27,7 +27,7 @@ export class WorkbookManager {
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
                 : await JSZip.loadAsync(templateFile);
 
-        return await this.generateSingleQueryWorkbookFromZip(zip, query, connectionOnlyQuery, formula, docProps);
+        return await this.generateSingleQueryWorkbookFromZip(zip, query, formula, connectionOnlyQuery, docProps);
     }
 
     private createNewFormula(query: QueryInfo, connectionOnlyQuery?: QueryInfo) {
@@ -38,7 +38,7 @@ export class WorkbookManager {
         return formula;
     }
 
-    private async generateSingleQueryWorkbookFromZip(zip: JSZip, query: QueryInfo, connectionOnlyQuery?: QueryInfo, formula?: string, docProps?: DocProps): Promise<Blob> {
+    private async generateSingleQueryWorkbookFromZip(zip: JSZip, query: QueryInfo, formula: string, connectionOnlyQuery?: QueryInfo, docProps?: DocProps): Promise<Blob> {
         if (!query.queryName) {
             query.queryName = defaults.queryName;
         }
@@ -52,7 +52,7 @@ export class WorkbookManager {
         });
     }
 
-    private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashup: string, formula?: string, connectionOnlyQueryName?: string) {
+    private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashup: string, formula: string, connectionOnlyQueryName?: string) {
         const old_base64 = await pqUtils.getBase64(zip);
 
         if (!old_base64) {
