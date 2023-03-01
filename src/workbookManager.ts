@@ -11,26 +11,29 @@ import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableEle
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
 
-    async generateSingleQueryWorkbook(query: QueryInfo, templateFile?: File, docProps?: DocProps): Promise<Blob> {
+    async generateSingleQueryWorkbook(query: QueryInfo, connectionOnlyQuery?: QueryInfo, templateFile?: File, docProps?: DocProps): Promise<Blob> {
         if (!query.queryMashup) {
             throw new Error("Query mashup can't be empty");
         }
         if (!query.queryName) {
             query.queryName = defaults.queryName;
         }
+        if (connectionOnlyQuery && !connectionOnlyQuery.queryName) {
+            connectionOnlyQuery.queryName = defaults.connectionOnlyQueryName;
+        }
         const zip =
             templateFile === undefined
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
                 : await JSZip.loadAsync(templateFile);
 
-        return await this.generateSingleQueryWorkbookFromZip(zip, query, docProps);
+        return await this.generateSingleQueryWorkbookFromZip(zip, query, connectionOnlyQuery, docProps);
     }
 
-    private async generateSingleQueryWorkbookFromZip(zip: JSZip, query: QueryInfo, docProps?: DocProps): Promise<Blob> {
+    private async generateSingleQueryWorkbookFromZip(zip: JSZip, query: QueryInfo, connectionOnlyQuery?: QueryInfo, docProps?: DocProps): Promise<Blob> {
         if (!query.queryName) {
             query.queryName = defaults.queryName;
         }
-        await this.updatePowerQueryDocument(zip, query.queryName, query.queryMashup);
+        await this.updatePowerQueryDocument(zip, query.queryName, query.queryMashup, connectionOnlyQuery ? connectionOnlyQuery.queryName : undefined);
         await this.updateSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
         await this.updateDocProps(zip, docProps);
 
@@ -40,14 +43,16 @@ export class WorkbookManager {
         });
     }
 
-    private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashup: string) {
+    private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashup: string, connectionOnlyQueryName: string | undefined) {
         const old_base64 = await pqUtils.getBase64(zip);
 
         if (!old_base64) {
             throw new Error("Base64 string is not found in zip file");
         }
-
-        const new_base64 = await this.mashupHandler.ReplaceSingleQuery(old_base64, queryName, queryMashup);
+        let new_base64 = await this.mashupHandler.ReplaceSingleQuery(old_base64, queryName, queryMashup);
+        if (connectionOnlyQueryName) {
+           new_base64 = await this.mashupHandler.AddConnectionOnlyQuery(new_base64, connectionOnlyQueryName);
+        } 
         await pqUtils.setBase64(zip, new_base64);
     }
 
