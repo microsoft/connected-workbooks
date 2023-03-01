@@ -37,7 +37,7 @@ export default class MashupHandler {
         }
         const packageSizeBuffer = arrayUtils.getInt32Buffer(packageOPC.byteLength);
         const permissionsSizeBuffer = arrayUtils.getInt32Buffer(permissionsSize);
-        const newMetadataBuffer = this.addConnectionOnlyMetadata(metadata, connectionOnlyName);
+        const newMetadataBuffer = this.addConnectionOnlyQueryMetadata(metadata, connectionOnlyName);
         const metadataSizeBuffer = arrayUtils.getInt32Buffer(newMetadataBuffer.byteLength);
         const newMashup = arrayUtils.concatArrays(
             version,
@@ -193,7 +193,7 @@ export default class MashupHandler {
         return newMetadataArray;
     };
 
-    private addConnectionOnlyMetadata = (metadataArray: Uint8Array, queryName: string) => {
+    private addConnectionOnlyQueryMetadata = (metadataArray: Uint8Array, queryName: string) => {
         //extract metadataXml
         const mashupArray = new arrayUtils.ArrayReader(metadataArray.buffer);
         const metadataVersion = mashupArray.getBytes(4);
@@ -201,38 +201,10 @@ export default class MashupHandler {
         const metadataXml = mashupArray.getBytes(metadataXmlSize);
         const endBuffer = mashupArray.getBytes();
 
-        //parse metdataXml
+        //parse metadataXml
         const metadataString = uintToString(metadataXml);
-        const parser = new DOMParser();
-        const serializer = new XMLSerializer();
-        const metadataDoc = parser.parseFromString(metadataString, "text/xml");
-
-        // Add new Item to metadataXml
-        const items = metadataDoc.getElementsByTagName("Items")[0];
-        const newItem = this.createNewItem(metadataDoc);
-        const oldPathItem = metadataDoc.getElementsByTagName("Item")[2];
-        const newPathItem = oldPathItem.cloneNode(true);
-        items.appendChild(newPathItem);
-        const itemPaths = metadataDoc.getElementsByTagName("ItemPath");
-        if (itemPaths && itemPaths.length) {
-            for (let i = 0; i < itemPaths.length; i++) {
-                const itemPath = itemPaths[i];
-                if (
-                    itemPath.parentElement?.parentElement === newPathItem ||
-                    itemPath.parentElement?.parentElement === newItem
-                ) {
-                    const content = itemPath.innerHTML;
-                    if (content.includes("Section1/")) {
-                        const strArr = content.split("/");
-                        strArr[1] = queryName;
-                        const newContent = strArr.join("/");
-                        itemPath.textContent = newContent;
-                    }
-                }
-            }
-        }
-        // Convert new metadataXml to Uint8Array
-        const newMetadataString = serializer.serializeToString(metadataDoc);
+        const newMetadataString = this.updateConnectionOnlyMetadataStr(metadataString, queryName);
+        
         const encoder = new TextEncoder();
         const newMetadataXml = encoder.encode(newMetadataString);
         const newMetadataXmlSize = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
@@ -245,49 +217,75 @@ export default class MashupHandler {
         return newMetadataArray;
     };
 
-    private createNewItem(metadataDoc: Document) {
+    private updateConnectionOnlyMetadataStr = (metadataString: string, queryName: string) => {
+        const parser = new DOMParser();
+        const metadataDoc = parser.parseFromString(metadataString, "text/xml");     
+        this.createStableEntriesItem(metadataDoc, queryName);
+        this.createSourceItem(metadataDoc, queryName);
+       
+        const serializer = new XMLSerializer();
+        const newMetadataString = serializer.serializeToString(metadataDoc);
+        return newMetadataString;
+    };
+
+    private createSourceItem = (metadataDoc: Document, queryName: string) => {
         const items = metadataDoc.getElementsByTagName("Items")[0];
-        const oldItem = metadataDoc.getElementsByTagName("Item")[1];
-        const newItem = oldItem.cloneNode(false);
-        const newItemLocation = metadataDoc.getElementsByTagName("ItemLocation")[1].cloneNode(true);
+        const newItemSource = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Item");
+        const newItemLocation = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemLocation");
+        const newItemType = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemType");
+        newItemType.textContent = "Formula";
+        const newItemPath = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemPath");
+        newItemPath.textContent = `Section1/${queryName}/Source`;
+        newItemLocation.appendChild(newItemType);
+        newItemLocation.appendChild(newItemPath);
+        newItemSource.appendChild(newItemLocation);
+        items.appendChild(newItemSource);
+    };
+
+    private createStableEntriesItem = (metadataDoc: Document, queryName: string) => {
+        const items = metadataDoc.getElementsByTagName("Items")[0];
+        const newItem = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Item");
+        const newItemLocation = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemLocation");
+        const newItemType = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemType");
+        newItemType.textContent = "Formula";
+        const newItemPath = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemPath");
+        newItemPath.textContent = `Section1/${queryName}`;
+        newItemLocation.appendChild(newItemType);
+        newItemLocation.appendChild(newItemPath); 
         newItem.appendChild(newItemLocation);
         items.append(newItem);
-        const newStableEntries = metadataDoc.getElementsByTagName("StableEntries")[1].cloneNode(true);
-        newItem.appendChild(newStableEntries);
-        const entries = metadataDoc.getElementsByTagName("Entry");
-        if (entries && entries.length) {
-            for (let i = 0; i < entries.length; i++) {
-                const entry = entries[i];
-                // update certain entries values in new connectionOnly Item
-                if (entry.parentElement === newStableEntries) {
-                    const entryAttributesArr = [...entry.attributes];
-                    const entryProp = entryAttributesArr.find((prop) => {
-                        return prop?.name === "Type";
-                    });
-                    if (entryProp?.nodeValue == "ResultType") {
-                        entry.setAttribute("Value", "sTable");
-                    }
-                    if (entryProp?.nodeValue == "FillObjectType") {
-                        entry.setAttribute("Value", "sConnectionOnly");
-                    }
-                    if (entryProp?.nodeValue == "FillEnabled") {
-                        entry.setAttribute("Value", "l0");
-                    }
-                    if (entryProp?.nodeValue == "FillLastUpdated") {
-                        const nowTime = new Date().toISOString();
-                        entry.setAttribute("Value", ("d" + nowTime).replace(/Z/, "0000Z"));
-                    }
-                    if (entryProp?.nodeValue == "FillColumnNames") {
-                        newStableEntries.removeChild(entry);
-                    }
-                    if (entryProp?.nodeValue == "FillTarget") {
-                        newStableEntries.removeChild(entry);
-                    }
-                }
-            }
-        }
-        return newItem;
-    }
+        let stableEntries = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "StableEntries");
+        stableEntries = this.createConnectionOnlyEntries(metadataDoc, stableEntries);
+        newItem.appendChild(stableEntries);
+    };
+    
+    private createConnectionOnlyEntries = (metadataDoc: Document, stableEntries: Element) => {
+        const IsPrivate = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
+        IsPrivate.setAttribute("Type", "IsPrivate");
+        IsPrivate.setAttribute("Value", "l0");
+        stableEntries.appendChild(IsPrivate);
+        const FillEnabled = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
+        FillEnabled.setAttribute("Type", "FillEnabled");
+        FillEnabled.setAttribute("Value", "l0");
+        stableEntries.appendChild(FillEnabled);
+        const FillObjectType = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
+        FillObjectType.setAttribute("Type", "FillObjectType");
+        FillObjectType.setAttribute("Value", "sConnectionOnly");
+        stableEntries.appendChild(FillObjectType);
+        const FillToDataModelEnabled = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
+        FillToDataModelEnabled.setAttribute("Type", "FillToDataModelEnabled");
+        FillToDataModelEnabled.setAttribute("Value", "l0");
+        const FillLastUpdated = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
+        FillLastUpdated.setAttribute("Type", "FillLastUpdated");
+        const nowTime = new Date().toISOString();
+        FillLastUpdated.setAttribute("Value", ("d" + nowTime).replace(/Z/, "0000Z"));
+        stableEntries.appendChild(FillLastUpdated);
+        const ResultType = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
+        ResultType.setAttribute("Type", "ResultType");
+        ResultType.setAttribute("Value", "sTable");
+        stableEntries.appendChild(ResultType);
+        return stableEntries;
+    };
 }
 
 function uintToString(uintArray: Uint8Array) {
