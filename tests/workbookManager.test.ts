@@ -1,7 +1,7 @@
 import workbookTemplate from "../src/workbookTemplate";
 import { WorkbookManager }  from "../src/workbookManager";
 import { connectionsXmlPath, sharedStringsXmlPath } from "../src/constants";
-import { sharedStringsXmlMock, existingSharedStringsXmlMock } from "./mocks";
+import { sharedStringsXmlMock, existingSharedStringsXmlMock, queryTablesXmlMock } from "./mocks";
 
 describe("Workbook Manager tests", () => {
     const workbookManager = new WorkbookManager() as any;
@@ -54,5 +54,10 @@ describe("Workbook Manager tests", () => {
         expect(newConnectionStr.replace(/ /g, "")).toContain('name=\"Query - newConnection\"'.replace(/ /g, ""));
         expect(newConnectionStr.replace(/ /g, "")).toContain('name="Query - newConnection"'.replace(/ /g, ""));
         expect(newConnectionStr.replace(/ /g, "")).toContain(`description="Connection to the 'newConnection' query in the workbook."`.replace(/ /g, ""));
+    })
+
+    test("Adding a new connection to queryTableXML", async () => {
+        const newQueryTableStr = await workbookManager.updateConnectionOnlyQueryTables(queryTablesXmlMock, "newConnection");
+        expect(newQueryTableStr.replace(/ /g, "")).toContain(('nextId="3"').replace(/ /g, "")); 
     })
 });
