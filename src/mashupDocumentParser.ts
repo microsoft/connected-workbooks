@@ -19,6 +19,7 @@ export default class MashupHandler {
         const newMashup = arrayUtils.concatArrays(version, packageSizeBuffer, newPackageBuffer, permissionsSizeBuffer, permissions, metadataSizeBuffer, newMetadataBuffer, endBuffer);
         return base64.fromByteArray(newMashup);
     }
+
     async AddConnectionOnlyQuery(base64Str: string, queryName: string): Promise<string> {
         var { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } = this.getPackageComponents(base64Str);
         const packageSizeBuffer = arrayUtils.getInt32Buffer(packageOPC.byteLength);
@@ -180,16 +181,17 @@ export default class MashupHandler {
     private updateConnectionOnlyMetadataStr = (metadataString: string, queryName: string) => {
         const parser = new DOMParser();
         const metadataDoc = parser.parseFromString(metadataString, "text/xml");     
-        this.createStableEntriesItem(metadataDoc, queryName);
-        this.createSourceItem(metadataDoc, queryName);
-
+        const items = metadataDoc.getElementsByTagName("Items")[0];
+        const stableEntriesItem = this.createStableEntriesItem(metadataDoc, queryName);
+        items.appendChild(stableEntriesItem);
+        const sourceItem = this.createSourceItem(metadataDoc, queryName);
+        items.appendChild(sourceItem);
         const serializer = new XMLSerializer();
         const newMetadataString = serializer.serializeToString(metadataDoc);
         return newMetadataString;
     };
 
     private createSourceItem = (metadataDoc: Document, queryName: string) => {
-        const items = metadataDoc.getElementsByTagName("Items")[0];
         const newItemSource = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Item");
         const newItemLocation = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemLocation");
         const newItemType = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemType");
@@ -199,11 +201,10 @@ export default class MashupHandler {
         newItemLocation.appendChild(newItemType);
         newItemLocation.appendChild(newItemPath);
         newItemSource.appendChild(newItemLocation);
-        items.appendChild(newItemSource);
+        return newItemSource;
     };
 
     private createStableEntriesItem = (metadataDoc: Document, queryName: string) => {
-        const items = metadataDoc.getElementsByTagName("Items")[0];
         const newItem = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Item");
         const newItemLocation = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemLocation");
         const newItemType = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemType");
@@ -213,13 +214,13 @@ export default class MashupHandler {
         newItemLocation.appendChild(newItemType);
         newItemLocation.appendChild(newItemPath); 
         newItem.appendChild(newItemLocation);
-        items.append(newItem);
-        let stableEntries = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "StableEntries");
-        stableEntries = this.createConnectionOnlyEntries(metadataDoc, stableEntries);
+        const stableEntries = this.createConnectionOnlyEntries(metadataDoc);
         newItem.appendChild(stableEntries);
+        return newItem;
     };
 
-    private createConnectionOnlyEntries = (metadataDoc: Document, stableEntries: Element) => {
+    private createConnectionOnlyEntries = (metadataDoc: Document) => {
+        const stableEntries = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "StableEntries");
         const IsPrivate = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
         IsPrivate.setAttribute("Type", "IsPrivate");
         IsPrivate.setAttribute("Value", "l0");
@@ -235,6 +236,7 @@ export default class MashupHandler {
         const FillToDataModelEnabled = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
         FillToDataModelEnabled.setAttribute("Type", "FillToDataModelEnabled");
         FillToDataModelEnabled.setAttribute("Value", "l0");
+        stableEntries.appendChild(FillToDataModelEnabled);
         const FillLastUpdated = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
         FillLastUpdated.setAttribute("Type", "FillLastUpdated");
         const nowTime = new Date().toISOString();
