@@ -15,6 +15,14 @@ export const defaults = {
     connectionOnlyQueryName: "Query2"
 };
 
+export const SHARED_STRINGS_NOT_FOUND = "SharedStrings were not found in template";
+export const CONNECTIONS_NOT_FOUND = "Connections were not found in template";
+export const SHEETS_NOT_FOUND = "Sheets were not found in template";
+export const BASE64_NOT_FOUND = "Base64 was not found in template";
+export const EMPTY_QUERY_MASHUP = "Query mashup is empty";
+export const QUERY_TABLE_NOT_FOUND = "No Query Table or Pivot Table found for query in given template.";
+export const QUERY_CONNECTION_NOT_FOUND = `No connection found for query`;
+
 export const URLS = {
     PQ: [
         "http://schemas.microsoft.com/DataMashup",
