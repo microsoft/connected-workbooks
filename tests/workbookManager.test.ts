@@ -1,7 +1,8 @@
 import workbookTemplate from "../src/workbookTemplate";
 import { WorkbookManager }  from "../src/workbookManager";
 import { connectionsXmlPath, sharedStringsXmlPath } from "../src/constants";
-import { sharedStringsXmlMock, existingSharedStringsXmlMock } from "./mocks";
+import { sharedStringsXmlMock, existingSharedStringsXmlMock, section1mMultipleQueryMock } from "./mocks";
+import { generateSingleQueryMashup } from "../src/generators";
 
 describe("Workbook Manager tests", () => {
     const workbookManager = new WorkbookManager() as any;
@@ -45,5 +46,16 @@ describe("Workbook Manager tests", () => {
         const {sharedStringIndex, newSharedStrings} = await workbookManager.updateSharedStrings('<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="1" uniqueCount="1"><si><t>Query1</t></si><si><t/></si></sst>', "newQueryName");
         expect(sharedStringIndex).toEqual(2);
         expect(newSharedStrings.replace(/ /g, "")).toContain(sharedStringsXmlMock.replace(/ /g, ""));
+    })
+
+    test("Create new formula from QueryInfo", async () => {
+        const formula = await workbookManager.createNewFormula({queryMashup: "mashupDoc1", refreshOnOpen: 0, queryName: "Query1"}, {queryMashup: "mashupDoc2", refreshOnOpen: 0, queryName: "Query2"});
+        expect(formula.replace(/ /g, "")).toEqual(section1mMultipleQueryMock.replace(/ /g, ""));
+    })
+
+    test("Create new formula from formula", async () => {
+        const oldFormula = generateSingleQueryMashup("Query1", "mashupDoc");
+        const formula = await workbookManager.createNewFormula({queryMashup: "mashupDoc1", refreshOnOpen: 0, queryName: "Query1"}, {queryMashup: "mashupDoc2", refreshOnOpen: 0, queryName: "Query2"}, oldFormula);
+        expect(formula.replace(/ /g, "")).toEqual(oldFormula.replace(/ /g, ""));
     })
 });

@@ -19,9 +19,7 @@ export class WorkbookManager {
         if (!query.queryName) {
             query.queryName = defaults.queryName;
         }
-        if (!formula) {
-            formula = this.createNewFormula(query, connectionOnlyQuery);
-        }
+        formula = this.createNewFormula(query, connectionOnlyQuery, formula);
         const zip =
             templateFile === undefined
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
@@ -30,10 +28,12 @@ export class WorkbookManager {
         return await this.generateSingleQueryWorkbookFromZip(zip, query, formula, connectionOnlyQuery, docProps);
     }
 
-    private createNewFormula(query: QueryInfo, connectionOnlyQuery?: QueryInfo) {
-        let formula = generateSingleQueryMashup(query.queryName!, query.queryMashup);
-        if (connectionOnlyQuery) {
-            formula = generateNewQueryMashup(formula, connectionOnlyQuery.queryName!, connectionOnlyQuery.queryMashup);
+    private createNewFormula(query: QueryInfo, connectionOnlyQuery?: QueryInfo, formula?: string) {
+        if (!formula) {
+            formula = generateSingleQueryMashup(query.queryName!, query.queryMashup);
+            if (connectionOnlyQuery) {
+                formula = generateNewQueryMashup(formula, connectionOnlyQuery.queryName!, connectionOnlyQuery.queryMashup);
+            }
         }
         return formula;
     }
@@ -190,7 +190,7 @@ export class WorkbookManager {
         const newSharedStrings = serializer.serializeToString(sharedStringsDoc);
         return {sharedStringIndex, newSharedStrings};
 
-}
+    }
 
     private async updateWorksheet(sheetsXmlString: string, sharedStringIndex: string) {
         const parser: DOMParser = new DOMParser();
