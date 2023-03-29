@@ -18,7 +18,7 @@ describe("Mashup Document Parser tests", () => {
         const originalBase64Str = await pqUtils.getBase64(defaultZipFile);
 
           if (originalBase64Str) {
-            const replacedQueryBase64Str = await mashupHandler.ReplaceSingleQuery(originalBase64Str, "newQueryName", simpleQueryMock);
+            const replacedQueryBase64Str = await mashupHandler.ReplaceSingleQuery(originalBase64Str, "Query1", section1mNewQueryNameSimpleMock);
             const buffer = base64.toByteArray(replacedQueryBase64Str).buffer;
             const mashupArray = new arrayUtils.ArrayReader(buffer);
             const startArray = mashupArray.getBytes(4);
