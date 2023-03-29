@@ -7,30 +7,34 @@ import WorkbookTemplate from "./workbookTemplate";
 import MashupHandler from "./mashupDocumentParser";
 import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, defaults, sharedStringsXmlPath, sheetsXmlPath } from "./constants";
 import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements } from "./types";
+import { generateSingleQueryMashup } from "./generators";
 
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
 
-    async generateSingleQueryWorkbook(query: QueryInfo, templateFile?: File, docProps?: DocProps): Promise<Blob> {
+    async generateSingleQueryWorkbook(query: QueryInfo, formula?: string, templateFile?: File, docProps?: DocProps): Promise<Blob> {
         if (!query.queryMashup) {
             throw new Error("Query mashup can't be empty");
         }
         if (!query.queryName) {
             query.queryName = defaults.queryName;
         }
+        if (!formula) {
+            formula = this.createNewFormula(query);
+        }
         const zip =
             templateFile === undefined
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
                 : await JSZip.loadAsync(templateFile);
 
-        return await this.generateSingleQueryWorkbookFromZip(zip, query, docProps);
+        return await this.generateSingleQueryWorkbookFromZip(zip, query, formula!, docProps);
     }
 
-    private async generateSingleQueryWorkbookFromZip(zip: JSZip, query: QueryInfo, docProps?: DocProps): Promise<Blob> {
+    private async generateSingleQueryWorkbookFromZip(zip: JSZip, query: QueryInfo, formula:string, docProps?: DocProps): Promise<Blob> {
         if (!query.queryName) {
             query.queryName = defaults.queryName;
         }
-        await this.updatePowerQueryDocument(zip, query.queryName, query.queryMashup);
+        await this.updatePowerQueryDocument(zip, query.queryName, formula);
         await this.updateSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
         await this.updateDocProps(zip, docProps);
 
@@ -40,14 +44,18 @@ export class WorkbookManager {
         });
     }
 
-    private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashup: string) {
+    private createNewFormula(query: QueryInfo) {
+        return generateSingleQueryMashup(query.queryName!, query.queryMashup);
+    }
+    
+    private async updatePowerQueryDocument(zip: JSZip, queryName: string, formula: string) {
         const old_base64 = await pqUtils.getBase64(zip);
 
         if (!old_base64) {
             throw new Error("Base64 string is not found in zip file");
         }
 
-        const new_base64 = await this.mashupHandler.ReplaceSingleQuery(old_base64, queryName, queryMashup);
+        const new_base64 = await this.mashupHandler.ReplaceSingleQuery(old_base64, queryName, formula);
         await pqUtils.setBase64(zip, new_base64);
     }
 
