@@ -11,36 +11,36 @@ import { generateSingleQueryMashup } from "./generators";
 export default class MashupHandler {
     async ReplaceSingleQuery(base64Str: string, queryName: string, query: string): Promise<string> {
         const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } = this.getPackageComponents(base64Str);
-        const newPackageBuffer = await this.editSingleQueryPackage(packageOPC, queryName, query);
-        const packageSizeBuffer = arrayUtils.getInt32Buffer(newPackageBuffer.byteLength);
-        const permissionsSizeBuffer = arrayUtils.getInt32Buffer(permissionsSize);
-        const newMetadataBuffer = this.editSingleQueryMetadata(metadata, { queryName });
-        const metadataSizeBuffer = arrayUtils.getInt32Buffer(newMetadataBuffer.byteLength);
-        const newMashup = arrayUtils.concatArrays(version, packageSizeBuffer, newPackageBuffer, permissionsSizeBuffer, permissions, metadataSizeBuffer, newMetadataBuffer, endBuffer);
+        const newPackageBuffer: Uint8Array = await this.editSingleQueryPackage(packageOPC, queryName, query);
+        const packageSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(newPackageBuffer.byteLength);
+        const permissionsSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(permissionsSize);
+        const newMetadataBuffer: Uint8Array = this.editSingleQueryMetadata(metadata, { queryName });
+        const metadataSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(newMetadataBuffer.byteLength);
+        const newMashup: Uint8Array = arrayUtils.concatArrays(version, packageSizeBuffer, newPackageBuffer, permissionsSizeBuffer, permissions, metadataSizeBuffer, newMetadataBuffer, endBuffer);
         return base64.fromByteArray(newMashup);
     }
 
     async AddConnectionOnlyQuery(base64Str: string, queryName: string): Promise<string> {
         var { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } = this.getPackageComponents(base64Str);
-        const packageSizeBuffer = arrayUtils.getInt32Buffer(packageOPC.byteLength);
-        const permissionsSizeBuffer = arrayUtils.getInt32Buffer(permissionsSize);
-        const newMetadataBuffer = this.addConnectionOnlyQueryMetadata(metadata, queryName);
-        const metadataSizeBuffer = arrayUtils.getInt32Buffer(newMetadataBuffer.byteLength);
-        const newMashup = arrayUtils.concatArrays(version, packageSizeBuffer, packageOPC, permissionsSizeBuffer, permissions, metadataSizeBuffer, newMetadataBuffer, endBuffer);
+        const packageSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(packageOPC.byteLength);
+        const permissionsSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(permissionsSize);
+        const newMetadataBuffer: Uint8Array = this.addConnectionOnlyQueryMetadata(metadata, queryName);
+        const metadataSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(newMetadataBuffer.byteLength);
+        const newMashup: Uint8Array = arrayUtils.concatArrays(version, packageSizeBuffer, packageOPC, permissionsSizeBuffer, permissions, metadataSizeBuffer, newMetadataBuffer, endBuffer);
         return base64.fromByteArray(newMashup);
     }
 
     private getPackageComponents(base64Str: string) {
-        const buffer = base64.toByteArray(base64Str).buffer;
-        const mashupArray = new arrayUtils.ArrayReader(buffer);
-        const version = mashupArray.getBytes(4);
-        const packageSize = mashupArray.getInt32();
-        const packageOPC = mashupArray.getBytes(packageSize);
-        const permissionsSize = mashupArray.getInt32();
-        const permissions = mashupArray.getBytes(permissionsSize);
-        const metadataSize = mashupArray.getInt32();
-        const metadata = mashupArray.getBytes(metadataSize);
-        const endBuffer = mashupArray.getBytes();
+        const buffer: ArrayBufferLike = base64.toByteArray(base64Str).buffer;
+        const mashupArray: any = new arrayUtils.ArrayReader(buffer);
+        const version: any = mashupArray.getBytes(4);
+        const packageSize: any = mashupArray.getInt32();
+        const packageOPC: any = mashupArray.getBytes(packageSize);
+        const permissionsSize: any = mashupArray.getInt32();
+        const permissions: any = mashupArray.getBytes(permissionsSize);
+        const metadataSize: any = mashupArray.getInt32();
+        const metadata: any = mashupArray.getBytes(metadataSize);
+        const endBuffer: any = mashupArray.getBytes();
 
          return {
             version,
@@ -53,7 +53,7 @@ export default class MashupHandler {
     }
 
     private async editSingleQueryPackage(packageOPC: ArrayBuffer, queryName: string, query: string) {
-        const packageZip = await JSZip.loadAsync(packageOPC);
+        const packageZip: JSZip = await JSZip.loadAsync(packageOPC);
         this.getSection1m(packageZip);
         this.setSection1m(queryName, query, packageZip);
 
@@ -61,7 +61,7 @@ export default class MashupHandler {
     }
 
     private setSection1m = (queryName: string, query: string, zip: JSZip): void => {
-        const newSection1m = generateSingleQueryMashup(queryName, query);
+        const newSection1m: string = generateSingleQueryMashup(queryName, query);
 
         zip.file(section1mPath, newSection1m, {
             compression: "",
@@ -69,7 +69,7 @@ export default class MashupHandler {
     };
 
     private getSection1m = async (zip: JSZip): Promise<string> => {
-        const section1m = zip.file(section1mPath)?.async("text");
+        const section1m: Promise<string> | undefined = zip.file(section1mPath)?.async("text");
         if (!section1m) {
             throw new Error("Formula section wasn't found in template");
         }
@@ -80,29 +80,29 @@ export default class MashupHandler {
     
     private editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Metadata) => {
         //extract metadataXml
-        const mashupArray = new arrayUtils.ArrayReader(metadataArray.buffer);
-        const metadataVersion = mashupArray.getBytes(4);
-        const metadataXmlSize = mashupArray.getInt32();
-        const metadataXml = mashupArray.getBytes(metadataXmlSize);
-        const endBuffer = mashupArray.getBytes();
+        const mashupArray: any = new arrayUtils.ArrayReader(metadataArray.buffer);
+        const metadataVersion: any = mashupArray.getBytes(4);
+        const metadataXmlSize: any = mashupArray.getInt32();
+        const metadataXml: any = mashupArray.getBytes(metadataXmlSize);
+        const endBuffer: any = mashupArray.getBytes();
 
         //parse metdataXml
-        const textDecoder = new TextDecoder();
-        const metadataString = textDecoder.decode(metadataXml);
-        const parser = new DOMParser();
-        const serializer = new XMLSerializer();
-        const parsedMetadata = parser.parseFromString(metadataString, "text/xml");
+        const textDecoder: TextDecoder = new TextDecoder();
+        const metadataString: string = textDecoder.decode(metadataXml);
+        const parser: DOMParser = new DOMParser();
+        const serializer: XMLSerializer = new XMLSerializer();
+        const parsedMetadata: Document = parser.parseFromString(metadataString, "text/xml");
 
         // Update InfoPaths to new QueryName
-        const itemPaths = parsedMetadata.getElementsByTagName("ItemPath");
+        const itemPaths: HTMLCollectionOf<Element> = parsedMetadata.getElementsByTagName("ItemPath");
         if (itemPaths && itemPaths.length) {
             for (let i = 0; i < itemPaths.length; i++) {
-                const itemPath = itemPaths[i];
-                const content = itemPath.innerHTML;
+                const itemPath: Element = itemPaths[i];
+                const content: string = itemPath.innerHTML;
                 if (content.includes("Section1/")) {
-                    const strArr = content.split("/");
+                    const strArr: string[] = content.split("/");
                     strArr[1] = metadata.queryName;
-                    const newContent = strArr.join("/");
+                    const newContent: string = strArr.join("/");
                     itemPath.textContent = newContent;
                     }    
                 }
@@ -111,13 +111,13 @@ export default class MashupHandler {
         const entries = parsedMetadata.getElementsByTagName("Entry");
             if (entries && entries.length) {
                 for (let i = 0; i < entries.length; i++) {
-                    const entry = entries[i];
-                    const entryAttributes = entry.attributes;
-                    const entryAttributesArr = [...entryAttributes]; 
-                    const entryProp = entryAttributesArr.find((prop) => {
+                    const entry: Element = entries[i];
+                    const entryAttributes: NamedNodeMap = entry.attributes;
+                    const entryAttributesArr: Attr[] = [...entryAttributes]; 
+                    const entryProp: Attr | undefined = entryAttributesArr.find((prop) => {
                     return prop?.name === "Type"});
                     if (entryProp?.nodeValue == "RelationshipInfoContainer") {
-                        const newValue = entry.getAttribute("Value")?.replace(/Query1/g, metadata.queryName);
+                        const newValue: string | undefined = entry.getAttribute("Value")?.replace(/Query1/g, metadata.queryName);
                         if (newValue) {
                             entry.setAttribute("Value", newValue);
                         }
@@ -126,50 +126,50 @@ export default class MashupHandler {
                         entry.setAttribute("Value", "sTable");
                     }
                     if (entryProp?.nodeValue == "FillColumnNames") {
-                        const oldValue = entry.getAttribute("Value");
+                        const oldValue: string | null = entry.getAttribute("Value");
                         if (oldValue) {
                             entry.setAttribute("Value", oldValue.replace(defaults.queryName, metadata.queryName));
                         }    
                     }
                     if (entryProp?.nodeValue == "FillTarget") {
-                        const oldValue = entry.getAttribute("Value");
+                        const oldValue: string | null = entry.getAttribute("Value");
                         if (oldValue) {
                             entry.setAttribute("Value", oldValue.replace(defaults.queryName, metadata.queryName));
                         }    
                     }
                     if (entryProp?.nodeValue == "FillLastUpdated") {
-                        const nowTime = new Date().toISOString();
+                        const nowTime: string = new Date().toISOString();
                         entry.setAttribute("Value", ("d" + nowTime).replace(/Z/, '0000Z'));
                     }   
                 }
             }
 
         // Convert new metadataXml to Uint8Array
-        const newMetadataString = serializer.serializeToString(parsedMetadata);
-        const encoder = new TextEncoder();
-        const newMetadataXml = encoder.encode(newMetadataString);
-        const newMetadataXmlSize = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
+        const newMetadataString: string = serializer.serializeToString(parsedMetadata);
+        const encoder: TextEncoder = new TextEncoder();
+        const newMetadataXml: Uint8Array = encoder.encode(newMetadataString);
+        const newMetadataXmlSize: Uint8Array = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
 
-        const newMetadataArray = arrayUtils.concatArrays(metadataVersion, newMetadataXmlSize, newMetadataXml, endBuffer);
+        const newMetadataArray: Uint8Array = arrayUtils.concatArrays(metadataVersion, newMetadataXmlSize, newMetadataXml, endBuffer);
         return newMetadataArray;
     };
 
     private addConnectionOnlyQueryMetadata = (metadataArray: Uint8Array, queryName: string) => {
         //extract metadataXml
-        const mashupArray = new arrayUtils.ArrayReader(metadataArray.buffer);
-        const metadataVersion = mashupArray.getBytes(4);
-        const metadataXmlSize = mashupArray.getInt32();
-        const metadataXml = mashupArray.getBytes(metadataXmlSize);
-        const endBuffer = mashupArray.getBytes();
+        const mashupArray: any = new arrayUtils.ArrayReader(metadataArray.buffer);
+        const metadataVersion: any = mashupArray.getBytes(4);
+        const metadataXmlSize: any = mashupArray.getInt32();
+        const metadataXml: any = mashupArray.getBytes(metadataXmlSize);
+        const endBuffer: any = mashupArray.getBytes();
 
         //parse metadataXml
-        const metadataString = uintToString(metadataXml);
-        const newMetadataString = this.updateConnectionOnlyMetadataStr(metadataString, queryName);
+        const metadataString: string = uintToString(metadataXml);
+        const newMetadataString: string = this.updateConnectionOnlyMetadataStr(metadataString, queryName);
 
-        const encoder = new TextEncoder();
-        const newMetadataXml = encoder.encode(newMetadataString);
-        const newMetadataXmlSize = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
-        const newMetadataArray = arrayUtils.concatArrays(
+        const encoder: TextEncoder = new TextEncoder();
+        const newMetadataXml: Uint8Array = encoder.encode(newMetadataString);
+        const newMetadataXmlSize: Uint8Array = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
+        const newMetadataArray: Uint8Array = arrayUtils.concatArrays(
             metadataVersion,
             newMetadataXmlSize,
             newMetadataXml,
@@ -179,24 +179,24 @@ export default class MashupHandler {
     };
 
     private updateConnectionOnlyMetadataStr = (metadataString: string, queryName: string) => {
-        const parser = new DOMParser();
-        const metadataDoc = parser.parseFromString(metadataString, "text/xml");     
-        const items = metadataDoc.getElementsByTagName("Items")[0];
-        const stableEntriesItem = this.createStableEntriesItem(metadataDoc, queryName);
+        const parser: DOMParser = new DOMParser();
+        const metadataDoc: Document = parser.parseFromString(metadataString, "text/xml");     
+        const items: Element = metadataDoc.getElementsByTagName("Items")[0];
+        const stableEntriesItem: Element = this.createStableEntriesItem(metadataDoc, queryName);
         items.appendChild(stableEntriesItem);
-        const sourceItem = this.createSourceItem(metadataDoc, queryName);
+        const sourceItem: Element = this.createSourceItem(metadataDoc, queryName);
         items.appendChild(sourceItem);
-        const serializer = new XMLSerializer();
-        const newMetadataString = serializer.serializeToString(metadataDoc);
+        const serializer: XMLSerializer = new XMLSerializer();
+        const newMetadataString: string = serializer.serializeToString(metadataDoc);
         return newMetadataString;
     };
 
     private createSourceItem = (metadataDoc: Document, queryName: string) => {
-        const newItemSource = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Item");
-        const newItemLocation = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemLocation");
-        const newItemType = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemType");
+        const newItemSource: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Item");
+        const newItemLocation: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemLocation");
+        const newItemType: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemType");
         newItemType.textContent = "Formula";
-        const newItemPath = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemPath");
+        const newItemPath: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemPath");
         newItemPath.textContent = `Section1/${queryName}/Source`;
         newItemLocation.appendChild(newItemType);
         newItemLocation.appendChild(newItemPath);
@@ -205,44 +205,44 @@ export default class MashupHandler {
     };
 
     private createStableEntriesItem = (metadataDoc: Document, queryName: string) => {
-        const newItem = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Item");
-        const newItemLocation = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemLocation");
-        const newItemType = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemType");
+        const newItem: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Item");
+        const newItemLocation: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemLocation");
+        const newItemType: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemType");
         newItemType.textContent = "Formula";
-        const newItemPath = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemPath");
+        const newItemPath: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemPath");
         newItemPath.textContent = `Section1/${queryName}`;
         newItemLocation.appendChild(newItemType);
         newItemLocation.appendChild(newItemPath); 
         newItem.appendChild(newItemLocation);
-        const stableEntries = this.createConnectionOnlyEntries(metadataDoc);
+        const stableEntries: Element = this.createConnectionOnlyEntries(metadataDoc);
         newItem.appendChild(stableEntries);
         return newItem;
     };
 
     private createConnectionOnlyEntries = (metadataDoc: Document) => {
-        const stableEntries = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "StableEntries");
-        const IsPrivate = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
+        const stableEntries: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "StableEntries");
+        const IsPrivate: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
         IsPrivate.setAttribute("Type", "IsPrivate");
         IsPrivate.setAttribute("Value", "l0");
         stableEntries.appendChild(IsPrivate);
-        const FillEnabled = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
+        const FillEnabled: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
         FillEnabled.setAttribute("Type", "FillEnabled");
         FillEnabled.setAttribute("Value", "l0");
         stableEntries.appendChild(FillEnabled);
-        const FillObjectType = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
+        const FillObjectType: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
         FillObjectType.setAttribute("Type", "FillObjectType");
         FillObjectType.setAttribute("Value", "sConnectionOnly");
         stableEntries.appendChild(FillObjectType);
-        const FillToDataModelEnabled = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
+        const FillToDataModelEnabled: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
         FillToDataModelEnabled.setAttribute("Type", "FillToDataModelEnabled");
         FillToDataModelEnabled.setAttribute("Value", "l0");
         stableEntries.appendChild(FillToDataModelEnabled);
-        const FillLastUpdated = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
+        const FillLastUpdated: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
         FillLastUpdated.setAttribute("Type", "FillLastUpdated");
-        const nowTime = new Date().toISOString();
+        const nowTime: string = new Date().toISOString();
         FillLastUpdated.setAttribute("Value", ("d" + nowTime).replace(/Z/, "0000Z"));
         stableEntries.appendChild(FillLastUpdated);
-        const ResultType = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
+        const ResultType: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
         ResultType.setAttribute("Type", "ResultType");
         ResultType.setAttribute("Value", "sTable");
         stableEntries.appendChild(ResultType);
@@ -251,6 +251,6 @@ export default class MashupHandler {
 }
 
 function uintToString(uintArray: Uint8Array) {
-    var encodedString = new TextDecoder("utf-8").decode(uintArray);
+    var encodedString: string = new TextDecoder("utf-8").decode(uintArray);
     return encodedString;
 }
