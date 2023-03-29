@@ -17,6 +17,7 @@ export default class MashupHandler {
         const newMetadataBuffer: Uint8Array = this.editSingleQueryMetadata(metadata, { queryName });
         const metadataSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(newMetadataBuffer.byteLength);
         const newMashup: Uint8Array = arrayUtils.concatArrays(version, packageSizeBuffer, newPackageBuffer, permissionsSizeBuffer, permissions, metadataSizeBuffer, newMetadataBuffer, endBuffer);
+        
         return base64.fromByteArray(newMashup);
     }
 
@@ -27,6 +28,7 @@ export default class MashupHandler {
         const newMetadataBuffer: Uint8Array = this.addConnectionOnlyQueryMetadata(metadata, queryName);
         const metadataSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(newMetadataBuffer.byteLength);
         const newMashup: Uint8Array = arrayUtils.concatArrays(version, packageSizeBuffer, packageOPC, permissionsSizeBuffer, permissions, metadataSizeBuffer, newMetadataBuffer, endBuffer);
+        
         return base64.fromByteArray(newMashup);
     }
 
@@ -122,21 +124,25 @@ export default class MashupHandler {
                             entry.setAttribute("Value", newValue);
                         }
                     }
+
                     if (entryProp?.nodeValue == "ResultType") {
                         entry.setAttribute("Value", "sTable");
                     }
+
                     if (entryProp?.nodeValue == "FillColumnNames") {
                         const oldValue: string | null = entry.getAttribute("Value");
                         if (oldValue) {
                             entry.setAttribute("Value", oldValue.replace(defaults.queryName, metadata.queryName));
                         }    
                     }
+
                     if (entryProp?.nodeValue == "FillTarget") {
                         const oldValue: string | null = entry.getAttribute("Value");
                         if (oldValue) {
                             entry.setAttribute("Value", oldValue.replace(defaults.queryName, metadata.queryName));
                         }    
                     }
+
                     if (entryProp?.nodeValue == "FillLastUpdated") {
                         const nowTime: string = new Date().toISOString();
                         entry.setAttribute("Value", ("d" + nowTime).replace(/Z/, '0000Z'));
@@ -149,8 +155,8 @@ export default class MashupHandler {
         const encoder: TextEncoder = new TextEncoder();
         const newMetadataXml: Uint8Array = encoder.encode(newMetadataString);
         const newMetadataXmlSize: Uint8Array = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
-
         const newMetadataArray: Uint8Array = arrayUtils.concatArrays(metadataVersion, newMetadataXmlSize, newMetadataXml, endBuffer);
+        
         return newMetadataArray;
     };
 
@@ -165,7 +171,6 @@ export default class MashupHandler {
         //parse metadataXml
         const metadataString: string = uintToString(metadataXml);
         const newMetadataString: string = this.updateConnectionOnlyMetadataStr(metadataString, queryName);
-
         const encoder: TextEncoder = new TextEncoder();
         const newMetadataXml: Uint8Array = encoder.encode(newMetadataString);
         const newMetadataXmlSize: Uint8Array = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
@@ -175,6 +180,7 @@ export default class MashupHandler {
             newMetadataXml,
             endBuffer
         );
+        
         return newMetadataArray;
     };
 
@@ -188,6 +194,7 @@ export default class MashupHandler {
         items.appendChild(sourceItem);
         const serializer: XMLSerializer = new XMLSerializer();
         const newMetadataString: string = serializer.serializeToString(metadataDoc);
+        
         return newMetadataString;
     };
 
@@ -201,6 +208,7 @@ export default class MashupHandler {
         newItemLocation.appendChild(newItemType);
         newItemLocation.appendChild(newItemPath);
         newItemSource.appendChild(newItemLocation);
+        
         return newItemSource;
     };
 
@@ -216,6 +224,7 @@ export default class MashupHandler {
         newItem.appendChild(newItemLocation);
         const stableEntries: Element = this.createConnectionOnlyEntries(metadataDoc);
         newItem.appendChild(stableEntries);
+        
         return newItem;
     };
 
@@ -246,11 +255,13 @@ export default class MashupHandler {
         ResultType.setAttribute("Type", "ResultType");
         ResultType.setAttribute("Value", "sTable");
         stableEntries.appendChild(ResultType);
+        
         return stableEntries;
     };
 }
 
 function uintToString(uintArray: Uint8Array) {
     var encodedString: string = new TextDecoder("utf-8").decode(uintArray);
+    
     return encodedString;
 }
