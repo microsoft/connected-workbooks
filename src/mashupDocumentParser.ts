@@ -6,12 +6,11 @@ import JSZip from "jszip";
 import { section1mPath, defaults } from "./constants";
 import { arrayUtils } from "./utils";
 import { Metadata } from "./types";
-import { generateSingleQueryMashup } from "./generators";
 
 export default class MashupHandler {
     async ReplaceSingleQuery(base64Str: string, queryName: string, formula: string): Promise<string> {
         const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } = this.getPackageComponents(base64Str);
-        const newPackageBuffer = await this.editSingleQueryPackage(packageOPC, queryName, formula);
+        const newPackageBuffer = await this.editSingleQueryPackage(packageOPC, formula);
         const packageSizeBuffer = arrayUtils.getInt32Buffer(newPackageBuffer.byteLength);
         const permissionsSizeBuffer = arrayUtils.getInt32Buffer(permissionsSize);
         const newMetadataBuffer = this.editSingleQueryMetadata(metadata, { queryName });
@@ -42,7 +41,7 @@ export default class MashupHandler {
         };
     }
 
-    private async editSingleQueryPackage(packageOPC: ArrayBuffer, queryName: string, formula: string) {
+    private async editSingleQueryPackage(packageOPC: ArrayBuffer, formula: string) {
         const packageZip = await JSZip.loadAsync(packageOPC);
         this.getSection1m(packageZip);
         this.setSection1m(formula, packageZip);
