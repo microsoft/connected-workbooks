@@ -5,8 +5,8 @@ import JSZip from "jszip";
 import { pqUtils, documentUtils } from "./utils";
 import WorkbookTemplate from "./workbookTemplate";
 import MashupHandler from "./mashupDocumentParser";
-import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, defaults, sharedStringsXmlPath, sheetsXmlPath, elementAttributes } from "./constants";
-import { SHARED_STRINGS_NOT_FOUND, CONNECTIONS_NOT_FOUND, QUERY_TABLE_NOT_FOUND, BASE64_NOT_FOUND, EMPTY_QUERY_MASHUP, QUERY_CONNECTION_NOT_FOUND, SHEETS_NOT_FOUND } from "./constants";
+import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, defaults, sharedStringsXmlPath, sheetsXmlPath, SHEETS_NOT_FOUND } from "./constants";
+import { SHARED_STRINGS_NOT_FOUND, CONNECTIONS_NOT_FOUND, QUERY_TABLE_NOT_FOUND, BASE64_NOT_FOUND, EMPTY_QUERY_MASHUP, QUERY_CONNECTION_NOT_FOUND } from "./constants";
 import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements } from "./types";
 
 
@@ -136,14 +136,14 @@ export class WorkbookManager {
         const connectionsDoc: Document = parser.parseFromString(connectionsXmlString, "text/xml");
         const connectionsProperties: any = connectionsDoc.getElementsByTagName("dbPr");
         const dbPr: any = connectionsProperties[0];
-        dbPr.setAttribute(elementAttributes.refreshOnLoad, refreshOnLoadValue);
+        dbPr.setAttribute("refreshOnLoad", refreshOnLoadValue);
         
         // Update query details to match queryName
-        dbPr.parentElement?.setAttribute(elementAttributes.name, `Query - ${queryName}`);
-        dbPr.parentElement?.setAttribute(elementAttributes.description, `Connection to the '${queryName}' query in the workbook.`);
-        dbPr.setAttribute(elementAttributes.connection, `Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=${queryName};`);
-        dbPr.setAttribute(elementAttributes.command,`SELECT * FROM [${queryName}]`);
-        const connectionId: any = dbPr.parentElement?.getAttribute(elementAttributes.id);
+        dbPr.parentElement?.setAttribute("name", `Query - ${queryName}`);
+        dbPr.parentElement?.setAttribute("description", `Connection to the '${queryName}' query in the workbook.`);
+        dbPr.setAttribute("connection", `Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=${queryName};`);
+        dbPr.setAttribute("command",`SELECT * FROM [${queryName}]`);
+        const connectionId: any = dbPr.parentElement?.getAttribute("id");
         const connectionXmlFileString: string = serializer.serializeToString(connectionsDoc);
 
         if (connectionId === null) {
@@ -162,7 +162,7 @@ export class WorkbookManager {
             throw new Error(SHARED_STRINGS_NOT_FOUND);
         }
 
-        const tItems: HTMLCollectionOf<Element> = sharedStringsDoc.getElementsByTagName(elementAttributes.text);
+        const tItems: HTMLCollectionOf<Element> = sharedStringsDoc.getElementsByTagName("t");
         let t = null;
         let sharedStringIndex = tItems.length;
         if (tItems && tItems.length) {
@@ -177,21 +177,21 @@ export class WorkbookManager {
 
         if (t === null) {  
             if (sharedStringsDoc.documentElement.namespaceURI) {
-                const tElement: Element = sharedStringsDoc.createElementNS(sharedStringsDoc.documentElement.namespaceURI, elementAttributes.text);
+                const tElement: Element = sharedStringsDoc.createElementNS(sharedStringsDoc.documentElement.namespaceURI, "t");
                 tElement.textContent = queryName;
-                const siElement: Element = sharedStringsDoc.createElementNS(sharedStringsDoc.documentElement.namespaceURI, elementAttributes.sharedStringItem);
+                const siElement: Element = sharedStringsDoc.createElementNS(sharedStringsDoc.documentElement.namespaceURI, "si");
                 siElement.appendChild(tElement);
-                sharedStringsDoc.getElementsByTagName(elementAttributes.sharedStringTable)[0].appendChild(siElement);
+                sharedStringsDoc.getElementsByTagName("sst")[0].appendChild(siElement);
             }
 
-            const value: string|null = sst.getAttribute(elementAttributes.count);
+            const value: string|null = sst.getAttribute("count");
             if (value) {
-                sst.setAttribute(elementAttributes.count, (parseInt(value)+1).toString()); 
+                sst.setAttribute("count", (parseInt(value)+1).toString()); 
             }
 
-            const uniqueValue: string|null = sst.getAttribute(elementAttributes.uniqueCount);
+            const uniqueValue: string|null = sst.getAttribute("uniqueCount");
             if (uniqueValue) {
-                sst.setAttribute(elementAttributes.uniqueCount, (parseInt(uniqueValue)+1).toString()); 
+                sst.setAttribute("uniqueCount", (parseInt(uniqueValue)+1).toString()); 
             }
 
         }
@@ -205,7 +205,7 @@ export class WorkbookManager {
         const parser: DOMParser = new DOMParser();
         const serializer: XMLSerializer = new XMLSerializer();
         const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, "text/xml");
-        sheetsDoc.getElementsByTagName(elementAttributes.v)[0].innerHTML = sharedStringIndex.toString();
+        sheetsDoc.getElementsByTagName("v")[0].innerHTML = sharedStringIndex.toString();
         const newSheet: string = serializer.serializeToString(sheetsDoc);
         
         return newSheet;
@@ -282,10 +282,10 @@ export class WorkbookManager {
         const parser: DOMParser = new DOMParser();
         const serializer = new XMLSerializer();
         const queryTableDoc: Document = parser.parseFromString(tableXmlString, "text/xml");
-        const element: any = queryTableDoc.getElementsByTagName(elementAttributes.queryTable)[0];
+        const element: any = queryTableDoc.getElementsByTagName("queryTable")[0];
         var newQueryTable: string = "";
-        if (element.getAttribute(elementAttributes.connectionId) == connectionId) {
-            element.setAttribute(elementAttributes.refreshOnLoad, refreshOnLoadValue);
+        if (element.getAttribute("connectionId") == connectionId) {
+            element.setAttribute("refreshOnLoad", refreshOnLoadValue);
             newQueryTable = serializer.serializeToString(queryTableDoc);
             isQueryTableUpdated = true;
         }
@@ -299,11 +299,11 @@ export class WorkbookManager {
         const parser: DOMParser = new DOMParser();
         const serializer: XMLSerializer = new XMLSerializer();
         const pivotCacheDoc: Document = parser.parseFromString(tableXmlString, "text/xml");
-        let element: Element = pivotCacheDoc.getElementsByTagName(elementAttributes.cacheSource)[0];
+        let element: Element = pivotCacheDoc.getElementsByTagName("cacheSource")[0];
         var newPivotTable: string = "";
-        if (element.getAttribute(elementAttributes.connectionId) == connectionId) {
+        if (element.getAttribute("connectionId") == connectionId) {
             element = element.parentElement!;
-            element.setAttribute(elementAttributes.refreshOnLoad, refreshOnLoadValue);
+            element.setAttribute("refreshOnLoad", refreshOnLoadValue);
             newPivotTable = serializer.serializeToString(pivotCacheDoc);
             isPivotTableUpdated = true;
         }
