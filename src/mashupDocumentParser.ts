@@ -3,7 +3,7 @@
 
 import * as base64 from "base64-js";
 import JSZip from "jszip";
-import { section1mPath, defaults } from "./constants";
+import { section1mPath, defaults, uint8ArrayType, emptyValue, textResultType, formulaSectionNotFoundErr, xmlTextResultType, element, section1PathPrefix, divider, elementAttributes, elementAttributesValues } from "./constants";
 import { arrayUtils } from "./utils";
 import { Metadata } from "./types";
 import { generateSingleQueryMashup } from "./generators";
@@ -48,21 +48,21 @@ export default class MashupHandler {
         this.getSection1m(packageZip);
         this.setSection1m(queryName, query, packageZip);
 
-        return await packageZip.generateAsync({ type: "uint8array" });
+        return await packageZip.generateAsync({ type: uint8ArrayType });
     }
 
     private setSection1m = (queryName: string, query: string, zip: JSZip): void => {
         const newSection1m: string = generateSingleQueryMashup(queryName, query);
 
         zip.file(section1mPath, newSection1m, {
-            compression: "",
+            compression: emptyValue,
         });
     };
 
     private getSection1m = async (zip: JSZip): Promise<string> => {
-        const section1m = zip.file(section1mPath)?.async("text");
+        const section1m = zip.file(section1mPath)?.async(textResultType);
         if (!section1m) {
-            throw new Error("Formula section wasn't found in template");
+            throw new Error(formulaSectionNotFoundErr);
         }
 
         return section1m;
@@ -82,58 +82,58 @@ export default class MashupHandler {
         const metadataString: string = textDecoder.decode(metadataXml);
         const parser: DOMParser = new DOMParser();
         const serializer: XMLSerializer = new XMLSerializer();
-        const parsedMetadata: Document = parser.parseFromString(metadataString, "text/xml");
+        const parsedMetadata: Document = parser.parseFromString(metadataString, xmlTextResultType);
 
         // Update InfoPaths to new QueryName
-        const itemPaths: HTMLCollectionOf<Element> = parsedMetadata.getElementsByTagName("ItemPath");
+        const itemPaths: HTMLCollectionOf<Element> = parsedMetadata.getElementsByTagName(element.itemPath);
         if (itemPaths && itemPaths.length) {
             for (let i = 0; i < itemPaths.length; i++) {
                 const itemPath: Element = itemPaths[i];
                 const content: string = itemPath.innerHTML;
-                if (content.includes("Section1/")) {
-                    const strArr: string[] = content.split("/");
+                if (content.includes(section1PathPrefix)) {
+                    const strArr: string[] = content.split(divider);
                     strArr[1] = metadata.queryName;
-                    const newContent: string = strArr.join("/");
+                    const newContent: string = strArr.join(divider);
                     itemPath.textContent = newContent;
                     }    
                 }
             }
 
-        const entries = parsedMetadata.getElementsByTagName("Entry");
+        const entries = parsedMetadata.getElementsByTagName(element.entry);
             if (entries && entries.length) {
                 for (let i = 0; i < entries.length; i++) {
                     const entry: Element = entries[i];
                     const entryAttributes: NamedNodeMap = entry.attributes;
                     const entryAttributesArr: Attr[] = [...entryAttributes]; 
                     const entryProp: Attr | undefined = entryAttributesArr.find((prop) => {
-                    return prop?.name === "Type"});
-                    if (entryProp?.nodeValue == "RelationshipInfoContainer") {
-                        const newValue: string | undefined = entry.getAttribute("Value")?.replace(/Query1/g, metadata.queryName);
+                    return prop?.name === elementAttributes.type});
+                    if (entryProp?.nodeValue == elementAttributes.relationshipInfo) {
+                        const newValue: string | undefined = entry.getAttribute(elementAttributes.value)?.replace(/Query1/g, metadata.queryName);
                         if (newValue) {
-                            entry.setAttribute("Value", newValue);
+                            entry.setAttribute(elementAttributes.value, newValue);
                         }
                     }
-                    if (entryProp?.nodeValue == "ResultType") {
-                        entry.setAttribute("Value", "sTable");
+                    if (entryProp?.nodeValue == elementAttributes.resultType) {
+                        entry.setAttribute(elementAttributes.value, elementAttributesValues.tableResultType());
                     }
 
-                    if (entryProp?.nodeValue == "FillColumnNames") {
-                        const oldValue: string | null = entry.getAttribute("Value");
+                    if (entryProp?.nodeValue == elementAttributes.fillColumnNames) {
+                        const oldValue: string | null = entry.getAttribute(elementAttributes.value);
                         if (oldValue) {
-                            entry.setAttribute("Value", oldValue.replace(defaults.queryName, metadata.queryName));
+                            entry.setAttribute(elementAttributes.value, oldValue.replace(defaults.queryName, metadata.queryName));
                         }    
                     }
 
-                    if (entryProp?.nodeValue == "FillTarget") {
-                        const oldValue: string | null = entry.getAttribute("Value");
+                    if (entryProp?.nodeValue == elementAttributes.fillTarget) {
+                        const oldValue: string | null = entry.getAttribute(elementAttributes.value);
                         if (oldValue) {
-                            entry.setAttribute("Value", oldValue.replace(defaults.queryName, metadata.queryName));
+                            entry.setAttribute(elementAttributes.value, oldValue.replace(defaults.queryName, metadata.queryName));
                         }    
                     }
 
-                    if (entryProp?.nodeValue == "FillLastUpdated") {
+                    if (entryProp?.nodeValue == elementAttributes.fillLastUpdated) {
                         const nowTime: string = new Date().toISOString();
-                        entry.setAttribute("Value", ("d" + nowTime).replace(/Z/, '0000Z'));
+                        entry.setAttribute(elementAttributes.value, (elementAttributes.day + nowTime).replace(/Z/, '0000Z'));
                     }   
                 }
             }
