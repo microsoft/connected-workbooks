@@ -15,9 +15,11 @@ export class WorkbookManager {
         if (!query.queryMashup) {
             throw new Error("Query mashup can't be empty");
         }
+
         if (!query.queryName) {
             query.queryName = defaults.queryName;
         }
+
         const zip: JSZip =
             templateFile === undefined
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
@@ -30,6 +32,7 @@ export class WorkbookManager {
         if (!query.queryName) {
             query.queryName = defaults.queryName;
         }
+
         await this.updatePowerQueryDocument(zip, query.queryName, query.queryMashup);
         await this.updateSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
         await this.updateDocProps(zip, docProps);
@@ -99,6 +102,7 @@ export class WorkbookManager {
         if (sharedStringsXmlString === undefined) {
             throw new Error("SharedStrings were not found in template");
         }
+        
         const {sharedStringIndex, newSharedStrings} = await this.updateSharedStrings(sharedStringsXmlString, queryName);
         zip.file(sharedStringsXmlPath, newSharedStrings);
         
@@ -107,6 +111,7 @@ export class WorkbookManager {
         if (sheetsXmlString === undefined) {
             throw new Error("Sheets were not found in template");
         }
+
         const worksheetString: string = await this.updateWorksheet(sheetsXmlString, sharedStringIndex.toString());
         zip.file(sheetsXmlPath, worksheetString);
         
@@ -146,6 +151,7 @@ export class WorkbookManager {
         if (!sst) {
             throw new Error("No shared string was found!");
         } 
+
         const tItems: HTMLCollectionOf<Element> = sharedStringsDoc.getElementsByTagName("t");
         let t: Element|null = null;
         let sharedStringIndex: number = tItems.length;
@@ -158,6 +164,7 @@ export class WorkbookManager {
                 } 
             }
         }
+
         if (t === null) {  
             if (sharedStringsDoc.documentElement.namespaceURI) {
                 const tElement: Element = sharedStringsDoc.createElementNS(sharedStringsDoc.documentElement.namespaceURI, "t");
@@ -166,16 +173,19 @@ export class WorkbookManager {
                 siElement.appendChild(tElement);
                 sharedStringsDoc.getElementsByTagName("sst")[0].appendChild(siElement);
             }
+
             const value: string|null = sst.getAttribute("count");
             if (value) {
                 sst.setAttribute("count", (parseInt(value)+1).toString()); 
             }
+
             const uniqueValue: string|null = sst.getAttribute("uniqueCount");
             if (uniqueValue) {
                 sst.setAttribute("uniqueCount", (parseInt(uniqueValue)+1).toString()); 
             }
         }
         const newSharedStrings: string = serializer.serializeToString(sharedStringsDoc);
+        
         return {sharedStringIndex, newSharedStrings};
 
 }
@@ -186,6 +196,7 @@ export class WorkbookManager {
         const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, "text/xml");
         sheetsDoc.getElementsByTagName("v")[0].innerHTML = sharedStringIndex.toString();
         const newSheet: string = serializer.serializeToString(sheetsDoc);
+        
         return newSheet;
     }
 
@@ -264,6 +275,7 @@ export class WorkbookManager {
             newQueryTable = serializer.serializeToString(queryTableDoc);
             isQueryTableUpdated = true;
         }
+
         return {isQueryTableUpdated, newQueryTable};
     }
 
@@ -281,6 +293,7 @@ export class WorkbookManager {
             newPivotTable = serializer.serializeToString(pivotCacheDoc);
             isPivotTableUpdated = true;
         }
+        
         return {isPivotTableUpdated, newPivotTable};
     }
 

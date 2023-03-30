@@ -17,6 +17,7 @@ export default class MashupHandler {
         const newMetadataBuffer: Uint8Array = this.editSingleQueryMetadata(metadata, { queryName });
         const metadataSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(newMetadataBuffer.byteLength);
         const newMashup: Uint8Array = arrayUtils.concatArrays(version, packageSizeBuffer, newPackageBuffer, permissionsSizeBuffer, permissions, metadataSizeBuffer, newMetadataBuffer, endBuffer);
+        
         return base64.fromByteArray(newMashup);
     }
 
@@ -32,7 +33,7 @@ export default class MashupHandler {
         const metadata: any = mashupArray.getBytes(metadataSize);
         const endBuffer: any = mashupArray.getBytes();
 
-         return {
+        return {
             version,
             packageOPC,
             permissionsSize,
@@ -115,18 +116,21 @@ export default class MashupHandler {
                     if (entryProp?.nodeValue == "ResultType") {
                         entry.setAttribute("Value", "sTable");
                     }
+
                     if (entryProp?.nodeValue == "FillColumnNames") {
                         const oldValue: string | null = entry.getAttribute("Value");
                         if (oldValue) {
                             entry.setAttribute("Value", oldValue.replace(defaults.queryName, metadata.queryName));
                         }    
                     }
+
                     if (entryProp?.nodeValue == "FillTarget") {
                         const oldValue: string | null = entry.getAttribute("Value");
                         if (oldValue) {
                             entry.setAttribute("Value", oldValue.replace(defaults.queryName, metadata.queryName));
                         }    
                     }
+
                     if (entryProp?.nodeValue == "FillLastUpdated") {
                         const nowTime: string = new Date().toISOString();
                         entry.setAttribute("Value", ("d" + nowTime).replace(/Z/, '0000Z'));
@@ -139,8 +143,8 @@ export default class MashupHandler {
         const encoder: TextEncoder = new TextEncoder();
         const newMetadataXml: Uint8Array = encoder.encode(newMetadataString);
         const newMetadataXmlSize: Uint8Array = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
-
         const newMetadataArray: Uint8Array = arrayUtils.concatArrays(metadataVersion, newMetadataXmlSize, newMetadataXml, endBuffer);
+        
         return newMetadataArray;
     };
 }
