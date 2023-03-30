@@ -3,7 +3,7 @@
 
 import * as base64 from "base64-js";
 import JSZip from "jszip";
-import { section1mPath, defaults } from "./constants";
+import { section1mPath, defaults, FORMULA_NOT_FOUND, elementAttributes, element, uint8ArrayType, textResultType, xmlTextResultType, section1PathPrefix, divider, elementAttributesValues } from "./constants";
 import { arrayUtils } from "./utils";
 import { Metadata } from "./types";
 import { generateSingleQueryMashup } from "./generators";
@@ -59,7 +59,7 @@ export default class MashupHandler {
         this.getSection1m(packageZip);
         this.setSection1m(queryName, query, packageZip);
 
-        return await packageZip.generateAsync({ type: "uint8array" });
+        return await packageZip.generateAsync({ type:  uint8ArrayType});
     }
 
     private setSection1m = (queryName: string, query: string, zip: JSZip): void => {
@@ -71,9 +71,9 @@ export default class MashupHandler {
     };
 
     private getSection1m = async (zip: JSZip): Promise<string> => {
-        const section1m: Promise<string> | undefined = zip.file(section1mPath)?.async("text");
+        const section1m: Promise<string> | undefined = zip.file(section1mPath)?.async(textResultType);
         if (!section1m) {
-            throw new Error("Formula section wasn't found in template");
+            throw new Error(FORMULA_NOT_FOUND);
         }
 
         return section1m;
@@ -93,7 +93,7 @@ export default class MashupHandler {
         const metadataString: string = textDecoder.decode(metadataXml);
         const parser: DOMParser = new DOMParser();
         const serializer: XMLSerializer = new XMLSerializer();
-        const parsedMetadata: Document = parser.parseFromString(metadataString, "text/xml");
+        const parsedMetadata: Document = parser.parseFromString(metadataString, xmlTextResultType);
 
         // Update InfoPaths to new QueryName
         const itemPaths: HTMLCollectionOf<Element> = parsedMetadata.getElementsByTagName("ItemPath");
@@ -101,51 +101,51 @@ export default class MashupHandler {
             for (let i = 0; i < itemPaths.length; i++) {
                 const itemPath: Element = itemPaths[i];
                 const content: string = itemPath.innerHTML;
-                if (content.includes("Section1/")) {
-                    const strArr: string[] = content.split("/");
+                if (content.includes(section1PathPrefix)) {
+                    const strArr: string[] = content.split(divider);
                     strArr[1] = metadata.queryName;
-                    const newContent: string = strArr.join("/");
+                    const newContent: string = strArr.join(divider);
                     itemPath.textContent = newContent;
                     }    
                 }
             }
 
-        const entries = parsedMetadata.getElementsByTagName("Entry");
+        const entries = parsedMetadata.getElementsByTagName(element.entry);
             if (entries && entries.length) {
                 for (let i = 0; i < entries.length; i++) {
                     const entry: Element = entries[i];
                     const entryAttributes: NamedNodeMap = entry.attributes;
                     const entryAttributesArr: Attr[] = [...entryAttributes]; 
                     const entryProp: Attr | undefined = entryAttributesArr.find((prop) => {
-                    return prop?.name === "Type"});
-                    if (entryProp?.nodeValue == "RelationshipInfoContainer") {
-                        const newValue: string | undefined = entry.getAttribute("Value")?.replace(/Query1/g, metadata.queryName);
+                    return prop?.name === elementAttributes.type});
+                    if (entryProp?.nodeValue == elementAttributes.relationshipInfo) {
+                        const newValue: string | undefined = entry.getAttribute(elementAttributes.value)?.replace(/Query1/g, metadata.queryName);
                         if (newValue) {
-                            entry.setAttribute("Value", newValue);
+                            entry.setAttribute(elementAttributes.value, newValue);
                         }
                     }
 
-                    if (entryProp?.nodeValue == "ResultType") {
-                        entry.setAttribute("Value", "sTable");
+                    if (entryProp?.nodeValue == elementAttributes.resultType) {
+                        entry.setAttribute(elementAttributes.value, elementAttributesValues.tableResultType());
                     }
 
-                    if (entryProp?.nodeValue == "FillColumnNames") {
-                        const oldValue: string | null = entry.getAttribute("Value");
+                    if (entryProp?.nodeValue == elementAttributes.fillColumnNames) {
+                        const oldValue: string | null = entry.getAttribute(elementAttributes.value);
                         if (oldValue) {
-                            entry.setAttribute("Value", oldValue.replace(defaults.queryName, metadata.queryName));
+                            entry.setAttribute(elementAttributes.value, oldValue.replace(defaults.queryName, metadata.queryName));
                         }    
                     }
 
-                    if (entryProp?.nodeValue == "FillTarget") {
-                        const oldValue: string | null = entry.getAttribute("Value");
+                    if (entryProp?.nodeValue == elementAttributes.fillTarget) {
+                        const oldValue: string | null = entry.getAttribute(elementAttributes.value);
                         if (oldValue) {
-                            entry.setAttribute("Value", oldValue.replace(defaults.queryName, metadata.queryName));
+                            entry.setAttribute(elementAttributes.value, oldValue.replace(defaults.queryName, metadata.queryName));
                         }    
                     }
 
-                    if (entryProp?.nodeValue == "FillLastUpdated") {
+                    if (entryProp?.nodeValue == elementAttributes.fillLastUpdated) {
                         const nowTime: string = new Date().toISOString();
-                        entry.setAttribute("Value", ("d" + nowTime).replace(/Z/, '0000Z'));
+                        entry.setAttribute(elementAttributes.value, ("d" + nowTime).replace(/Z/, '0000Z'));
                     }   
                 }
             }
@@ -213,11 +213,11 @@ export default class MashupHandler {
     };
 
     private createStableEntriesItem = (metadataDoc: Document, queryName: string) => {
-        const newItem: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Item");
-        const newItemLocation: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemLocation");
-        const newItemType: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemType");
+        const newItem: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.item);
+        const newItemLocation: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.itemLocation);
+        const newItemType: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.itemType);
         newItemType.textContent = "Formula";
-        const newItemPath: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemPath");
+        const newItemPath: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.itemPath);
         newItemPath.textContent = `Section1/${queryName}`;
         newItemLocation.appendChild(newItemType);
         newItemLocation.appendChild(newItemPath); 
@@ -231,29 +231,29 @@ export default class MashupHandler {
     private createConnectionOnlyEntries = (metadataDoc: Document) => {
         const stableEntries: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "StableEntries");
         const IsPrivate: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
-        IsPrivate.setAttribute("Type", "IsPrivate");
-        IsPrivate.setAttribute("Value", "l0");
+        IsPrivate.setAttribute(elementAttributes.type, "IsPrivate");
+        IsPrivate.setAttribute(elementAttributes.value, "l0");
         stableEntries.appendChild(IsPrivate);
         const FillEnabled: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
-        FillEnabled.setAttribute("Type", "FillEnabled");
-        FillEnabled.setAttribute("Value", "l0");
+        FillEnabled.setAttribute(elementAttributes.type, "FillEnabled");
+        FillEnabled.setAttribute(elementAttributes.value, "l0");
         stableEntries.appendChild(FillEnabled);
         const FillObjectType: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
-        FillObjectType.setAttribute("Type", "FillObjectType");
-        FillObjectType.setAttribute("Value", "sConnectionOnly");
+        FillObjectType.setAttribute(elementAttributes.type, "FillObjectType");
+        FillObjectType.setAttribute(elementAttributes.value, "sConnectionOnly");
         stableEntries.appendChild(FillObjectType);
         const FillToDataModelEnabled: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
-        FillToDataModelEnabled.setAttribute("Type", "FillToDataModelEnabled");
-        FillToDataModelEnabled.setAttribute("Value", "l0");
+        FillToDataModelEnabled.setAttribute(elementAttributes.type, "FillToDataModelEnabled");
+        FillToDataModelEnabled.setAttribute(elementAttributes.value, "l0");
         stableEntries.appendChild(FillToDataModelEnabled);
         const FillLastUpdated: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
-        FillLastUpdated.setAttribute("Type", "FillLastUpdated");
+        FillLastUpdated.setAttribute(elementAttributes.type, "FillLastUpdated");
         const nowTime: string = new Date().toISOString();
-        FillLastUpdated.setAttribute("Value", ("d" + nowTime).replace(/Z/, "0000Z"));
+        FillLastUpdated.setAttribute(elementAttributes.value, ("d" + nowTime).replace(/Z/, "0000Z"));
         stableEntries.appendChild(FillLastUpdated);
         const ResultType: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
-        ResultType.setAttribute("Type", "ResultType");
-        ResultType.setAttribute("Value", "sTable");
+        ResultType.setAttribute(elementAttributes.type, "ResultType");
+        ResultType.setAttribute(elementAttributes.value, "sTable");
         stableEntries.appendChild(ResultType);
         
         return stableEntries;
