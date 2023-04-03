@@ -12,22 +12,20 @@ import { generateSingleQueryMashup } from "./generators";
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
 
-    async generateSingleQueryWorkbook(query: QueryInfo, formula?: string, templateFile?: File, docProps?: DocProps): Promise<Blob> {
+    async generateSingleQueryWorkbook(query: QueryInfo, queryMashupDoc?: string, templateFile?: File, docProps?: DocProps): Promise<Blob> {
         if (!query.queryMashup) {
             throw new Error("Query mashup can't be empty");
         }
         if (!query.queryName) {
             query.queryName = defaults.queryName;
         }
-        if (!formula) {
-            formula = this.createNewFormula(query);
-        }
+        const generatedQueryMashupDoc: string = queryMashupDoc === undefined ? this.createNewFormula(query) : queryMashupDoc;
         const zip =
             templateFile === undefined
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
                 : await JSZip.loadAsync(templateFile);
 
-        return await this.generateSingleQueryWorkbookFromZip(zip, query, formula!, docProps);
+        return await this.generateSingleQueryWorkbookFromZip(zip, query, generatedQueryMashupDoc, docProps);
     }
 
     private async generateSingleQueryWorkbookFromZip(zip: JSZip, query: QueryInfo, formula:string, docProps?: DocProps): Promise<Blob> {
