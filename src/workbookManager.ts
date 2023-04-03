@@ -147,8 +147,8 @@ export class WorkbookManager {
         const parser: DOMParser = new DOMParser();
         const serializer: XMLSerializer = new XMLSerializer();
         const sharedStringsDoc: Document = parser.parseFromString(sharedStringsXmlString, xmlTextResultType);
-        const sst: Element = sharedStringsDoc.getElementsByTagName(element.sharedStringTable)[0];
-        if (!sst) {
+        const sharedStringsTable: Element = sharedStringsDoc.getElementsByTagName(element.sharedStringTable)[0];
+        if (!sharedStringsTable) {
             throw new Error(sharedStringsNotFoundErr);
         } 
 
@@ -167,34 +167,33 @@ export class WorkbookManager {
 
         if (textElement === null) {  
             if (sharedStringsDoc.documentElement.namespaceURI) {
-                const tElement: Element = sharedStringsDoc.createElementNS(sharedStringsDoc.documentElement.namespaceURI, element.text);
-                tElement.textContent = queryName;
+                textElement = sharedStringsDoc.createElementNS(sharedStringsDoc.documentElement.namespaceURI, element.text);
+                textElement.textContent = queryName;
                 const siElement: Element = sharedStringsDoc.createElementNS(sharedStringsDoc.documentElement.namespaceURI, element.sharedStringItem);
-                siElement.appendChild(tElement);
+                siElement.appendChild(textElement);
                 sharedStringsDoc.getElementsByTagName(element.sharedStringTable)[0].appendChild(siElement);
             }
 
-            const value: string|null = sst.getAttribute(elementAttributes.count);
+            const value: string|null = sharedStringsTable.getAttribute(elementAttributes.count);
             if (value) {
-                sst.setAttribute(elementAttributes.count, (parseInt(value)+1).toString()); 
+                sharedStringsTable.setAttribute(elementAttributes.count, (parseInt(value)+1).toString()); 
             }
 
-            const uniqueValue: string|null = sst.getAttribute(elementAttributes.uniqueCount);
+            const uniqueValue: string|null = sharedStringsTable.getAttribute(elementAttributes.uniqueCount);
             if (uniqueValue) {
-                sst.setAttribute(elementAttributes.uniqueCount, (parseInt(uniqueValue)+1).toString()); 
+                sharedStringsTable.setAttribute(elementAttributes.uniqueCount, (parseInt(uniqueValue)+1).toString()); 
             }
         }
         const newSharedStrings: string = serializer.serializeToString(sharedStringsDoc);
         
         return {sharedStringIndex, newSharedStrings};
-
 }
 
     private async updateWorksheet(sheetsXmlString: string, sharedStringIndex: string) {
         const parser: DOMParser = new DOMParser();
         const serializer: XMLSerializer = new XMLSerializer();
         const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, xmlTextResultType);
-        sheetsDoc.getElementsByTagName(element.v)[0].innerHTML = sharedStringIndex.toString();
+        sheetsDoc.getElementsByTagName(element.cellValue)[0].innerHTML = sharedStringIndex.toString();
         const newSheet: string = serializer.serializeToString(sheetsDoc);
         
         return newSheet;

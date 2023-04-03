@@ -35,7 +35,7 @@ export const element = {
     sharedStringTable: "sst",
     text: "t",
     sharedStringItem: "si",
-    v: "v",
+    cellValue: "v",
     databaseProperties: "dbPr",
     queryTable: "queryTable",
     cacheSource: "cacheSource",

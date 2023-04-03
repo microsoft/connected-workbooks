@@ -7,6 +7,7 @@ import { section1mPath, defaults, uint8ArrayType, emptyValue, textResultType, fo
 import { arrayUtils } from "./utils";
 import { Metadata } from "./types";
 import { generateSingleQueryMashup } from "./generators";
+import { ArrayReader } from "././utils/arrayUtils"; 
 
 export default class MashupHandler {
     async ReplaceSingleQuery(base64Str: string, queryName: string, query: string): Promise<string> {
@@ -23,15 +24,15 @@ export default class MashupHandler {
 
     private getPackageComponents(base64Str: string) {
         const buffer: ArrayBufferLike = base64.toByteArray(base64Str).buffer;
-        const mashupArray: any = new arrayUtils.ArrayReader(buffer);
-        const version: any = mashupArray.getBytes(4);
-        const packageSize: any = mashupArray.getInt32();
-        const packageOPC: any = mashupArray.getBytes(packageSize);
-        const permissionsSize: any = mashupArray.getInt32();
-        const permissions: any = mashupArray.getBytes(permissionsSize);
-        const metadataSize: any = mashupArray.getInt32();
-        const metadata: any = mashupArray.getBytes(metadataSize);
-        const endBuffer: any = mashupArray.getBytes();
+        const mashupArray: ArrayReader = new arrayUtils.ArrayReader(buffer);
+        const version: Uint8Array = mashupArray.getBytes(4);
+        const packageSize: number = mashupArray.getInt32();
+        const packageOPC: Uint8Array = mashupArray.getBytes(packageSize);
+        const permissionsSize: number = mashupArray.getInt32();
+        const permissions: Uint8Array = mashupArray.getBytes(permissionsSize);
+        const metadataSize: number = mashupArray.getInt32();
+        const metadata: Uint8Array = mashupArray.getBytes(metadataSize);
+        const endBuffer: Uint8Array = mashupArray.getBytes();
 
         return {
             version,
@@ -71,11 +72,11 @@ export default class MashupHandler {
     
     private editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Metadata) => {
         //extract metadataXml
-        const mashupArray: any = new arrayUtils.ArrayReader(metadataArray.buffer);
-        const metadataVersion: any = mashupArray.getBytes(4);
-        const metadataXmlSize: any = mashupArray.getInt32();
-        const metadataXml: any = mashupArray.getBytes(metadataXmlSize);
-        const endBuffer: any = mashupArray.getBytes();
+        const mashupArray: ArrayReader = new arrayUtils.ArrayReader(metadataArray.buffer);
+        const metadataVersion: Uint8Array = mashupArray.getBytes(4);
+        const metadataXmlSize: number = mashupArray.getInt32();
+        const metadataXml: Uint8Array = mashupArray.getBytes(metadataXmlSize);
+        const endBuffer: Uint8Array = mashupArray.getBytes();
 
         //parse metdataXml
         const textDecoder: TextDecoder = new TextDecoder();
