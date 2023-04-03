@@ -8,9 +8,9 @@ import { arrayUtils } from "./utils";
 import { Metadata } from "./types";
 
 export default class MashupHandler {
-    async ReplaceSingleQuery(base64Str: string, queryName: string, formula: string): Promise<string> {
+    async ReplaceSingleQuery(base64Str: string, queryName: string, queryMashupDoc: string): Promise<string> {
         const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } = this.getPackageComponents(base64Str);
-        const newPackageBuffer = await this.editSingleQueryPackage(packageOPC, formula);
+        const newPackageBuffer = await this.editSingleQueryPackage(packageOPC, queryMashupDoc);
         const packageSizeBuffer = arrayUtils.getInt32Buffer(newPackageBuffer.byteLength);
         const permissionsSizeBuffer = arrayUtils.getInt32Buffer(permissionsSize);
         const newMetadataBuffer = this.editSingleQueryMetadata(metadata, { queryName });
@@ -41,10 +41,10 @@ export default class MashupHandler {
         };
     }
 
-    private async editSingleQueryPackage(packageOPC: ArrayBuffer, formula: string) {
+    private async editSingleQueryPackage(packageOPC: ArrayBuffer, queryMashupDoc: string) {
         const packageZip = await JSZip.loadAsync(packageOPC);
         this.getSection1m(packageZip);
-        this.setSection1m(formula, packageZip);
+        this.setSection1m(queryMashupDoc, packageZip);
 
         return await packageZip.generateAsync({ type: "uint8array" });
     }
