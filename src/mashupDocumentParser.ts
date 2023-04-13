@@ -3,35 +3,37 @@
 
 import * as base64 from "base64-js";
 import JSZip from "jszip";
-import { section1mPath, defaults } from "./constants";
+import { section1mPath, defaults, uint8ArrayType, emptyValue, textResultType, formulaSectionNotFoundErr, xmlTextResultType, element, section1PathPrefix, divider, elementAttributes, elementAttributesValues } from "./constants";
 import { arrayUtils } from "./utils";
 import { Metadata } from "./types";
+import { ArrayReader } from "././utils/arrayUtils"; 
 
 export default class MashupHandler {
     async ReplaceSingleQuery(base64Str: string, queryName: string, queryMashupDoc: string): Promise<string> {
         const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } = this.getPackageComponents(base64Str);
-        const newPackageBuffer = await this.editSingleQueryPackage(packageOPC, queryMashupDoc);
-        const packageSizeBuffer = arrayUtils.getInt32Buffer(newPackageBuffer.byteLength);
-        const permissionsSizeBuffer = arrayUtils.getInt32Buffer(permissionsSize);
-        const newMetadataBuffer = this.editSingleQueryMetadata(metadata, { queryName });
-        const metadataSizeBuffer = arrayUtils.getInt32Buffer(newMetadataBuffer.byteLength);
-        const newMashup = arrayUtils.concatArrays(version, packageSizeBuffer, newPackageBuffer, permissionsSizeBuffer, permissions, metadataSizeBuffer, newMetadataBuffer, endBuffer);
+        const newPackageBuffer: Uint8Array = await this.editSingleQueryPackage(packageOPC, queryMashupDoc);
+        const packageSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(newPackageBuffer.byteLength);
+        const permissionsSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(permissionsSize);
+        const newMetadataBuffer: Uint8Array = this.editSingleQueryMetadata(metadata, { queryName });
+        const metadataSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(newMetadataBuffer.byteLength);
+        const newMashup: Uint8Array = arrayUtils.concatArrays(version, packageSizeBuffer, newPackageBuffer, permissionsSizeBuffer, permissions, metadataSizeBuffer, newMetadataBuffer, endBuffer);
+        
         return base64.fromByteArray(newMashup);
     }
 
     private getPackageComponents(base64Str: string) {
-        const buffer = base64.toByteArray(base64Str).buffer;
-        const mashupArray = new arrayUtils.ArrayReader(buffer);
-        const version = mashupArray.getBytes(4);
-        const packageSize = mashupArray.getInt32();
-        const packageOPC = mashupArray.getBytes(packageSize);
-        const permissionsSize = mashupArray.getInt32();
-        const permissions = mashupArray.getBytes(permissionsSize);
-        const metadataSize = mashupArray.getInt32();
-        const metadata = mashupArray.getBytes(metadataSize);
-        const endBuffer = mashupArray.getBytes();
+        const buffer: ArrayBufferLike = base64.toByteArray(base64Str).buffer;
+        const mashupArray: ArrayReader = new arrayUtils.ArrayReader(buffer);
+        const version: Uint8Array = mashupArray.getBytes(4);
+        const packageSize: number = mashupArray.getInt32();
+        const packageOPC: Uint8Array = mashupArray.getBytes(packageSize);
+        const permissionsSize: number = mashupArray.getInt32();
+        const permissions: Uint8Array = mashupArray.getBytes(permissionsSize);
+        const metadataSize: number = mashupArray.getInt32();
+        const metadata: Uint8Array = mashupArray.getBytes(metadataSize);
+        const endBuffer: Uint8Array = mashupArray.getBytes();
 
-         return {
+        return {
             version,
             packageOPC,
             permissionsSize,
@@ -42,25 +44,25 @@ export default class MashupHandler {
     }
 
     private async editSingleQueryPackage(packageOPC: ArrayBuffer, queryMashupDoc: string) {
-        const packageZip = await JSZip.loadAsync(packageOPC);
+        const packageZip: JSZip = await JSZip.loadAsync(packageOPC);
         this.getSection1m(packageZip);
         this.setSection1m(queryMashupDoc, packageZip);
 
-        return await packageZip.generateAsync({ type: "uint8array" });
+        return await packageZip.generateAsync({ type: uint8ArrayType });
     }
 
-    private setSection1m = (formula: string, zip: JSZip): void => {
-        const newSection1m = formula;
+    private setSection1m = (queryMashupDoc: string, zip: JSZip): void => {
+        const newSection1m: string = queryMashupDoc;
 
         zip.file(section1mPath, newSection1m, {
-            compression: "",
+            compression: emptyValue,
         });
     };
 
     private getSection1m = async (zip: JSZip): Promise<string> => {
-        const section1m = zip.file(section1mPath)?.async("text");
+        const section1m = zip.file(section1mPath)?.async(textResultType);
         if (!section1m) {
-            throw new Error("Formula section wasn't found in template");
+            throw new Error(formulaSectionNotFoundErr);
         }
 
         return section1m;
@@ -69,77 +71,80 @@ export default class MashupHandler {
     
     private editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Metadata) => {
         //extract metadataXml
-        const mashupArray = new arrayUtils.ArrayReader(metadataArray.buffer);
-        const metadataVersion = mashupArray.getBytes(4);
-        const metadataXmlSize = mashupArray.getInt32();
-        const metadataXml = mashupArray.getBytes(metadataXmlSize);
-        const endBuffer = mashupArray.getBytes();
+        const mashupArray: ArrayReader = new arrayUtils.ArrayReader(metadataArray.buffer);
+        const metadataVersion: Uint8Array = mashupArray.getBytes(4);
+        const metadataXmlSize: number = mashupArray.getInt32();
+        const metadataXml: Uint8Array = mashupArray.getBytes(metadataXmlSize);
+        const endBuffer: Uint8Array = mashupArray.getBytes();
 
         //parse metdataXml
-        const textDecoder = new TextDecoder();
-        const metadataString = textDecoder.decode(metadataXml);
-        const parser = new DOMParser();
-        const serializer = new XMLSerializer();
-        const parsedMetadata = parser.parseFromString(metadataString, "text/xml");
+        const textDecoder: TextDecoder = new TextDecoder();
+        const metadataString: string = textDecoder.decode(metadataXml);
+        const parser: DOMParser = new DOMParser();
+        const serializer: XMLSerializer = new XMLSerializer();
+        const parsedMetadata: Document = parser.parseFromString(metadataString, xmlTextResultType);
 
         // Update InfoPaths to new QueryName
-        const itemPaths = parsedMetadata.getElementsByTagName("ItemPath");
+        const itemPaths: HTMLCollectionOf<Element> = parsedMetadata.getElementsByTagName(element.itemPath);
         if (itemPaths && itemPaths.length) {
             for (let i = 0; i < itemPaths.length; i++) {
-                const itemPath = itemPaths[i];
-                const content = itemPath.innerHTML;
-                if (content.includes("Section1/")) {
-                    const strArr = content.split("/");
+                const itemPath: Element = itemPaths[i];
+                const content: string = itemPath.innerHTML;
+                if (content.includes(section1PathPrefix)) {
+                    const strArr: string[] = content.split(divider);
                     strArr[1] = metadata.queryName;
-                    const newContent = strArr.join("/");
+                    const newContent: string = strArr.join(divider);
                     itemPath.textContent = newContent;
                     }    
                 }
             }
 
-        const entries = parsedMetadata.getElementsByTagName("Entry");
+        const entries = parsedMetadata.getElementsByTagName(element.entry);
             if (entries && entries.length) {
                 for (let i = 0; i < entries.length; i++) {
-                    const entry = entries[i];
-                    const entryAttributes = entry.attributes;
-                    const entryAttributesArr = [...entryAttributes]; 
-                    const entryProp = entryAttributesArr.find((prop) => {
-                    return prop?.name === "Type"});
-                    if (entryProp?.nodeValue == "RelationshipInfoContainer") {
-                        const newValue = entry.getAttribute("Value")?.replace(/Query1/g, metadata.queryName);
+                    const entry: Element = entries[i];
+                    const entryAttributes: NamedNodeMap = entry.attributes;
+                    const entryAttributesArr: Attr[] = [...entryAttributes]; 
+                    const entryProp: Attr | undefined = entryAttributesArr.find((prop) => {
+                    return prop?.name === elementAttributes.type});
+                    if (entryProp?.nodeValue == elementAttributes.relationshipInfo) {
+                        const newValue: string | undefined = entry.getAttribute(elementAttributes.value)?.replace(/Query1/g, metadata.queryName);
                         if (newValue) {
-                            entry.setAttribute("Value", newValue);
+                            entry.setAttribute(elementAttributes.value, newValue);
                         }
                     }
-                    if (entryProp?.nodeValue == "ResultType") {
-                        entry.setAttribute("Value", "sTable");
+                    if (entryProp?.nodeValue == elementAttributes.resultType) {
+                        entry.setAttribute(elementAttributes.value, elementAttributesValues.tableResultType());
                     }
-                    if (entryProp?.nodeValue == "FillColumnNames") {
-                        const oldValue = entry.getAttribute("Value");
+
+                    if (entryProp?.nodeValue == elementAttributes.fillColumnNames) {
+                        const oldValue: string | null = entry.getAttribute(elementAttributes.value);
                         if (oldValue) {
-                            entry.setAttribute("Value", oldValue.replace(defaults.queryName, metadata.queryName));
+                            entry.setAttribute(elementAttributes.value, oldValue.replace(defaults.queryName, metadata.queryName));
                         }    
                     }
-                    if (entryProp?.nodeValue == "FillTarget") {
-                        const oldValue = entry.getAttribute("Value");
+
+                    if (entryProp?.nodeValue == elementAttributes.fillTarget) {
+                        const oldValue: string | null = entry.getAttribute(elementAttributes.value);
                         if (oldValue) {
-                            entry.setAttribute("Value", oldValue.replace(defaults.queryName, metadata.queryName));
+                            entry.setAttribute(elementAttributes.value, oldValue.replace(defaults.queryName, metadata.queryName));
                         }    
                     }
-                    if (entryProp?.nodeValue == "FillLastUpdated") {
-                        const nowTime = new Date().toISOString();
-                        entry.setAttribute("Value", ("d" + nowTime).replace(/Z/, '0000Z'));
+
+                    if (entryProp?.nodeValue == elementAttributes.fillLastUpdated) {
+                        const nowTime: string = new Date().toISOString();
+                        entry.setAttribute(elementAttributes.value, (elementAttributes.day + nowTime).replace(/Z/, '0000Z'));
                     }   
                 }
             }
 
         // Convert new metadataXml to Uint8Array
-        const newMetadataString = serializer.serializeToString(parsedMetadata);
-        const encoder = new TextEncoder();
-        const newMetadataXml = encoder.encode(newMetadataString);
-        const newMetadataXmlSize = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
-
-        const newMetadataArray = arrayUtils.concatArrays(metadataVersion, newMetadataXmlSize, newMetadataXml, endBuffer);
+        const newMetadataString: string = serializer.serializeToString(parsedMetadata);
+        const encoder: TextEncoder = new TextEncoder();
+        const newMetadataXml: Uint8Array = encoder.encode(newMetadataString);
+        const newMetadataXmlSize: Uint8Array = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
+        const newMetadataArray: Uint8Array = arrayUtils.concatArrays(metadataVersion, newMetadataXmlSize, newMetadataXml, endBuffer);
+        
         return newMetadataArray;
     };
 }
