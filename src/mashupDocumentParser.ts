@@ -45,29 +45,21 @@ export default class MashupHandler {
 
     private async editSingleQueryPackage(packageOPC: ArrayBuffer, queryMashupDoc: string) {
         const packageZip: JSZip = await JSZip.loadAsync(packageOPC);
-        this.getSection1m(packageZip);
         this.setSection1m(queryMashupDoc, packageZip);
 
         return await packageZip.generateAsync({ type: uint8ArrayType });
     }
 
     private setSection1m = (queryMashupDoc: string, zip: JSZip): void => {
+        if (!zip.file(section1mPath)?.async(textResultType)) {
+            throw new Error(formulaSectionNotFoundErr);
+        }
         const newSection1m: string = queryMashupDoc;
 
         zip.file(section1mPath, newSection1m, {
             compression: emptyValue,
         });
     };
-
-    private getSection1m = async (zip: JSZip): Promise<string> => {
-        const section1m = zip.file(section1mPath)?.async(textResultType);
-        if (!section1m) {
-            throw new Error(formulaSectionNotFoundErr);
-        }
-
-        return section1m;
-    };
-
     
     private editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Metadata) => {
         //extract metadataXml

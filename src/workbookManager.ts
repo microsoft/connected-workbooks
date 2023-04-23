@@ -35,8 +35,6 @@ export class WorkbookManager {
             query.queryName = defaults.queryName;
         }
         await this.updatePowerQueryDocument(zip, query.queryName, queryMashupDoc);
-
-        await this.updatePowerQueryDocument(zip, query.queryName, query.queryMashup);
         await this.updateSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
         await this.updateDocProps(zip, docProps);
 

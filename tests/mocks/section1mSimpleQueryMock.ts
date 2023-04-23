@@ -1,6 +1,5 @@
 export const simpleQueryMock = 
-    `section Section1;
-    shared newQueryName = 
+    `shared newQueryName = 
     let
     Source = Folder.Files("C:\\Users\\user1\\Desktop\\test")
 in
