@@ -15,6 +15,7 @@ export const connectionsNotFoundErr = "Connections were not found in template";
 export const sheetsNotFoundErr = "Sheets were not found in template";
 export const base64NotFoundErr = "Base64 was not found in template";
 export const emptyQueryMashupErr = "Query mashup is empty";
+export const queryNameNotFoundErr = "Query name was not found";
 export const queryAndPivotTableNotFoundErr = "No such query found in Query Table or Pivot Table found in given template";
 export const queryConnectionNotFoundErr = "No connection found for query";
 export const formulaSectionNotFoundErr = "Formula section wasn't found in template";
