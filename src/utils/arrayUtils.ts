@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-class ArrayReader {
+export class ArrayReader {
     private _array: ArrayBuffer;
     private _position: number;
 

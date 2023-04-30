@@ -2,4 +2,5 @@
 // Licensed under the MIT license.
 
 export { WorkbookManager } from "./workbookManager";
-export { QueryInfo } from "./types";
+export type { QueryInfo } from "./types";
+export type {ArrayReader} from "././utils/arrayUtils";
