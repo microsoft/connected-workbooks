@@ -8,13 +8,13 @@ export default class GridParser {
         }
 
         this.validateGridHeader(initialDataGrid);
-        const data = this.parseGridData(initialDataGrid, initialDataGrid.Header);
+        const data: string[][] = this.parseGridData(initialDataGrid, initialDataGrid.Header);
         
         return { columnMetadata : initialDataGrid.Header, data: data };
     }
 
     private parseGridData(initialDataGrid: Grid, columnMetadata: ColumnMetadata[]) {
-        const gridData = initialDataGrid.GridData;
+        const gridData: (string | number | boolean)[][] = initialDataGrid.GridData;
         if (!gridData) {
             throw new Error(GridNotFoundErr);
         }
@@ -22,10 +22,10 @@ export default class GridParser {
         const tableData: string[][] = [];
         for (const rowData of gridData) {
             const row: string[] = [];
-            var colIndex = 0;
+            var colIndex: number = 0;
             for (const prop in rowData) {
-                const dataType = columnMetadata[colIndex].type;
-                const cellValue = rowData[prop];
+                const dataType: dataTypes = columnMetadata[colIndex].type;
+                const cellValue: string | number | boolean = rowData[prop];
                 if (dataType == dataTypes.number) {
                     if (isNaN(Number(cellValue))) {
                         throw new Error(invalidValueInColumnErr);
@@ -48,7 +48,7 @@ export default class GridParser {
     }
 
     private validateGridHeader(data: Grid) {
-        const headerData = data.Header;
+        const headerData: ColumnMetadata[] = data.Header;
         if (!headerData) {
             throw new Error(headerNotFoundErr);
         }

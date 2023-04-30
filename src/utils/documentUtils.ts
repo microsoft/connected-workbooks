@@ -50,11 +50,12 @@ const getTableReference = (numberOfCols: number, numberOfRows: number) => {
 };
 
 const createCellElement = (doc: Document, colIndex: number, rowIndex: number, dataType: number, data: string) => {
-    const cell = doc.createElementNS(doc.documentElement.namespaceURI, "c");
+    const cell: Element = doc.createElementNS(doc.documentElement.namespaceURI, "c");
     cell.setAttribute("r", getCellReference(colIndex, rowIndex + 1).replace("$", ""));
-    const cellData = doc.createElementNS(doc.documentElement.namespaceURI, "v");
+    const cellData: Element = doc.createElementNS(doc.documentElement.namespaceURI, "v");
     updateCellData(dataType, data, cell, cellData);
     cell.appendChild(cellData);
+    
     return cell;
 };
 
