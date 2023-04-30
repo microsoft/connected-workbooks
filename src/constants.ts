@@ -21,6 +21,13 @@ export const emptyQueryMashupErr = "Query mashup is empty";
 export const queryAndPivotTableNotFoundErr = "No such query found in Query Table or Pivot Table found in given template";
 export const queryConnectionNotFoundErr = "No connection found for query";
 export const formulaSectionNotFoundErr = "Formula section wasn't found in template";
+export const templateWithInitialDataErr = "Cannot receive template file with initial data";
+export const queryTableNotFoundErr = "Query table wasn't found in template";
+export const tableNotFoundErr = "Table wasn't found in template";
+export const GridNotFoundErr = "Invalid JSON file, grid data is missing";
+export const invalidValueInColumnErr = "Invalid cell value in column";
+export const headerNotFoundErr = "Invalid JSON file, header is missing";
+export const invalidDataTypeErr = "Invalid JSON file, invalid data type";
 
 export const blobFileType = "blob";
 export const uint8ArrayType = "uint8array";
@@ -48,7 +55,18 @@ export const element = {
     itemType: "ItemType",
     itemLocation: "ItemLocation",
     entry: "Entry",
-    stableEntries: "StableEntries"
+    stableEntries: "StableEntries",
+    tableColumns: "tableColumns",
+    tableColumn: "tableColumn",
+    table: "table",
+    autoFilter: "autoFilter",
+    definedName: "definedName",
+    queryTableFields: "queryTableFields",
+    queryTableField: "queryTableField",
+    queryTableRefresh: "queryTableRefresh",
+    sheetData: "sheetData",
+    row: "row",
+    dimension: "dimension"
 }
 
 export const elementAttributes = {
@@ -70,7 +88,15 @@ export const elementAttributes = {
     fillColumnNames: "FillColumnNames",
     fillTarget: "FillTarget",
     fillLastUpdated: "FillLastUpdated",
-    day: "d"
+    day: "d",
+    uniqueName: "uniqueName",
+    queryTableFieldId: "queryTableFieldId",
+    reference: "ref",
+    tableColumnId: "tableColumnId",
+    nextId: "nextId",
+    row: "r",
+    spans: "spans",
+    x14acDyDescent: "x14ac:dyDescent"
 };
 
 export const elementAttributesValues = {
