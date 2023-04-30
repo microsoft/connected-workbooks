@@ -2,6 +2,8 @@ import workbookTemplate from "../src/workbookTemplate";
 import { WorkbookManager }  from "../src/workbookManager";
 import { connectionsXmlPath, sharedStringsXmlPath } from "../src/constants";
 import { sharedStringsXmlMock, existingSharedStringsXmlMock } from "./mocks";
+import { dataTypes } from "../src/types";
+import { sheetsXmlMock, workbookXmlMock, queryTableMock, addZeroSheetsXmlMock } from "./mocks";
 
 describe("Workbook Manager tests", () => {
     const workbookManager = new WorkbookManager() as any;
@@ -35,13 +37,6 @@ describe("Workbook Manager tests", () => {
         const {sharedStringIndex} = await workbookManager.updateSharedStrings('<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="1" uniqueCount="1"><si><t>Query1</t></si><si><t/></si></sst>', "newQueryName");
         expect(sharedStringIndex).toEqual(2);
     })
-import workbookTemplate from "../src/workbookTemplate";
-import { WorkbookManager }  from "../src/workbookManager";
-import { dataTypes } from "../src/types";
-import { sheetsXmlMock, workbookXmlMock, queryTableMock, addZeroSheetsXmlMock } from "./mocks";
-
-describe("Workbook Manager tests", () => {
-    const workbookManager = new WorkbookManager() as any;
     test("test valid initial data in SheetsXML", async () => {
         const defaultString = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="x14ac xr xr2 xr3" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" xmlns:xr="http://schemas.microsoft.com/office/spreadsheetml/2014/revision" xmlns:xr2="http://schemas.microsoft.com/office/spreadsheetml/2015/revision2" xmlns:xr3="http://schemas.microsoft.com/office/spreadsheetml/2016/revision3" xr:uid="{EDF0138E-D216-4CD1-8EFA-1396A1BB4478}"><sheetPr codeName="Sheet1"/><dimension ref="A1:A2"/><sheetViews><sheetView tabSelected="1" workbookViewId="0"/></sheetViews><sheetFormatPr defaultRowHeight="14.4" x14ac:dyDescent="0.3"/><cols><col min="1" max="1" width="9.6640625" bestFit="1" customWidth="1"/></cols><sheetData><row r="1" spans="1:1" x14ac:dyDescent="0.3"><c r="A1" t="s"><v>0</v></c></row><row r="2" spans="1:1" x14ac:dyDescent="0.3"><c r="A2" t="s"><v>1</v></c></row></sheetData><pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/><tableParts count="1"><tablePart r:id="rId1"/></tableParts></worksheet>';
         const sheetsXmlString = await workbookManager.updateSheetsInitialData(defaultString, {columnMetadata: [{name: 'Column1', type: dataTypes.string}, {name: 'Column2', type: dataTypes.number} ], data: [['1', '2']]});
@@ -76,11 +71,12 @@ describe("Workbook Manager tests", () => {
         expect(sharedStringIndex).toEqual(2);
         expect(newSharedStrings.replace(/ /g, "")).toContain(sharedStringsXmlMock.replace(/ /g, ""));
     })
-});
+
     test("tests Query Tables contain initial data", async () => {
         const defaultString = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\r\n<queryTable xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" mc:Ignorable=\"xr16\" xmlns:xr16=\"http://schemas.microsoft.com/office/spreadsheetml/2017/revision16\" name=\"ExternalData_1\" connectionId=\"1\" xr16:uid=\"{24C17B89-3CD3-4AA5-B84F-9FF5F35245D7}\" autoFormatId=\"16\" applyNumberFormats=\"0\" applyBorderFormats=\"0\" applyFontFormats=\"0\" applyPatternFormats=\"0\" applyAlignmentFormats=\"0\" applyWidthHeightFormats=\"0\"><queryTableRefresh nextId=\"2\"><queryTableFields count=\"1\"><queryTableField id=\"1\" name=\"Query1\" tableColumnId=\"1\"/></queryTableFields></queryTableRefresh></queryTable>";
         const queryTableXmlSheet = await workbookManager.updateQueryTablesInitialData(defaultString, {columnMetadata: [{name: 'Column1', type: dataTypes.string}, {name: 'Column2', type: dataTypes.number} ],
                 data: [['1', '2']]});
         expect(queryTableXmlSheet).toContain(queryTableMock);
     })
+
 });
