@@ -60,15 +60,16 @@ const createCellElement = (doc: Document, colIndex: number, rowIndex: number, da
 };
 
 const updateCellData = (dataType: number, data: string, cell: Element, cellData: Element) => {
-    if (dataType == dataTypes.string) {
+    switch(dataType) {
+    case dataTypes.string:
         cell.setAttribute("t", "str");
-    }
-    if (dataType == dataTypes.number) {
+        break;
+    case dataTypes.number:
         cell.setAttribute("t", "1");
-    }
-
-    if (dataType == dataTypes.boolean) {
+        break;
+    case dataTypes.boolean:
         cell.setAttribute("t", "b");
+        break;
     }
     cellData.textContent = data;
 };
