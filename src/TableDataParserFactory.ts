@@ -6,6 +6,7 @@ export default class TableDataParserFactory {
     if (data.Header !== undefined && data.GridData !== undefined) {
         return new GridParser();
     }
+    
     throw new Error("Unsupported data type");
  }
 }

@@ -30,7 +30,7 @@ export interface ColumnMetadata {
 
 export interface Grid {
     Header: ColumnMetadata[];
-    GridData: (string|number|boolean)[][];
+    GridData: dataTypes[][];
 }
 
 export interface TableDataParser {
