@@ -278,6 +278,9 @@ node_modules/
 # Build files
 dist/
 
+# data
+data/
+
 # Test coverage files 
 coverage/
 

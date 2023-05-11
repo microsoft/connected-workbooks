@@ -22,7 +22,7 @@ export default class MashupHandler {
         return base64.fromByteArray(newMashup);
     }
 
-    private getPackageComponents(base64Str: string) {
+    public getPackageComponents(base64Str: string) {
         const buffer: ArrayBufferLike = base64.toByteArray(base64Str).buffer;
         const mashupArray: ArrayReader = new arrayUtils.ArrayReader(buffer);
         const version: Uint8Array = mashupArray.getBytes(4);
@@ -60,7 +60,7 @@ export default class MashupHandler {
         });
     };
 
-    private getSection1m = async (zip: JSZip): Promise<string> => {
+    public getSection1m = async (zip: JSZip): Promise<string> => {
         const section1m = zip.file(section1mPath)?.async(textResultType);
         if (!section1m) {
             throw new Error(formulaSectionNotFoundErr);

@@ -3,8 +3,11 @@
 
 import JSZip from "jszip";
 import iconv from "iconv-lite";
+import { decode } from 'iconv-lite';
 import { URLS } from "../constants";
 import { generateMashupXMLTemplate, generateCustomXmlFilePath } from "../generators";
+const { DOMParser } = require('xmldom')
+
 
 type CustomXmlFile = {
     found: boolean;
@@ -64,13 +67,13 @@ const getCustomXmlFile = async (zip: JSZip, url: string, encoding = "UTF-16"): P
             break;
         }
 
-        xmlString = iconv.decode(xmlValue.buffer as Buffer, encoding);
+        xmlString = decode(Buffer.from(xmlValue), encoding);
         const doc: Document = parser.parseFromString(xmlString, "text/xml");
 
         found = doc?.documentElement?.namespaceURI === url;
 
         if (found) {
-            value = doc.documentElement.innerHTML;
+            value = doc.documentElement.textContent!;
             break;
         }
     }
