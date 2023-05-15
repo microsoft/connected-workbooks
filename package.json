@@ -10,7 +10,8 @@
   "scripts": {
     "build": "tsc",
     "test": "jest",
-    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" --config .prettierrc"
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" --config .prettierrc",
+    "bundle:server": "webpack"
   },
   "repository": {
     "type": "git",
@@ -52,6 +53,9 @@
     "nyc": "^15.1.0",
     "prettier": "2.3.2",
     "ts-node": "^9.0.0",
-    "typescript": "^4.0.5"
+    "typescript": "^4.0.5",
+    "webpack": "^5.82.1",
+    "webpack-cli": "^5.1.1",
+    "webpack-node-externals": "^3.0.0"
   }
 }

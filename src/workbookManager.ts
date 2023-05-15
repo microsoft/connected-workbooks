@@ -300,71 +300,65 @@ export class WorkbookManager {
     public async getMQueryData(zipFilePath: string) {
         const queries: QueryData[] = [];
 
-        try {
-            var fs = require("fs");
-            const data = fs.readFileSync(zipFilePath);
-            const zipFile = await JSZip.loadAsync(data);
-            const originalBase64Str = await pqUtils.getBase64(zipFile);
+        var fs = require("fs");
+        const data = fs.readFileSync(zipFilePath);
+        const zipFile = await JSZip.loadAsync(data);
+        const originalBase64Str = await pqUtils.getBase64(zipFile);
 
-            if (!originalBase64Str) {
-                // return with {}
-                return queries;
-            }
-
-            const mashupHandler = new MashupHandler();
-            const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } =
-                mashupHandler.getPackageComponents(originalBase64Str);
-
-            //extract metadataXml
-            const mashupArray: ArrayReader = new arrayUtils.ArrayReader(metadata.buffer);
-            const metadataVersion: Uint8Array = mashupArray.getBytes(4);
-            const metadataXmlSize: number = mashupArray.getInt32();
-            const metadataXml: Uint8Array = mashupArray.getBytes(metadataXmlSize);
-
-            // extract section1m
-            const packageZip: JSZip = await JSZip.loadAsync(packageOPC);
-            const section1m = await mashupHandler.getSection1m(packageZip);
-
-            // get all query names and values from section1m
-            this.GetQueriesFromSection1m(section1m, queries);
-
-            // if no queries are found in the workbook, return
-            if (queries.length === 0) {
-                // return with {}
-                return queries;
-            }
-
-            // get connection ID from query name
-            const connectionsXmlString = await zipFile.file("xl/connections.xml")?.async("text");
-            if (!connectionsXmlString) {
-                // return with the queries and no table info
-                return queries;
-            }
-
-            const { DOMParser } = require('xmldom')
-            const parser: DOMParser = new DOMParser();
-            const parsedConnections: Document = parser.parseFromString(connectionsXmlString, xmlTextResultType);
-            const connectionTags = parsedConnections.getElementsByTagName("connection");
-            this.GetConnectionIdsFromQueryNames(connectionTags, queries);
-
-            // get query metadata from connection IDs
-            await this.GetQueryMetadataFromConnectionIds(zipFile, queries);
-
-            // get table name from metadata
-            // NOTE: this is not the metadata we extracted in the previous step
-            const textDecoder: TextDecoder = new TextDecoder();
-            const metadataString: string = textDecoder.decode(metadataXml);
-            const parsedMetadata: Document = parser.parseFromString(metadataString, xmlTextResultType);
-            this.GetTableNamesFromMetadata(parsedMetadata, queries);
-
-            // get range from table - trying to loop through all tables
-            await this.GetTableRangesFromTableNames(zipFile, queries);
-            return queries;
-        } catch (error) {
-            // log error
-            console.log(error);
+        if (!originalBase64Str) {
+            // return with {}
             return queries;
         }
+
+        const mashupHandler = new MashupHandler();
+        const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } =
+            mashupHandler.getPackageComponents(originalBase64Str);
+
+        //extract metadataXml
+        const mashupArray: ArrayReader = new arrayUtils.ArrayReader(metadata.buffer);
+        const metadataVersion: Uint8Array = mashupArray.getBytes(4);
+        const metadataXmlSize: number = mashupArray.getInt32();
+        const metadataXml: Uint8Array = mashupArray.getBytes(metadataXmlSize);
+
+        // extract section1m
+        const packageZip: JSZip = await JSZip.loadAsync(packageOPC);
+        const section1m = await mashupHandler.getSection1m(packageZip);
+
+        // get all query names and values from section1m
+        this.GetQueriesFromSection1m(section1m, queries);
+
+        // if no queries are found in the workbook, return
+        if (queries.length === 0) {
+            // return with {}
+            return queries;
+        }
+
+        // get connection ID from query name
+        const connectionsXmlString = await zipFile.file("xl/connections.xml")?.async("text");
+        if (!connectionsXmlString) {
+            // return with the queries and no table info
+            return queries;
+        }
+
+        const { DOMParser } = require('xmldom')
+        const parser: DOMParser = new DOMParser();
+        const parsedConnections: Document = parser.parseFromString(connectionsXmlString, xmlTextResultType);
+        const connectionTags = parsedConnections.getElementsByTagName("connection");
+        this.GetConnectionIdsFromQueryNames(connectionTags, queries);
+
+        // get query metadata from connection IDs
+        await this.GetQueryMetadataFromConnectionIds(zipFile, queries);
+
+        // get table name from metadata
+        // NOTE: this is not the metadata we extracted in the previous step
+        const textDecoder: TextDecoder = new TextDecoder();
+        const metadataString: string = textDecoder.decode(metadataXml);
+        const parsedMetadata: Document = parser.parseFromString(metadataString, xmlTextResultType);
+        this.GetTableNamesFromMetadata(parsedMetadata, queries);
+
+        // get range from table - trying to loop through all tables
+        await this.GetTableRangesFromTableNames(zipFile, queries);
+        return queries;
     }
 
     public async getQueryInfo(zipFilePath: string): Promise<string> {

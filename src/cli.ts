@@ -10,5 +10,5 @@ const workbookManager = new WorkbookManager();
 workbookManager.getMQueryData(filepath).then((queries) => {
     console.log(JSON.stringify(queries));
 }).catch((err) => {
-    console.log(JSON.stringify(err));
+    console.error(err);
 });

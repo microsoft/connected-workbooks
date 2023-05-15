@@ -277,6 +277,7 @@ node_modules/
 
 # Build files
 dist/
+bundle/
 
 # data
 data/
