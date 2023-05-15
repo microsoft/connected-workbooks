@@ -6,7 +6,7 @@ import { pqUtils, documentUtils } from "./utils";
 import WorkbookTemplate from "./workbookTemplate";
 import MashupHandler from "./mashupDocumentParser";
 import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, defaults, sharedStringsXmlPath, sheetsXmlPath, emptyQueryMashupErr, blobFileType, application, base64NotFoundErr, textResultType, connectionsNotFoundErr, sharedStringsNotFoundErr, sheetsNotFoundErr, trueValue, falseValue, xmlTextResultType, element, elementAttributes, elementAttributesValues, pivotCachesPathPrefix, emptyValue, queryAndPivotTableNotFoundErr } from "./constants";
-import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements } from "./types";
+import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements, QueryData } from "./types";
 import arrayUtils, { ArrayReader } from "./utils/arrayUtils";
 
 export class WorkbookManager {
@@ -298,61 +298,73 @@ export class WorkbookManager {
     }
 
     public async getMQueryData(zipFilePath: string) {
-        var fs = require("fs");
+        const queries: QueryData[] = [];
 
-        const mashupHandler = new MashupHandler();
-        const data = fs.readFileSync(zipFilePath);
-        const zipFile = await JSZip.loadAsync(data);
-        const originalBase64Str = await pqUtils.getBase64(zipFile);
+        try {
+            var fs = require("fs");
+            const data = fs.readFileSync(zipFilePath);
+            const zipFile = await JSZip.loadAsync(data);
+            const originalBase64Str = await pqUtils.getBase64(zipFile);
 
-        const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } =
-            mashupHandler.getPackageComponents(originalBase64Str!);
-        const packageZip: JSZip = await JSZip.loadAsync(packageOPC);
-        const section1m = await mashupHandler.getSection1m(packageZip);
-
-        console.log(version, packageOPC, permissionsSize, permissions, metadata, endBuffer);
-
-        //extract metadataXml
-        const mashupArray: ArrayReader = new arrayUtils.ArrayReader(metadata.buffer);
-        const metadataVersion: Uint8Array = mashupArray.getBytes(4);
-        const metadataXmlSize: number = mashupArray.getInt32();
-        const metadataXml: Uint8Array = mashupArray.getBytes(metadataXmlSize);
-
-        //parse metdataXml
-        const textDecoder: TextDecoder = new TextDecoder();
-        const metadataString: string = textDecoder.decode(metadataXml);
-        const parser: DOMParser = new DOMParser();
-        const serializer: XMLSerializer = new XMLSerializer();
-        const parsedMetadata: Document = parser.parseFromString(metadataString, xmlTextResultType);
-        const entries = parsedMetadata.getElementsByTagName(element.entry);
-        if (entries && entries.length) {
-            for (let i = 0; i < entries.length; i++) {
-                const entry: Element = entries[i];
-                const entryAttributes: NamedNodeMap = entry.attributes;
-                const entryAttributesArr: Attr[] = [...entryAttributes];
-                const entryProp: Attr | undefined = entryAttributesArr.find((prop) => {
-                    return prop?.name === elementAttributes.type;
-                });
-
-                if (entryProp?.nodeValue == elementAttributes.fillTarget) {
-                    console.log(entryProp?.nodeValue);
-                    console.log(entryProp?.value);
-
-                    const entryValues: Attr | undefined = entryAttributesArr.find((prop) => {
-                        return prop?.name === elementAttributes.value;
-                    });
-                    console.log(entryValues);
-                }
+            if (!originalBase64Str) {
+                // return with {}
+                return queries;
             }
+
+            const mashupHandler = new MashupHandler();
+            const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } =
+                mashupHandler.getPackageComponents(originalBase64Str);
+
+            //extract metadataXml
+            const mashupArray: ArrayReader = new arrayUtils.ArrayReader(metadata.buffer);
+            const metadataVersion: Uint8Array = mashupArray.getBytes(4);
+            const metadataXmlSize: number = mashupArray.getInt32();
+            const metadataXml: Uint8Array = mashupArray.getBytes(metadataXmlSize);
+
+            // extract section1m
+            const packageZip: JSZip = await JSZip.loadAsync(packageOPC);
+            const section1m = await mashupHandler.getSection1m(packageZip);
+
+            // get all query names and values from section1m
+            this.GetQueriesFromSection1m(section1m, queries);
+
+            // if no queries are found in the workbook, return
+            if (queries.length === 0) {
+                // return with {}
+                return queries;
+            }
+
+            // get connection ID from query name
+            const connectionsXmlString = await zipFile.file("xl/connections.xml")?.async("text");
+            if (!connectionsXmlString) {
+                // return with the queries and no table info
+                return queries;
+            }
+
+            const { DOMParser } = require('xmldom')
+            const parser: DOMParser = new DOMParser();
+            const parsedConnections: Document = parser.parseFromString(connectionsXmlString, xmlTextResultType);
+            const connectionTags = parsedConnections.getElementsByTagName("connection");
+            this.GetConnectionIdsFromQueryNames(connectionTags, queries);
+
+            // get query metadata from connection IDs
+            await this.GetQueryMetadataFromConnectionIds(zipFile, queries);
+
+            // get table name from metadata
+            // NOTE: this is not the metadata we extracted in the previous step
+            const textDecoder: TextDecoder = new TextDecoder();
+            const metadataString: string = textDecoder.decode(metadataXml);
+            const parsedMetadata: Document = parser.parseFromString(metadataString, xmlTextResultType);
+            this.GetTableNamesFromMetadata(parsedMetadata, queries);
+
+            // get range from table - trying to loop through all tables
+            await this.GetTableRangesFromTableNames(zipFile, queries);
+            return queries;
+        } catch (error) {
+            // log error
+            console.log(error);
+            return queries;
         }
-
-        // extract query name from query with regex
-        const queryName = section1m.match(/shared\s(.+?) =/)?.[1];
-        console.log(queryName);
-
-        // extract connection ID from connections using the query name
-
-        // extract metadata from query table using the connection ID
     }
 
     public async getQueryInfo(zipFilePath: string): Promise<string> {
@@ -368,6 +380,222 @@ export class WorkbookManager {
         const packageZip: JSZip = await JSZip.loadAsync(packageOPC);
         const section1m = await mashupHandler.getSection1m(packageZip);
         return section1m;
+    }
+
+    private GetQueriesFromSection1m(section1m: string, queries: QueryData[]): void {
+        const queryRegex = /shared\s+(\w+)\s+=\s+(.*?)(?=\s*shared|$)/gs;
+        let queryMatch: RegExpExecArray | null;
+        while ((queryMatch = queryRegex.exec(section1m)) !== null) {
+            // This is necessary to avoid infinite loops with zero-width matches
+            if (queryMatch.index === queryRegex.lastIndex) {
+                queryRegex.lastIndex++;
+            }
+
+            const queryData: QueryData = {
+                queryName: queryMatch[1],
+                query: queryMatch[2].trim(),
+            };
+
+            queries.push(queryData);
+        }
+    }
+
+    private GetConnectionIdsFromQueryNames(connectionTags: HTMLCollectionOf<Element>, queries: QueryData[]): void {
+        if (connectionTags && connectionTags.length) {
+            for (let i = 0; i < connectionTags.length; i++) {
+                const connectionTag: Element = connectionTags[i];
+                const connectionTagAttributes: NamedNodeMap = connectionTag.attributes;
+                const connectionTagAttributesArr: Attr[] = Array.from(connectionTagAttributes);
+
+
+                // the xml tags look like: <connection id="1" name="Query - Query1"/>
+
+                const nameAttribute: Attr | undefined = connectionTagAttributesArr.find((attribute) => {
+                    // get the attribute called "name" which holds the query name
+                    return attribute?.name === elementAttributes.name;
+                });
+
+                // extract the name of the query from the name attribute
+                const connectionQueryNameValue = nameAttribute?.value;
+                const regex = /(?<=Query - )\w+/;
+                const connectionQueryName = connectionQueryNameValue
+                    ? regex.exec(connectionQueryNameValue)?.[0]
+                    : "NAME_NOT_FOUND";
+
+                // find the queryData with the same queryName - extract the connection id attribute
+                for (const queryData of queries) {
+                    if (connectionQueryName === queryData.queryName) {
+                        const idAttribute: Attr | undefined = connectionTagAttributesArr.find((attribute) => {
+                            // get the attribute called "id" which holds the connection id
+                            return attribute?.name === elementAttributes.id;
+                        });
+
+                        const connectionId = idAttribute?.value;
+                        queryData.connectionId = connectionId;
+                    }
+                }
+            }
+        }
+    }
+
+    async GetQueryMetadataFromConnectionIds(defaultZipFile: JSZip, queries: QueryData[]): Promise<void> {
+        const { DOMParser } = require('xmldom')
+        const parser: DOMParser = new DOMParser();
+        const queryTablePromises: Promise<{
+            path: string;
+            queryTableXmlString: string;
+        }>[] = [];
+        defaultZipFile.folder("xl/queryTables")?.forEach(async (relativePath, queryTableFile) => {
+            queryTablePromises.push(
+                (() => {
+                    return queryTableFile.async("text").then((queryTableString) => {
+                        return {
+                            path: relativePath,
+                            queryTableXmlString: queryTableString,
+                        };
+                    });
+                })()
+            );
+        });
+
+        (await Promise.all(queryTablePromises)).forEach(({ path, queryTableXmlString }) => {
+            const parsedQueryTableXml: Document = parser.parseFromString(queryTableXmlString, xmlTextResultType);
+            const queryTableTags = parsedQueryTableXml.getElementsByTagName("queryTable");
+
+            if (queryTableTags && queryTableTags.length) {
+                for (let i = 0; i < queryTableTags.length; i++) {
+                    const queryTableTag: Element = queryTableTags[i];
+                    const queryTableTagAttributes: NamedNodeMap = queryTableTag.attributes;
+                    const queryTableTagAttributesArr: Attr[] = Array.from(queryTableTagAttributes);
+
+                    const connectionIdAttribute: Attr | undefined = queryTableTagAttributesArr.find((attribute) => {
+                        // get the attribute called "conectionId" which holds the query connection id
+                        return attribute?.name === elementAttributes.connectionId;
+                    });
+
+                    // find the query info with this connection id
+                    for (const queryData of queries) {
+                        if (connectionIdAttribute?.nodeValue == queryData.connectionId) {
+                            // take the string of the queryTable xml and save it in the queryData object
+                            queryData.queryMetadata = queryTableTag.outerHTML;
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    private GetTableNamesFromMetadata(parsedMetadata: Document, queries: QueryData[]): void {
+        const items = parsedMetadata.getElementsByTagName(element.item);
+
+        if (items && items.length) {
+            for (let i = 0; i < items.length; i++) {
+                const item: Element = items[i];
+                const itemEntries = item.getElementsByTagName(element.entry);
+
+                if (itemEntries && itemEntries.length) {
+                    for (let i = 0; i < itemEntries.length; i++) {
+                        const entry: Element = itemEntries[i];
+                        const entryAttributes: NamedNodeMap = entry.attributes;
+                        const entryAttributesArr: Attr[] = Array.from(entryAttributes);
+
+
+                        // get the "type" attribute to search for tyep "FillTarget"
+                        const typeAttribute: Attr | undefined = entryAttributesArr.find((attribute) => {
+                            return attribute?.name === elementAttributes.type;
+                        });
+
+                        // if we found the entry of type "FillTarget", get its value which is the table name
+                        if (typeAttribute?.nodeValue == elementAttributes.fillTarget) {
+                            const valueAttribute: Attr | undefined = entryAttributesArr.find((attribute) => {
+                                return attribute?.name === elementAttributes.value;
+                            });
+
+                            // remove the 's' prefix in the table name and save the name in queryData
+                            const tableName = valueAttribute?.nodeValue?.substring(1);
+
+                            // find the query name from the item -> itemPath
+                            const itemPaths = item.getElementsByTagName(element.itemPath);
+                            if (itemPaths && itemPaths.length) {
+                                for (let i = 0; i < itemPaths.length; i++) {
+                                    const itemPath: Element = itemPaths[i];
+
+                                    if (!itemPath.textContent) {
+                                        continue;
+                                    }
+
+                                    const itemPathValue: string = itemPath.textContent;
+
+                                    // find the queryData with this query name and assign the tableName
+                                    for (const queryData of queries) {
+                                        if (!queryData.queryName) {
+                                            continue;
+                                        }
+
+                                        if (itemPathValue.includes(queryData.queryName)) {
+                                            queryData.tableName = tableName;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private async GetTableRangesFromTableNames(defaultZipFile: JSZip, queries: QueryData[]): Promise<void> {
+        const { DOMParser } = require('xmldom')
+        const parser: DOMParser = new DOMParser();
+        const tablePromises: Promise<{
+            path: string;
+            tableXmlString: string;
+        }>[] = [];
+        defaultZipFile.folder("xl/tables")?.forEach(async (relativePath, tableFile) => {
+            tablePromises.push(
+                (() => {
+                    return tableFile.async("text").then((tableString) => {
+                        return {
+                            path: relativePath,
+                            tableXmlString: tableString,
+                        };
+                    });
+                })()
+            );
+        });
+
+        (await Promise.all(tablePromises)).forEach(({ path, tableXmlString }) => {
+            const parsedTableXml: Document = parser.parseFromString(tableXmlString, xmlTextResultType);
+            const tableTags = parsedTableXml.getElementsByTagName("table");
+
+            if (tableTags && tableTags.length) {
+                for (let i = 0; i < tableTags.length; i++) {
+                    const tableTag: Element = tableTags[i];
+                    const tableTagAttributes: NamedNodeMap = tableTag.attributes;
+                    const tableTagAttributesArr: Attr[] = Array.from(tableTagAttributes);
+
+                    const nameAttribute: Attr | undefined = tableTagAttributesArr.find((attribute) => {
+                        // get the attribute called "name" which holds the table name
+                        return attribute?.name === elementAttributes.name;
+                    });
+
+                    // find the query info with this table name
+                    for (const queryData of queries) {
+                        if (nameAttribute?.nodeValue == queryData.tableName) {
+                            const refAttribute: Attr | undefined = tableTagAttributesArr.find((attribute) => {
+                                // get the attribute called "ref" which holds the table range
+                                return attribute?.name === "ref";
+                            });
+
+                            if (refAttribute?.nodeValue) {
+                                queryData.tableRange = refAttribute.nodeValue;
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
 
 } 

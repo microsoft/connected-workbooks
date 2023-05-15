@@ -7,6 +7,15 @@ export interface QueryInfo {
     queryName?: string;
 }
 
+export type QueryData = {
+    queryName?: string;
+    connectionId?: string;
+    queryMetadata?: string;
+    query?: string;
+    tableName?: string;
+    tableRange?: string;
+};
+
 export interface DocProps {
     title?: string | null;
     subject?: string | null;
