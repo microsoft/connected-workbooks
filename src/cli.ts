@@ -1,9 +1,10 @@
 import { WorkbookManager } from './workbookManager';
 
-var filepath = '';
-filepath = 'data/workbook-no-mquery.xlsx';
-filepath = 'data/workbook.xlsx';
-filepath = 'data/workbook-two-queries.xlsx';
+if (process.argv.length < 3) {
+    console.log('Usage: node cli.js <path to workbook>');
+    process.exit(1);
+}
+var filepath = process.argv[2];
 
 const workbookManager = new WorkbookManager();
 workbookManager.getMQueryData(filepath).then((queries) => {
