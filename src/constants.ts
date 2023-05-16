@@ -122,8 +122,8 @@ export const elementAttributesValues = {
     connectionDescription: (queryName: string) => `Connection to the '${queryName}' query in the workbook.`,
     connection: (queryName: string) => `Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=${queryName};`,
     connectionCommand: (queryName: string) => `SELECT * FROM [${queryName}]`,
-    tableResultType: () => "sTable"
-
+    tableResultType: () => "sTable",
+    cellNumberFormatId: (numberFormatId: number) => "0"
 }
 
 export const milliSecPerDay = 86400000;
@@ -140,7 +140,7 @@ export const dateFormatsRegex: { [key: string]: RegExp } = {
 };
 
 export const dateFormats: { [key: string]: number } = {
-  "m/d/yyyy h:mm": 27
+  "m/d/yyyy h:mm": 22
 };
 
 export const URLS = {
