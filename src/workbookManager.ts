@@ -264,18 +264,17 @@ export class WorkbookManager {
                 const formatCount = Number.parseInt(differentialFormats.getAttribute(elementAttributes.count)!);
                 differentialFormats.setAttribute(elementAttributes.count, (formatCount + 1).toString());
             }
-        // <xf numFmtId="22" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"
-        const cellFormats: Element = stylesDoc.getElementsByTagName(element.cellFormats)[0];
-        const cellFormat: Element = stylesDoc.createElementNS(stylesDoc.documentElement.namespaceURI, element.cellFormat);
-        cellFormat.setAttribute(elementAttributes.numberFormatId, "22");
-        cellFormat.setAttribute(elementAttributes.fontId, "0");
-        cellFormat.setAttribute(elementAttributes.fillId, "0");
-        cellFormat.setAttribute(elementAttributes.borderId, "0");
-        cellFormat.setAttribute(elementAttributes.formatId, "0");
-        cellFormat.setAttribute(elementAttributes.applyNumberFormat, "1");
-        cellFormats.appendChild(cellFormat);
-        const cellformatCount = Number.parseInt(cellFormats.getAttribute(elementAttributes.count)!);
-        cellFormats.setAttribute(elementAttributes.count, (cellformatCount + 1).toString());
+            const cellFormats: Element = stylesDoc.getElementsByTagName(element.cellFormats)[0];
+            const cellFormat: Element = stylesDoc.createElementNS(stylesDoc.documentElement.namespaceURI, element.cellFormat);
+            cellFormat.setAttribute(elementAttributes.numberFormatId, "22");
+            cellFormat.setAttribute(elementAttributes.fontId, "0");
+            cellFormat.setAttribute(elementAttributes.fillId, "0");
+            cellFormat.setAttribute(elementAttributes.borderId, "0");
+            cellFormat.setAttribute(elementAttributes.formatId, "0");
+            cellFormat.setAttribute(elementAttributes.applyNumberFormat, "1");
+            cellFormats.appendChild(cellFormat);
+            const cellformatCount = Number.parseInt(cellFormats.getAttribute(elementAttributes.count)!);
+            cellFormats.setAttribute(elementAttributes.count, (cellformatCount + 1).toString());
         });
         
 

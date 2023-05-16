@@ -136,13 +136,11 @@ export const defaults = {
 };
 
 export const dateFormatsRegex: { [key: string]: RegExp } = {
-  "m/d/yyyy h:mm": /^([1-9]|0[1-9]|1[0-2])\/([1-9]|[012][0-9]|3[01])\/\d{4} ([01]\d|2[0-3]):([0-5]\d)$/,
-  'm/d/yyyy\\ h:mm': /^([1-9]|0[1-9]|1[0-2])\/([1-9]|[012][0-9]|3[01])\/\d{4} ([01]\d|2[0-3]):([0-5]\d)$/
+  "m/d/yyyy h:mm": /^([1-9]|0[1-9]|1[0-2])\/([1-9]|[012][0-9]|3[01])\/\d{4} ([01]\d|2[0-3]):([0-5]\d)$/
 };
 
 export const dateFormats: { [key: string]: number } = {
-  "m/d/yyyy h:mm": 27,
-  'm/d/yyyy\\ h:mm': 27
+  "m/d/yyyy h:mm": 27
 };
 
 export const URLS = {
