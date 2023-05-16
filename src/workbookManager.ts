@@ -16,6 +16,9 @@ import {
     templateWithInitialDataErr,
     queryTableNotFoundErr,
     tableNotFoundErr,
+    stylesXmlPath,
+    stylesNotFoundErr,
+    dateFormats,
 } from "./constants";
 import {
     DocProps,
@@ -164,14 +167,26 @@ export class WorkbookManager {
         const newTable: string = await this.updateTablesInitialData(tableXmlString, tableData);
         zip.file(tableXmlPath, newTable);
 
-        const workbookXmlString = await zip.file(workbookXmlPath)?.async(textResultType);
+        const workbookXmlString: string | undefined = await zip.file(workbookXmlPath)?.async(textResultType);
         if (workbookXmlString === undefined) {
             throw new Error(sheetsNotFoundErr);
         }
         
-        const newWorkbook:string = await this.updateWorkbookInitialData(workbookXmlString, tableData);
+        const newWorkbook: string = await this.updateWorkbookInitialData(workbookXmlString, tableData);
         zip.file(workbookXmlPath, newWorkbook);
+
+        const styleXmlString: string | undefined = await zip.file(stylesXmlPath)?.async(textResultType);
+        if (styleXmlString === undefined) {
+            throw new Error(sheetsNotFoundErr);
+        }
+
+        const newStyles: string | undefined = await this.updateStylesFormat(styleXmlString, tableData);
+        if (styleXmlString === undefined) {
+            throw new Error(stylesNotFoundErr);
+        }
+        zip.file(stylesXmlPath, newStyles);
     }
+   
 
     private async updateTablesInitialData(tableXmlString: string, tableData: TableData) {
         const parser: DOMParser = new DOMParser();
@@ -179,12 +194,17 @@ export class WorkbookManager {
         const tableDoc: Document = parser.parseFromString(tableXmlString, xmlTextResultType);
         const tableColumns: Element = tableDoc.getElementsByTagName(element.tableColumns)[0];
         tableColumns.textContent = "";
+        var diffFormatId = 0;
         tableData.columnMetadata.forEach((col: ColumnMetadata, columnIndex: number) => {
             const tableColumn: Element = tableDoc.createElementNS(tableDoc.documentElement.namespaceURI, element.tableColumn);
             tableColumn.setAttribute(elementAttributes.id, (columnIndex + 1).toString());
             tableColumn.setAttribute(elementAttributes.uniqueName, (columnIndex + 1).toString());
             tableColumn.setAttribute(elementAttributes.name, col.name);
             tableColumn.setAttribute(elementAttributes.queryTableFieldId, (columnIndex + 1).toString());
+            if (col.format !== undefined) {
+                tableColumn.setAttribute(elementAttributes.dataDiffFormatId, diffFormatId.toString());
+                diffFormatId++;
+            }
             tableColumns.appendChild(tableColumn);
         });
 
@@ -222,6 +242,44 @@ export class WorkbookManager {
             `!$A$1:$${documentUtils.getCellReference(tableData.columnMetadata.length - 1, tableData.data.length + 1)}`;
         
         return newSerializer.serializeToString(workbookDoc);
+    }
+
+    private async updateStylesFormat(stylesXmlString: string, tableData: TableData) {
+        const newParser: DOMParser = new DOMParser();
+        const newSerializer: XMLSerializer = new XMLSerializer();
+        const stylesDoc: Document = newParser.parseFromString(stylesXmlString, xmlTextResultType);
+        const differentialFormats: Element = stylesDoc.getElementsByTagName(element.differentialFormats)[0];
+        differentialFormats.textContent = "";
+        differentialFormats.setAttribute(elementAttributes.count, "0");
+        tableData.columnMetadata.forEach((col: ColumnMetadata) => {
+            if (col.format !== undefined) {
+                // Add new diffrential format to styles
+                const diffFormat: Element = stylesDoc.createElementNS(stylesDoc.documentElement.namespaceURI, element.differentialFormat);
+                const numberFormat: Element = stylesDoc.createElementNS(stylesDoc.documentElement.namespaceURI, element.numberFormat);
+                numberFormat.setAttribute(elementAttributes.numberFormatId, dateFormats[col.format].toString());
+                numberFormat.setAttribute(elementAttributes.formatCode, col.format);
+                diffFormat.appendChild(numberFormat);
+                differentialFormats.appendChild(diffFormat);
+                // Increment format count
+                const formatCount = Number.parseInt(differentialFormats.getAttribute(elementAttributes.count)!);
+                differentialFormats.setAttribute(elementAttributes.count, (formatCount + 1).toString());
+            }
+        // <xf numFmtId="22" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"
+        const cellFormats: Element = stylesDoc.getElementsByTagName(element.cellFormats)[0];
+        const cellFormat: Element = stylesDoc.createElementNS(stylesDoc.documentElement.namespaceURI, element.cellFormat);
+        cellFormat.setAttribute(elementAttributes.numberFormatId, "22");
+        cellFormat.setAttribute(elementAttributes.fontId, "0");
+        cellFormat.setAttribute(elementAttributes.fillId, "0");
+        cellFormat.setAttribute(elementAttributes.borderId, "0");
+        cellFormat.setAttribute(elementAttributes.formatId, "0");
+        cellFormat.setAttribute(elementAttributes.applyNumberFormat, "1");
+        cellFormats.appendChild(cellFormat);
+        const cellformatCount = Number.parseInt(cellFormats.getAttribute(elementAttributes.count)!);
+        cellFormats.setAttribute(elementAttributes.count, (cellformatCount + 1).toString());
+        });
+        
+
+        return newSerializer.serializeToString(stylesDoc);
     }
 
     private async updateQueryTablesInitialData(queryTableXmlString: string, tableData: TableData) {

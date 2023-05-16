@@ -67,6 +67,9 @@ const updateCellData = (dataType: number, data: string, cell: Element, cellData:
     case dataTypes.number:
         cell.setAttribute("t", "1");
         break;
+    case dataTypes.dateTime:
+        cell.setAttribute("s", "1");
+        break;
     case dataTypes.boolean:
         cell.setAttribute("t", "b");
         break;
