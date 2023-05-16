@@ -8,7 +8,9 @@ var filepath = process.argv[2];
 
 const workbookManager = new WorkbookManager();
 workbookManager.getMQueryData(filepath).then((queries) => {
-    console.log(JSON.stringify(queries));
+    let metadata = { "timestamp": new Date().toISOString(), "version": "0.1.0", hostname: require("os").hostname() };
+    let fileQueries = { filepath, queries, metadata };
+    console.log(JSON.stringify(fileQueries));
 }).catch((err) => {
     console.error(err);
 });
