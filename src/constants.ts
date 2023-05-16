@@ -12,6 +12,7 @@ export const pivotCachesPath = "xl/pivotCache/";
 export const section1mPath = "Formulas/Section1.m";
 export const docPropsCoreXmlPath = "docProps/core.xml";
 export const docPropsRootElement = "cp:coreProperties";
+export const stylesXmlPath = "xl/styles.xml";
 
 export const sharedStringsNotFoundErr = "SharedStrings were not found in template";
 export const connectionsNotFoundErr = "Connections were not found in template";
@@ -28,6 +29,9 @@ export const GridNotFoundErr = "Invalid JSON file, grid data is missing";
 export const invalidValueInColumnErr = "Invalid cell value in column";
 export const headerNotFoundErr = "Invalid JSON file, header is missing";
 export const invalidDataTypeErr = "Invalid JSON file, invalid data type";
+export const invalidFormatTypeErr = "Invalid JSON file, invalid format type";
+export const stylesNotFoundErr = "Styles were not found in template";
+export const invalidMissingFormatFromDateTimeErr = "Invalid JSON file, missing format from dateTime";
 
 export const blobFileType = "blob";
 export const uint8ArrayType = "uint8array";
@@ -66,7 +70,12 @@ export const element = {
     queryTableRefresh: "queryTableRefresh",
     sheetData: "sheetData",
     row: "row",
-    dimension: "dimension"
+    dimension: "dimension",
+    differentialFormats: "dxfs",
+    differentialFormat: "dxf",
+    numberFormat: "numFmt",
+    cellFormats: "cellXfs",
+    cellFormat: "xf"
 }
 
 export const elementAttributes = {
@@ -96,8 +105,17 @@ export const elementAttributes = {
     nextId: "nextId",
     row: "r",
     spans: "spans",
-    x14acDyDescent: "x14ac:dyDescent"
+    x14acDyDescent: "x14ac:dyDescent",
+    numberFormatId: "numFmtId",
+    formatCode: "formatCode",
+    dataDiffFormatId: "dataDxfId",
+    fontId: "fontId",
+    fillId: "fillId",
+    borderId: "borderId",
+    formatId: "xfId",
+    applyNumberFormat: "applyNumberFormat"
 };
+
 
 export const elementAttributesValues = {
     connectionName: (queryName: string) => `Query - ${queryName}`,
@@ -108,8 +126,23 @@ export const elementAttributesValues = {
 
 }
 
+export const milliSecPerDay = 86400000;
+//This contains the number of days between 01/01/1970 and 01/01/1900
+export const numberOfDaysTillExcelBeginYear = 25569;
+export const monthsbeforeLeap = 2;
+export const beginYear = 1900;
 export const defaults = {
     queryName: "Query1",
+};
+
+export const dateFormatsRegex: { [key: string]: RegExp } = {
+  "m/d/yyyy h:mm": /^([1-9]|0[1-9]|1[0-2])\/([1-9]|[012][0-9]|3[01])\/\d{4} ([01]\d|2[0-3]):([0-5]\d)$/,
+  'm/d/yyyy\\ h:mm': /^([1-9]|0[1-9]|1[0-2])\/([1-9]|[012][0-9]|3[01])\/\d{4} ([01]\d|2[0-3]):([0-5]\d)$/
+};
+
+export const dateFormats: { [key: string]: number } = {
+  "m/d/yyyy h:mm": 27,
+  'm/d/yyyy\\ h:mm': 27
 };
 
 export const URLS = {

@@ -31,6 +31,7 @@ export interface TableData {
 export interface ColumnMetadata {
     name: string;
     type: number;
+    format?: string;
 }
 
 export interface Grid {
@@ -47,7 +48,9 @@ export enum dataTypes {
     string = 1,
     number = 2,
     boolean = 3,
+    dateTime = 4
 }
+
 
 export enum docPropsModifiableElements {
     title = "dc:title",
