@@ -470,8 +470,7 @@ export class WorkbookManager {
                     // find the query info with this connection id
                     for (const queryData of queries) {
                         if (connectionIdAttribute?.nodeValue == queryData.connectionId) {
-                            // take the string of the queryTable xml and save it in the queryData object
-                            queryData.queryMetadata = queryTableTag.outerHTML;
+                            queryData.queryMetadata = queryTableTag.toString();
                         }
                     }
                 }
