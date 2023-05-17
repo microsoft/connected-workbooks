@@ -18,24 +18,15 @@ export class WorkbookManager {
         }
         const generatedsection1mDoc: string = generateSingleQueryMashup(query.queryName, query.queryMashup);
 
+        return await this.generateSingleQueryWorkbookFromMashupDoc(query.queryName, query.refreshOnOpen, generatedsection1mDoc, templateFile, docProps);
+    }
+
+    async generateSingleQueryWorkbookFromMashupDoc(queryName: string, refreshOnOpen: boolean, section1mDoc: string, templateFile?: File, docProps?: DocProps): Promise<Blob> {
         const zip: JSZip =
             templateFile === undefined
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
                 : await JSZip.loadAsync(templateFile);
-
-        return await this.generateSingleQueryWorkbookFromZip(zip, query.queryName, query.refreshOnOpen, generatedsection1mDoc, docProps);
-    }
-
-     async generateSingleQueryWorkbookFromMashupDoc(queryName: string, refreshOnOpen: boolean, section1mDoc: string, templateFile?: File, docProps?: DocProps): Promise<Blob> {
-        const zip: JSZip =
-            templateFile === undefined
-                ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
-                : await JSZip.loadAsync(templateFile);
-
-        return await this.generateSingleQueryWorkbookFromZip(zip, queryName, refreshOnOpen, section1mDoc, docProps);
-    }
-
-    private async generateSingleQueryWorkbookFromZip(zip: JSZip, queryName: string, refreshOnOpen: boolean, section1mDoc:string, docProps?: DocProps): Promise<Blob> {
+                
         await this.updatePowerQueryDocument(zip, queryName, section1mDoc);
         await this.updateSingleQueryAttributes(zip, queryName, refreshOnOpen);
         await this.updateDocProps(zip, docProps);
