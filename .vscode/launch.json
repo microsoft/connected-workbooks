@@ -11,7 +11,10 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/dist/cli.js",
+            "program": "${workspaceFolder}/src/cli.ts",
+            "args": [
+                "data/workbook-two-queries.xlsx"
+            ],
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]
