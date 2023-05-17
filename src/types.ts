@@ -7,10 +7,6 @@ export interface QueryInfo {
     queryName?: string;
 }
 
-export type MashupDocRequired<T> = T extends { queryMashup: undefined } ? { queryName: string } : {};
-
-export type QueryInfoWithMashupDoc = MashupDocRequired<QueryInfo> & QueryInfo;
-
 export interface DocProps {
     title?: string | null;
     subject?: string | null;
