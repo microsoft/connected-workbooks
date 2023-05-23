@@ -7,7 +7,7 @@ import WorkbookTemplate from "./workbookTemplate";
 import MashupHandler from "./mashupDocumentParser";
 import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, defaults, sharedStringsXmlPath, sheetsXmlPath, emptyQueryMashupErr, blobFileType, application, base64NotFoundErr, textResultType, connectionsNotFoundErr, sharedStringsNotFoundErr, sheetsNotFoundErr, trueValue, falseValue, xmlTextResultType, element, elementAttributes, elementAttributesValues, pivotCachesPathPrefix, emptyValue, queryAndPivotTableNotFoundErr, queryNameNotFoundErr } from "./constants";
 import { DocProps, docPropsAutoUpdatedElements, docPropsModifiableElements, QueryInfo } from "./types";
-import { generateSingleQueryMashup } from "./generators";
+import { generateMultipleQueryMashup, generateSingleQueryMashup } from "./generators";
 
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
@@ -19,6 +19,20 @@ export class WorkbookManager {
         const generatedsection1mDoc: string = generateSingleQueryMashup(query.queryName, query.queryMashup);
 
         return await this.generateQueryWorkbookFromMashupDoc(query.queryName, query.refreshOnOpen, generatedsection1mDoc, templateFile, docProps);
+    }
+
+    async generateMultipleQueryWorkbook(query: QueryInfo, connectionOnlyQuery: QueryInfo, docProps?: DocProps) {
+        if (!query.queryName) {
+            query.queryName = defaults.queryName;
+        }
+
+        if (connectionOnlyQuery && !connectionOnlyQuery.queryName) {
+            connectionOnlyQuery.queryName = defaults.connectionOnlyQueryName;
+        }
+
+        const generatedsection1mDoc: string = generateMultipleQueryMashup(query.queryName, query.queryMashup, [connectionOnlyQuery]);
+
+        return await this.generateQueryWorkbookFromMashupDoc(query.queryName, query.refreshOnOpen, generatedsection1mDoc, undefined, docProps, [connectionOnlyQuery.queryName!]);
     }
 
     async generateQueryWorkbookFromMashupDoc(queryName: string, refreshOnOpen: boolean, section1mDoc: string, templateFile?: File, docProps?: DocProps, connectionOnlyQueryNames?: string[]): Promise<Blob> {
