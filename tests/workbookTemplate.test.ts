@@ -1,6 +1,6 @@
 import workbookTemplate from "../src/workbookTemplate";
 import { pqUtils } from "../src/utils";
-import { URLS } from "../src/constants";
+import { section1mPath, textResultType, URLS } from "../src/constants";
 import MashupHandler from "../src/mashupDocumentParser";
 import {
     section1mBlankQueryMock,
@@ -57,7 +57,10 @@ describe("Single query template tests", () => {
         const base64Str = await pqUtils.getBase64(defaultZipFile);
         const { packageOPC } = handler.getPackageComponents(base64Str);
         const packageZip = await JSZip.loadAsync(packageOPC);
-        const section1m: string = await handler.getSection1m(packageZip);
+        const section1m: string | undefined = await packageZip.file(section1mPath)?.async(textResultType);
+        if (section1m == undefined) {
+            throw new Error("section1m is undefined");
+        }
         const hasQuery1 = section1m.includes("Query1");
 
         expect(hasQuery1).toBeTruthy();
