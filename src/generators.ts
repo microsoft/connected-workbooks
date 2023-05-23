@@ -14,7 +14,7 @@ export const generateSingleQueryMashup = (queryName: string, query: string): str
 
 export const generateMultipleQueryMashup = (queryName: string, queryMashup: string, connectionOnlyQueries: QueryInfo[]): string => {
     let section1m: string =  generateSingleQueryMashup(queryName, queryMashup);  
-    connectionOnlyQueries.forEach(query => {
+    connectionOnlyQueries.forEach((query: QueryInfo) => {
         if (query.queryName === undefined) {
             throw new Error("Query name is undefined");
         }

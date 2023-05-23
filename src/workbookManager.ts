@@ -53,16 +53,18 @@ export class WorkbookManager {
     }
 
     private async updatePowerQueryDocument(zip: JSZip, queryName: string,  connectionOnlyQueryNames: string[] | undefined, queryMashup: string) {
-        const old_base64 = await pqUtils.getBase64(zip);
+        const old_base64: string | undefined = await pqUtils.getBase64(zip);
 
         if (!old_base64) {
             throw new Error(base64NotFoundErr);
         }
-        let new_base64 = await this.mashupHandler.ReplaceSingleQuery(old_base64, queryName, queryMashup);
+
+        let new_base64: string = await this.mashupHandler.ReplaceSingleQuery(old_base64, queryName, queryMashup);
         if (connectionOnlyQueryNames) {
             connectionOnlyQueryNames.forEach(async (connectionOnlyQueryName: string) => {
             new_base64 = await this.mashupHandler.AddConnectionOnlyQuery(new_base64, connectionOnlyQueryName);})
         } 
+
         await pqUtils.setBase64(zip, new_base64);
     }
 
