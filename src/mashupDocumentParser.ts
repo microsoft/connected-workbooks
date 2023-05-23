@@ -6,13 +6,12 @@ import JSZip from "jszip";
 import { section1mPath, defaults, uint8ArrayType, emptyValue, textResultType, formulaSectionNotFoundErr, xmlTextResultType, element, section1PathPrefix, divider, elementAttributes, elementAttributesValues } from "./constants";
 import { arrayUtils } from "./utils";
 import { Metadata } from "./types";
-import { generateSingleQueryMashup } from "./generators";
 import { ArrayReader } from "././utils/arrayUtils"; 
 
 export default class MashupHandler {
-    async ReplaceSingleQuery(base64Str: string, queryName: string, query: string): Promise<string> {
+    async ReplaceSingleQuery(base64Str: string, queryName: string, queryMashupDoc: string): Promise<string> {
         const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } = this.getPackageComponents(base64Str);
-        const newPackageBuffer: Uint8Array = await this.editSingleQueryPackage(packageOPC, queryName, query);
+        const newPackageBuffer: Uint8Array = await this.editSingleQueryPackage(packageOPC, queryMashupDoc);
         const packageSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(newPackageBuffer.byteLength);
         const permissionsSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(permissionsSize);
         const newMetadataBuffer: Uint8Array = this.editSingleQueryMetadata(metadata, { queryName });
@@ -44,31 +43,23 @@ export default class MashupHandler {
         };
     }
 
-    private async editSingleQueryPackage(packageOPC: ArrayBuffer, queryName: string, query: string) {
+    private async editSingleQueryPackage(packageOPC: ArrayBuffer, queryMashupDoc: string) {
         const packageZip: JSZip = await JSZip.loadAsync(packageOPC);
-        this.getSection1m(packageZip);
-        this.setSection1m(queryName, query, packageZip);
+        this.setSection1m(queryMashupDoc, packageZip);
 
         return await packageZip.generateAsync({ type: uint8ArrayType });
     }
 
-    private setSection1m = (queryName: string, query: string, zip: JSZip): void => {
-        const newSection1m: string = generateSingleQueryMashup(queryName, query);
+    private setSection1m = (queryMashupDoc: string, zip: JSZip): void => {
+        if (!zip.file(section1mPath)?.async(textResultType)) {
+            throw new Error(formulaSectionNotFoundErr);
+        }
+        const newSection1m: string = queryMashupDoc;
 
         zip.file(section1mPath, newSection1m, {
             compression: emptyValue,
         });
     };
-
-    private getSection1m = async (zip: JSZip): Promise<string> => {
-        const section1m = zip.file(section1mPath)?.async(textResultType);
-        if (!section1m) {
-            throw new Error(formulaSectionNotFoundErr);
-        }
-
-        return section1m;
-    };
-
     
     private editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Metadata) => {
         //extract metadataXml

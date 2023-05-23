@@ -5,36 +5,30 @@ import JSZip from "jszip";
 import { pqUtils, documentUtils } from "./utils";
 import WorkbookTemplate from "./workbookTemplate";
 import MashupHandler from "./mashupDocumentParser";
-import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, defaults, sharedStringsXmlPath, sheetsXmlPath, emptyQueryMashupErr, blobFileType, application, base64NotFoundErr, textResultType, connectionsNotFoundErr, sharedStringsNotFoundErr, sheetsNotFoundErr, trueValue, falseValue, xmlTextResultType, element, elementAttributes, elementAttributesValues, pivotCachesPathPrefix, emptyValue, queryAndPivotTableNotFoundErr } from "./constants";
-import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements } from "./types";
+import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, defaults, sharedStringsXmlPath, sheetsXmlPath, emptyQueryMashupErr, blobFileType, application, base64NotFoundErr, textResultType, connectionsNotFoundErr, sharedStringsNotFoundErr, sheetsNotFoundErr, trueValue, falseValue, xmlTextResultType, element, elementAttributes, elementAttributesValues, pivotCachesPathPrefix, emptyValue, queryAndPivotTableNotFoundErr, queryNameNotFoundErr } from "./constants";
+import { DocProps, docPropsAutoUpdatedElements, docPropsModifiableElements, QueryInfo } from "./types";
+import { generateSingleQueryMashup } from "./generators";
 
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
 
     async generateSingleQueryWorkbook(query: QueryInfo, templateFile?: File, docProps?: DocProps): Promise<Blob> {
-        if (!query.queryMashup) {
-            throw new Error(emptyQueryMashupErr);
-        }
-
         if (!query.queryName) {
             query.queryName = defaults.queryName;
         }
+        const generatedsection1mDoc: string = generateSingleQueryMashup(query.queryName, query.queryMashup);
 
+        return await this.generateSingleQueryWorkbookFromMashupDoc(query.queryName, query.refreshOnOpen, generatedsection1mDoc, templateFile, docProps);
+    }
+
+    async generateSingleQueryWorkbookFromMashupDoc(queryName: string, refreshOnOpen: boolean, section1mDoc: string, templateFile?: File, docProps?: DocProps): Promise<Blob> {
         const zip: JSZip =
             templateFile === undefined
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
                 : await JSZip.loadAsync(templateFile);
-
-        return await this.generateSingleQueryWorkbookFromZip(zip, query, docProps);
-    }
-
-    private async generateSingleQueryWorkbookFromZip(zip: JSZip, query: QueryInfo, docProps?: DocProps): Promise<Blob> {
-        if (!query.queryName) {
-            query.queryName = defaults.queryName;
-        }
-
-        await this.updatePowerQueryDocument(zip, query.queryName, query.queryMashup);
-        await this.updateSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
+                
+        await this.updatePowerQueryDocument(zip, queryName, section1mDoc);
+        await this.updateSingleQueryAttributes(zip, queryName, refreshOnOpen);
         await this.updateDocProps(zip, docProps);
 
         return await zip.generateAsync({
@@ -43,14 +37,14 @@ export class WorkbookManager {
         });
     }
 
-    private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashup: string) {
+    private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashupDoc: string) {
         const old_base64: string|undefined = await pqUtils.getBase64(zip);
 
         if (!old_base64) {
             throw new Error(base64NotFoundErr);
         }
 
-        const new_base64: string = await this.mashupHandler.ReplaceSingleQuery(old_base64, queryName, queryMashup);
+        const new_base64: string = await this.mashupHandler.ReplaceSingleQuery(old_base64, queryName, queryMashupDoc);
         await pqUtils.setBase64(zip, new_base64);
     }
 
