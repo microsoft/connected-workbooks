@@ -82,6 +82,7 @@ export const elementAttributesValues = {
 
 export const defaults = {
     queryName: "Query1",
+    connectionOnlyQueryName: "Query2"
 };
 
 export const URLS = {

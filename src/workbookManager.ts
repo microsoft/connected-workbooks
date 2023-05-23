@@ -18,10 +18,10 @@ export class WorkbookManager {
         }
         const generatedsection1mDoc: string = generateSingleQueryMashup(query.queryName, query.queryMashup);
 
-        return await this.generateSingleQueryWorkbookFromMashupDoc(query.queryName, query.refreshOnOpen, generatedsection1mDoc, templateFile, docProps);
+        return await this.generateQueryWorkbookFromMashupDoc(query.queryName, query.refreshOnOpen, generatedsection1mDoc, templateFile, docProps);
     }
 
-    async generateSingleQueryWorkbookFromMashupDoc(queryName: string, refreshOnOpen: boolean, section1mDoc: string, templateFile?: File, docProps?: DocProps): Promise<Blob> {
+    async generateQueryWorkbookFromMashupDoc(queryName: string, refreshOnOpen: boolean, section1mDoc: string, templateFile?: File, docProps?: DocProps, connectionOnlyQueryNames?: string[]): Promise<Blob> {
         const zip: JSZip =
             templateFile === undefined
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
