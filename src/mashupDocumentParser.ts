@@ -23,11 +23,12 @@ export default class MashupHandler {
 
     async AddConnectionOnlyQuery(base64Str: string, queryName: string): Promise<string> {
         var { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } = this.getPackageComponents(base64Str);
-        const packageSizeBuffer = arrayUtils.getInt32Buffer(packageOPC.byteLength);
-        const permissionsSizeBuffer = arrayUtils.getInt32Buffer(permissionsSize);
-        const newMetadataBuffer = this.addConnectionOnlyQueryMetadata(metadata, queryName);
-        const metadataSizeBuffer = arrayUtils.getInt32Buffer(newMetadataBuffer.byteLength);
-        const newMashup = arrayUtils.concatArrays(version, packageSizeBuffer, packageOPC, permissionsSizeBuffer, permissions, metadataSizeBuffer, newMetadataBuffer, endBuffer);
+        const packageSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(packageOPC.byteLength);
+        const permissionsSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(permissionsSize);
+        const newMetadataBuffer: Uint8Array = this.addConnectionOnlyQueryMetadata(metadata, queryName);
+        const metadataSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(newMetadataBuffer.byteLength);
+        const newMashup: Uint8Array = arrayUtils.concatArrays(version, packageSizeBuffer, packageOPC, permissionsSizeBuffer, permissions, metadataSizeBuffer, newMetadataBuffer, endBuffer);
+        
         return base64.fromByteArray(newMashup);
     }
 
@@ -151,102 +152,107 @@ export default class MashupHandler {
     };
 
     private addConnectionOnlyQueryMetadata = (metadataArray: Uint8Array, queryName: string) => {
-        //extract metadataXml
-        const mashupArray = new arrayUtils.ArrayReader(metadataArray.buffer);
-        const metadataVersion = mashupArray.getBytes(4);
-        const metadataXmlSize = mashupArray.getInt32();
-        const metadataXml = mashupArray.getBytes(metadataXmlSize);
-        const endBuffer = mashupArray.getBytes();
+        // extract metadataXml
+        const mashupArray: ArrayReader = new arrayUtils.ArrayReader(metadataArray.buffer);
+        const metadataVersion: Uint8Array = mashupArray.getBytes(4);
+        const metadataXmlSize: number = mashupArray.getInt32();
+        const metadataXml: Uint8Array = mashupArray.getBytes(metadataXmlSize);
+        const endBuffer: Uint8Array = mashupArray.getBytes();
 
-        //parse metadataXml
-        const metadataString = uintToString(metadataXml);
-        const newMetadataString = this.updateConnectionOnlyMetadataStr(metadataString, queryName);
-
-        const encoder = new TextEncoder();
-        const newMetadataXml = encoder.encode(newMetadataString);
-        const newMetadataXmlSize = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
-        const newMetadataArray = arrayUtils.concatArrays(
+        // parse metadataXml
+        const metadataString: string = uintToString(metadataXml);
+        const newMetadataString: string = this.updateConnectionOnlyMetadataStr(metadataString, queryName);
+        const encoder: TextEncoder = new TextEncoder();
+        const newMetadataXml: Uint8Array = encoder.encode(newMetadataString);
+        const newMetadataXmlSize: Uint8Array = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
+        const newMetadataArray: Uint8Array = arrayUtils.concatArrays(
             metadataVersion,
             newMetadataXmlSize,
             newMetadataXml,
             endBuffer
         );
+        
         return newMetadataArray;
     };
 
     private updateConnectionOnlyMetadataStr = (metadataString: string, queryName: string) => {
-        const parser = new DOMParser();
-        const metadataDoc = parser.parseFromString(metadataString, "text/xml");     
-        const items = metadataDoc.getElementsByTagName("Items")[0];
-        const stableEntriesItem = this.createStableEntriesItem(metadataDoc, queryName);
+        const parser: DOMParser = new DOMParser();
+        const metadataDoc: Document = parser.parseFromString(metadataString, "text/xml");     
+        const items: Element = metadataDoc.getElementsByTagName(element.items)[0];
+        const stableEntriesItem: Element = this.createStableEntriesItem(metadataDoc, queryName);
         items.appendChild(stableEntriesItem);
-        const sourceItem = this.createSourceItem(metadataDoc, queryName);
+        const sourceItem: Element = this.createSourceItem(metadataDoc, queryName);
         items.appendChild(sourceItem);
-        const serializer = new XMLSerializer();
-        const newMetadataString = serializer.serializeToString(metadataDoc);
+        const serializer: XMLSerializer = new XMLSerializer();
+        const newMetadataString: string = serializer.serializeToString(metadataDoc);
+        
         return newMetadataString;
     };
 
     private createSourceItem = (metadataDoc: Document, queryName: string) => {
-        const newItemSource = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Item");
-        const newItemLocation = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemLocation");
-        const newItemType = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemType");
+        const newItemSource: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.item);
+        const newItemLocation: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.itemLocation);
+        const newItemType: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.itemType);
         newItemType.textContent = "Formula";
-        const newItemPath = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemPath");
+        const newItemPath: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.itemPath);
         newItemPath.textContent = `Section1/${queryName}/Source`;
         newItemLocation.appendChild(newItemType);
         newItemLocation.appendChild(newItemPath);
         newItemSource.appendChild(newItemLocation);
+        
         return newItemSource;
     };
 
     private createStableEntriesItem = (metadataDoc: Document, queryName: string) => {
-        const newItem = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Item");
-        const newItemLocation = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemLocation");
-        const newItemType = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemType");
+        const newItem: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.item);
+        const newItemLocation: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.itemLocation);
+        const newItemType: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.itemType);
         newItemType.textContent = "Formula";
-        const newItemPath = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "ItemPath");
+        const newItemPath: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.itemPath);
         newItemPath.textContent = `Section1/${queryName}`;
         newItemLocation.appendChild(newItemType);
         newItemLocation.appendChild(newItemPath); 
         newItem.appendChild(newItemLocation);
-        const stableEntries = this.createConnectionOnlyEntries(metadataDoc);
+        const stableEntries: Element = this.createConnectionOnlyEntries(metadataDoc);
         newItem.appendChild(stableEntries);
+        
         return newItem;
     };
 
     private createConnectionOnlyEntries = (metadataDoc: Document) => {
-        const stableEntries = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "StableEntries");
-        const IsPrivate = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
-        IsPrivate.setAttribute("Type", "IsPrivate");
-        IsPrivate.setAttribute("Value", "l0");
+        const stableEntries: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.stableEntries);
+        const IsPrivate: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
+        IsPrivate.setAttribute(elementAttributes.type, "IsPrivate");
+        IsPrivate.setAttribute(elementAttributes.value, "l0");
         stableEntries.appendChild(IsPrivate);
-        const FillEnabled = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
-        FillEnabled.setAttribute("Type", "FillEnabled");
-        FillEnabled.setAttribute("Value", "l0");
+        const FillEnabled: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
+        FillEnabled.setAttribute(elementAttributes.type, "FillEnabled");
+        FillEnabled.setAttribute(elementAttributes.value, "l0");
         stableEntries.appendChild(FillEnabled);
-        const FillObjectType = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
-        FillObjectType.setAttribute("Type", "FillObjectType");
-        FillObjectType.setAttribute("Value", "sConnectionOnly");
+        const FillObjectType: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
+        FillObjectType.setAttribute(elementAttributes.type, "FillObjectType");
+        FillObjectType.setAttribute(elementAttributes.value, "sConnectionOnly");
         stableEntries.appendChild(FillObjectType);
-        const FillToDataModelEnabled = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
-        FillToDataModelEnabled.setAttribute("Type", "FillToDataModelEnabled");
-        FillToDataModelEnabled.setAttribute("Value", "l0");
+        const FillToDataModelEnabled: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
+        FillToDataModelEnabled.setAttribute(elementAttributes.type, "FillToDataModelEnabled");
+        FillToDataModelEnabled.setAttribute(elementAttributes.value, "l0");
         stableEntries.appendChild(FillToDataModelEnabled);
-        const FillLastUpdated = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
-        FillLastUpdated.setAttribute("Type", "FillLastUpdated");
-        const nowTime = new Date().toISOString();
-        FillLastUpdated.setAttribute("Value", ("d" + nowTime).replace(/Z/, "0000Z"));
+        const FillLastUpdated: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
+        FillLastUpdated.setAttribute(elementAttributes.type, "FillLastUpdated");
+        const nowTime: string = new Date().toISOString();
+        FillLastUpdated.setAttribute(elementAttributes.value, ("d" + nowTime).replace(/Z/, "0000Z"));
         stableEntries.appendChild(FillLastUpdated);
-        const ResultType = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, "Entry");
-        ResultType.setAttribute("Type", "ResultType");
-        ResultType.setAttribute("Value", "sTable");
+        const ResultType: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
+        ResultType.setAttribute(elementAttributes.type, "ResultType");
+        ResultType.setAttribute(elementAttributes.value, "sTable");
         stableEntries.appendChild(ResultType);
+        
         return stableEntries;
     };
 }
 
 function uintToString(uintArray: Uint8Array) {
-    var encodedString = new TextDecoder("utf-8").decode(uintArray);
+    var encodedString: string = new TextDecoder("utf-8").decode(uintArray);
+    
     return encodedString;
 }
