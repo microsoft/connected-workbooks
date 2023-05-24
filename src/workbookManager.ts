@@ -8,6 +8,7 @@ import MashupHandler from "./mashupDocumentParser";
 import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, defaults, sharedStringsXmlPath, sheetsXmlPath, emptyQueryMashupErr, blobFileType, application, base64NotFoundErr, textResultType, connectionsNotFoundErr, sharedStringsNotFoundErr, sheetsNotFoundErr, trueValue, falseValue, xmlTextResultType, element, elementAttributes, elementAttributesValues, pivotCachesPathPrefix, emptyValue, queryAndPivotTableNotFoundErr } from "./constants";
 import { DocProps, QueryInfo, docPropsAutoUpdatedElements, docPropsModifiableElements, QueryData } from "./types";
 import arrayUtils, { ArrayReader } from "./utils/arrayUtils";
+const { DOMParser } = require('xmldom')
 
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
@@ -358,22 +359,16 @@ export class WorkbookManager {
 
         // get range from table - trying to loop through all tables
         await this.GetTableRangesFromTableNames(zipFile, queries);
+
+        // get the sheet relationship relative path (e.g. sheet1.xml.rels)
+        await this.GetSheetRelPathFromTablePath(zipFile, queries);
+
+        // get the sheet name from the sheet relationship path
+        await this.GetWorkbootRelIdPathFromSheetRelPath(zipFile, queries);
+
+        // get the sheet names from workbook.xml using the relationship ID
+        await this.GetSheetNameFromWorkbookRelId(zipFile, queries);
         return queries;
-    }
-
-    public async getQueryInfo(zipFilePath: string): Promise<string> {
-        var fs = require("fs");
-        const data = fs.readFileSync(zipFilePath);
-        const zipFile = await JSZip.loadAsync(data);
-        const originalBase64Str = await pqUtils.getBase64(zipFile);
-
-        const mashupHandler = new MashupHandler();
-        const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } =
-            mashupHandler.getPackageComponents(originalBase64Str!);
-        // extract section1m
-        const packageZip: JSZip = await JSZip.loadAsync(packageOPC);
-        const section1m = await mashupHandler.getSection1m(packageZip);
-        return section1m;
     }
 
     private GetQueriesFromSection1m(section1m: string, queries: QueryData[]): void {
@@ -433,7 +428,6 @@ export class WorkbookManager {
     }
 
     async GetQueryMetadataFromConnectionIds(defaultZipFile: JSZip, queries: QueryData[]): Promise<void> {
-        const { DOMParser } = require('xmldom')
         const parser: DOMParser = new DOMParser();
         const queryTablePromises: Promise<{
             path: string;
@@ -539,7 +533,6 @@ export class WorkbookManager {
     }
 
     private async GetTableRangesFromTableNames(defaultZipFile: JSZip, queries: QueryData[]): Promise<void> {
-        const { DOMParser } = require('xmldom')
         const parser: DOMParser = new DOMParser();
         const tablePromises: Promise<{
             path: string;
@@ -591,4 +584,150 @@ export class WorkbookManager {
         });
     }
 
-} 
+    private async GetSheetRelPathFromTablePath(defaultZipFile: JSZip, queryInfos: QueryData[]): Promise<void> {
+        const parser: DOMParser = new DOMParser();
+        const sheetRelPromises: Promise<{
+            sheetRelPath: string;
+            sheetRelXmlString: string;
+        }>[] = [];
+        defaultZipFile.folder("xl/worksheets/_rels")?.forEach(async (relativePath, sheetRelFile) => {
+            sheetRelPromises.push(
+                (() => {
+                    return sheetRelFile.async("text").then((sheetRelString) => {
+                        return {
+                            sheetRelPath: relativePath,
+                            sheetRelXmlString: sheetRelString,
+                        };
+                    });
+                })()
+            );
+        });
+
+        (await Promise.all(sheetRelPromises)).forEach(({ sheetRelPath, sheetRelXmlString }) => {
+            const parsedSheetRelXml: Document = parser.parseFromString(sheetRelXmlString, xmlTextResultType);
+            const relationshipTags = parsedSheetRelXml.getElementsByTagName("Relationship");
+
+            if (relationshipTags && relationshipTags.length) {
+                for (let i = 0; i < relationshipTags.length; i++) {
+                    const relationshipTag: Element = relationshipTags[i];
+                    const relationshipTagAttributes: NamedNodeMap = relationshipTag.attributes;
+                    const relationshipTagAttributesArr: Attr[] = Array.from(relationshipTagAttributes);
+
+                    const targetAttribute: Attr | undefined = relationshipTagAttributesArr.find((attribute) => {
+                        // get the attribute called "Target" which holds the sheet rel path
+                        return attribute?.name === "Target";
+                    });
+
+                    // find the query info with the table path that this Relationship tag contains
+                    for (const queryInfo of queryInfos) {
+                        if (!queryInfo.tableFileRelativePath) continue;
+
+                        // if we found the sheet relationship for this table, save the sheet name in the query info
+                        if (targetAttribute?.nodeValue?.includes(queryInfo.tableFileRelativePath)) {
+                            queryInfo.sheetFileRelativePath = sheetRelPath;
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    private async GetWorkbootRelIdPathFromSheetRelPath(defaultZipFile: JSZip, queryInfos: QueryData[]): Promise<void> {
+        const parser: DOMParser = new DOMParser();
+        const workbookRelPromises: Promise<{
+            workbookRelPath: string;
+            workbookRelXmlString: string;
+        }>[] = [];
+        defaultZipFile.folder("xl/_rels")?.forEach(async (relativePath, workbookRelFile) => {
+            workbookRelPromises.push(
+                (() => {
+                    return workbookRelFile.async("text").then((workbookRelString) => {
+                        return {
+                            workbookRelPath: relativePath,
+                            workbookRelXmlString: workbookRelString,
+                        };
+                    });
+                })()
+            );
+        });
+
+        (await Promise.all(workbookRelPromises)).forEach(({ workbookRelPath, workbookRelXmlString }) => {
+            const parsedWorkbookRelXml: Document = parser.parseFromString(workbookRelXmlString, xmlTextResultType);
+            const relationshipTags = parsedWorkbookRelXml.getElementsByTagName("Relationship");
+
+            if (relationshipTags && relationshipTags.length) {
+                for (let i = 0; i < relationshipTags.length; i++) {
+                    const relationshipTag: Element = relationshipTags[i];
+                    const relationshipTagAttributes: NamedNodeMap = relationshipTag.attributes;
+                    const relationshipTagAttributesArr: Attr[] = Array.from(relationshipTagAttributes);
+
+                    const targetAttribute: Attr | undefined = relationshipTagAttributesArr.find((attribute) => {
+                        // get the attribute called "Target" which holds the sheet relative path
+                        return attribute?.name === "Target";
+                    });
+
+                    // find the query info with the table path that this Relationship tag contains
+                    for (const queryInfo of queryInfos) {
+                        if (!queryInfo.sheetFileRelativePath) continue;
+
+                        // if we found the sheet rel path for this workbook relationship, save the relationship ID in the query info
+                        if (
+                            targetAttribute?.nodeValue?.includes(
+                                queryInfo.sheetFileRelativePath.substring(0, queryInfo.sheetFileRelativePath.indexOf("."))
+                            )
+                        ) {
+                            const idAttribute: Attr | undefined = relationshipTagAttributesArr.find((attribute) => {
+                                // get the attribute called "ID" which holds the sheet relationship ID
+                                return attribute?.name === "Id";
+                            });
+
+                            if (idAttribute?.nodeValue) {
+                                queryInfo.sheetRelationshipId = idAttribute.nodeValue;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    private async GetSheetNameFromWorkbookRelId(defaultZipFile: JSZip, queryInfos: QueryData[]): Promise<void> {
+        // get all sheet tags from workbook.xml
+        // iterate over the sheet relationship IDs and save the sheet name in query info
+
+        // get workbook.xml
+        const workbookXmlString = await defaultZipFile.file("xl/workbook.xml")?.async("text");
+        if (!workbookXmlString) {
+            return;
+        }
+
+        const parser: DOMParser = new DOMParser();
+        const parsedConnections: Document = parser.parseFromString(workbookXmlString, xmlTextResultType);
+        const sheetTags = parsedConnections.getElementsByTagName("sheet");
+
+        if (sheetTags && sheetTags.length) {
+            for (let i = 0; i < sheetTags.length; i++) {
+                const sheetTag: Element = sheetTags[i];
+                const sheetTagAttributes: NamedNodeMap = sheetTag.attributes;
+                const sheetTagAttributesArr: Attr[] = Array.from(sheetTagAttributes);
+
+                const idAttribute: Attr | undefined = sheetTagAttributesArr.find((attribute) => {
+                    // get the attribute called "Id" which holds the relationship ID
+                    return attribute?.name === "r:id";
+                });
+
+                for (const queryInfo of queryInfos) {
+                    if (queryInfo.sheetRelationshipId == idAttribute?.nodeValue) {
+                        const nameAttribute: Attr | undefined = sheetTagAttributesArr.find((attribute) => {
+                            return attribute?.name === elementAttributes.name;
+                        });
+
+                        if (nameAttribute?.nodeValue) {
+                            queryInfo.tableSheetName = nameAttribute.nodeValue;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -14,6 +14,10 @@ export type QueryData = {
     query?: string;
     tableName?: string;
     tableRange?: string;
+    tableFileRelativePath?: string;
+    sheetFileRelativePath?: string;
+    sheetRelationshipId?: string;
+    tableSheetName?: string;
 };
 
 export interface DocProps {
