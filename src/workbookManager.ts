@@ -576,6 +576,7 @@ export class WorkbookManager {
 
                             if (refAttribute?.nodeValue) {
                                 queryData.tableRange = refAttribute.nodeValue;
+                                queryData.tableFileRelativePath = path;
                             }
                         }
                     }
