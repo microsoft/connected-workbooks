@@ -26,3 +26,17 @@ export const generateMultipleQueryMashup = (queryName: string, queryMashup: stri
 }
     
 export const generateCustomXmlFilePath = (i: number): string => `customXml/item${i}.xml`;
+
+
+export const generateMultipleQueryMashup = (queryName: string, queryMashup: string, connectionOnlyQueries: QueryInfo[]): string => {
+    let section1m: string =  generateSingleQueryMashup(queryName, queryMashup);  
+    connectionOnlyQueries.forEach((query: QueryInfo) => {
+        if (query.queryName === undefined) {
+            throw new Error("Query name is undefined");
+        }
+        section1m += 
+        `shared ${query.queryName!} = 
+        ${query.queryMashup};`
+    })
+    return section1m;
+}
