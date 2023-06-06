@@ -5,7 +5,7 @@ import JSZip from "jszip";
 import { pqUtils, documentUtils } from "./utils";
 import WorkbookTemplate from "./workbookTemplate";
 import MashupHandler from "./mashupDocumentParser";
-import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, defaults, sharedStringsXmlPath, sheetsXmlPath, emptyQueryMashupErr, blobFileType, application, base64NotFoundErr, textResultType, connectionsNotFoundErr, sharedStringsNotFoundErr, sheetsNotFoundErr, trueValue, falseValue, xmlTextResultType, element, elementAttributes, elementAttributesValues, pivotCachesPathPrefix, emptyValue, queryAndPivotTableNotFoundErr, queryNameNotFoundErr } from "./constants";
+import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, defaults, sharedStringsXmlPath, sheetsXmlPath, emptyQueryMashupErr, blobFileType, application, base64NotFoundErr, textResultType, connectionsNotFoundErr, sharedStringsNotFoundErr, sheetsNotFoundErr, trueValue, falseValue, xmlTextResultType, element, elementAttributes, elementAttributesValues, pivotCachesPathPrefix, emptyValue, queryAndPivotTableNotFoundErr, queryNameNotFoundErr, maxQueryLength, QueryNameMaxLengthErr, EmptyQueryNameErr } from "./constants";
 import { DocProps, docPropsAutoUpdatedElements, docPropsModifiableElements, QueryInfo } from "./types";
 import { generateSingleQueryMashup } from "./generators";
 
@@ -16,12 +16,15 @@ export class WorkbookManager {
         if (!query.queryName) {
             query.queryName = defaults.queryName;
         }
+
+        this.validateQueryName(query.queryName);
         const generatedsection1mDoc: string = generateSingleQueryMashup(query.queryName, query.queryMashup);
 
         return await this.generateSingleQueryWorkbookFromMashupDoc(query.queryName, query.refreshOnOpen, generatedsection1mDoc, templateFile, docProps);
     }
 
     async generateSingleQueryWorkbookFromMashupDoc(queryName: string, refreshOnOpen: boolean, section1mDoc: string, templateFile?: File, docProps?: DocProps): Promise<Blob> {
+        this.validateQueryName(queryName);
         const zip: JSZip =
             templateFile === undefined
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
@@ -36,7 +39,23 @@ export class WorkbookManager {
             mimeType: application,
         });
     }
+    
+    private validateQueryName (newName: string) {
+        if (!!newName) {
+            if (newName.length > maxQueryLength) {
+                throw new Error(QueryNameMaxLengthErr);
+            }
 
+            if (pqUtils.queryNameHasInvalidChars(newName)) {
+                throw new Error(QueryNameMaxLengthErr);
+            }
+        }
+
+        if (!newName.trim()) {
+            throw new Error(EmptyQueryNameErr);
+        }
+    }
+    
     private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashupDoc: string) {
         const old_base64: string|undefined = await pqUtils.getBase64(zip);
 
