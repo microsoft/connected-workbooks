@@ -39,31 +39,14 @@ export class WorkbookManager {
             mimeType: application,
         });
     }
-
-    private queryNameHasInvalidChars = (queryName: string) => {
-        let invalidQueryNameChars = ['"', "."];
-
-        // Control characters as defined in Unicode
-        for (let c = 0; c <= 0x001f; ++c) {
-            invalidQueryNameChars.push(String.fromCharCode(c));
-        }
-
-        for (let c = 0x007f; c <= 0x009f; ++c) {
-            invalidQueryNameChars.push(String.fromCharCode(c));
-        }
-
-        return queryName
-            .split("")
-            .some((ch) => invalidQueryNameChars.indexOf(ch) !== -1);
-    };
     
-    private validateQueryName = (newName: string) => {
+    private validateQueryName (newName: string) {
         if (!!newName) {
             if (newName.length > maxQueryLength) {
                 throw new Error(QueryNameMaxLengthErr);
             }
 
-            if (this.queryNameHasInvalidChars(newName)) {
+            if (pqUtils.queryNameHasInvalidChars(newName)) {
                 throw new Error(QueryNameMaxLengthErr);
             }
         }
@@ -71,7 +54,7 @@ export class WorkbookManager {
         if (!newName.trim()) {
             throw new Error(EmptyQueryNameErr);
         }
-    };
+    }
     
     private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashupDoc: string) {
         const old_base64: string|undefined = await pqUtils.getBase64(zip);

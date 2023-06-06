@@ -78,9 +78,27 @@ const getCustomXmlFile = async (zip: JSZip, url: string, encoding = "UTF-16"): P
     return { found, path: path!, xmlString: xmlString, value };
 };
 
+const queryNameHasInvalidChars = (queryName: string) => {
+    let invalidQueryNameChars = ['"', "."];
+
+    // Control characters as defined in Unicode
+    for (let c = 0; c <= 0x001f; ++c) {
+        invalidQueryNameChars.push(String.fromCharCode(c));
+    }
+
+    for (let c = 0x007f; c <= 0x009f; ++c) {
+        invalidQueryNameChars.push(String.fromCharCode(c));
+    }
+
+    return queryName
+        .split("")
+        .some((ch) => invalidQueryNameChars.indexOf(ch) !== -1);
+};
+
 export default {
     getBase64,
     setBase64,
     getCustomXmlFile,
     getDataMashupFile,
+    queryNameHasInvalidChars,
 };
