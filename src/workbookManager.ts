@@ -12,11 +12,11 @@ import { generateMultipleQueryMashup, generateSingleQueryMashup } from "./genera
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
 
-    async generateQueryWorkbook(query: QueryInfo, templateFile?: File, docProps?: DocProps): Promise<Blob> {
+    async generateSingleQueryWorkbook(query: QueryInfo, templateFile?: File, docProps?: DocProps): Promise<Blob> {
         if (!query.queryName) {
             query.queryName = defaults.queryName;
         }
-           
+
         const generatedsection1mDoc: string = generateSingleQueryMashup(query.queryName, query.queryMashup);
 
         return await this.generateQueryWorkbookFromMashupDoc(query.queryName, query.refreshOnOpen, generatedsection1mDoc, templateFile, docProps);
