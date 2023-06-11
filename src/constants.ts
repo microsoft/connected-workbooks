@@ -96,7 +96,8 @@ export const elementAttributes = {
     nextId: "nextId",
     row: "r",
     spans: "spans",
-    x14acDyDescent: "x14ac:dyDescent"
+    x14acDyDescent: "x14ac:dyDescent",
+    xr3uid: "xr3:uid",
 };
 
 export const elementAttributesValues = {
