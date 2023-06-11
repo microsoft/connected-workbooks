@@ -22,7 +22,34 @@ export interface Metadata {
     queryName: string;
 }
 
-export enum docPropsModifiableElements {
+export interface TableData {
+    columnMetadata: ColumnMetadata[];
+    rows: string[][];
+    columnwidth?: number;
+}
+
+export interface ColumnMetadata {
+    name: string;
+    type: DataTypes;
+}
+
+export interface Grid {
+    header: ColumnMetadata[];
+    gridData: (string|number|boolean)[][];
+}
+
+export interface TableDataParser {
+    parseToTableData: (grid: any) => TableData | undefined;
+}
+
+export enum DataTypes {
+    null = 0,
+    string = 1,
+    number = 2,
+    boolean = 3,
+}
+
+export enum DocPropsModifiableElements {
     title = "dc:title",
     subject = "dc:subject",
     keywords = "cp:keywords",
@@ -33,7 +60,7 @@ export enum docPropsModifiableElements {
     revision = "cp:revision",
 }
 
-export enum docPropsAutoUpdatedElements {
+export enum DocPropsAutoUpdatedElements {
     created = "dcterms:created",
     modified = "dcterms:modified",
 }

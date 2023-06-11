@@ -4,11 +4,15 @@
 export const connectionsXmlPath = "xl/connections.xml";
 export const sharedStringsXmlPath = "xl/sharedStrings.xml";
 export const sheetsXmlPath = "xl/worksheets/sheet1.xml"
+export const tableXmlPath = "xl/tables/table1.xml";
+export const queryTableXmlPath = "xl/queryTables/queryTable1.xml";
+export const workbookXmlPath = "xl/workbook.xml";
 export const queryTablesPath = "xl/queryTables/";
 export const pivotCachesPath = "xl/pivotCache/";
 export const section1mPath = "Formulas/Section1.m";
 export const docPropsCoreXmlPath = "docProps/core.xml";
 export const docPropsRootElement = "cp:coreProperties";
+
 
 export const sharedStringsNotFoundErr = "SharedStrings were not found in template";
 export const connectionsNotFoundErr = "Connections were not found in template";
@@ -19,6 +23,13 @@ export const queryNameNotFoundErr = "Query name was not found";
 export const queryAndPivotTableNotFoundErr = "No such query found in Query Table or Pivot Table found in given template";
 export const queryConnectionNotFoundErr = "No connection found for query";
 export const formulaSectionNotFoundErr = "Formula section wasn't found in template";
+export const templateWithInitialDataErr = "Cannot receive template file with initial data";
+export const queryTableNotFoundErr = "Query table wasn't found in template";
+export const tableNotFoundErr = "Table wasn't found in template";
+export const gridNotFoundErr = "Invalid JSON file, grid data is missing";
+export const invalidValueInColumnErr = "Invalid cell value in column";
+export const headerNotFoundErr = "Invalid JSON file, header is missing";
+export const invalidDataTypeErr = "Invalid JSON file, invalid data type";
 export const QueryNameMaxLengthErr = "Query names are limited to 80 characters";
 export const EmptyQueryNameErr = "Query name cannot be empty";
 
@@ -49,7 +60,19 @@ export const element = {
     itemType: "ItemType",
     itemLocation: "ItemLocation",
     entry: "Entry",
-    stableEntries: "StableEntries"
+    stableEntries: "StableEntries",
+    tableColumns: "tableColumns",
+    tableColumn: "tableColumn",
+    table: "table",
+    autoFilter: "autoFilter",
+    definedName: "definedName",
+    queryTableFields: "queryTableFields",
+    queryTableField: "queryTableField",
+    queryTableRefresh: "queryTableRefresh",
+    sheetData: "sheetData",
+    row: "row",
+    dimension: "dimension",
+    kindCell: "c"
 }
 
 export const elementAttributes = {
@@ -71,7 +94,22 @@ export const elementAttributes = {
     fillColumnNames: "FillColumnNames",
     fillTarget: "FillTarget",
     fillLastUpdated: "FillLastUpdated",
-    day: "d"
+    day: "d",
+    uniqueName: "uniqueName",
+    queryTableFieldId: "queryTableFieldId",
+    reference: "ref",
+    tableColumnId: "tableColumnId",
+    nextId: "nextId",
+    row: "r",
+    spans: "spans",
+    x14acDyDescent: "x14ac:dyDescent",
+    xr3uid: "xr3:uid",
+};
+
+export const dataTypeKind = {
+    string: "str",
+    number: "1",
+    boolean: "b",
 };
 
 export const elementAttributesValues = {

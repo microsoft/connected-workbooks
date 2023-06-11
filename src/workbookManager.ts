@@ -2,37 +2,89 @@
 // Licensed under the MIT license.
 
 import JSZip from "jszip";
-import { pqUtils, documentUtils } from "./utils";
+import { pqUtils, documentUtils, tableUtils } from "./utils";
 import WorkbookTemplate from "./workbookTemplate";
 import MashupHandler from "./mashupDocumentParser";
-import { connectionsXmlPath, queryTablesPath, pivotCachesPath, docPropsCoreXmlPath, defaults, sharedStringsXmlPath, sheetsXmlPath, emptyQueryMashupErr, blobFileType, application, base64NotFoundErr, textResultType, connectionsNotFoundErr, sharedStringsNotFoundErr, sheetsNotFoundErr, trueValue, falseValue, xmlTextResultType, element, elementAttributes, elementAttributesValues, pivotCachesPathPrefix, emptyValue, queryAndPivotTableNotFoundErr, queryNameNotFoundErr, maxQueryLength, QueryNameMaxLengthErr, EmptyQueryNameErr } from "./constants";
-import { DocProps, docPropsAutoUpdatedElements, docPropsModifiableElements, QueryInfo } from "./types";
+import {
+    connectionsXmlPath,
+    queryTablesPath,
+    pivotCachesPath,
+    docPropsCoreXmlPath, defaults, sharedStringsXmlPath, sheetsXmlPath, emptyQueryMashupErr, blobFileType, application, base64NotFoundErr, textResultType, connectionsNotFoundErr, sharedStringsNotFoundErr, sheetsNotFoundErr, trueValue, falseValue, xmlTextResultType, element, elementAttributes, elementAttributesValues, pivotCachesPathPrefix, emptyValue, queryAndPivotTableNotFoundErr,
+    templateWithInitialDataErr,
+    maxQueryLength,
+    QueryNameMaxLengthErr,
+    EmptyQueryNameErr,
+} from "./constants";
+import {
+    DocProps,
+    QueryInfo,
+    DocPropsAutoUpdatedElements,
+    DocPropsModifiableElements,
+    TableData,
+    Grid,
+    TableDataParser,
+} from "./types";
+import TableDataParserFactory from "./TableDataParserFactory";
 import { generateSingleQueryMashup } from "./generators";
 
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
 
-    async generateSingleQueryWorkbook(query: QueryInfo, templateFile?: File, docProps?: DocProps): Promise<Blob> {
+    async generateSingleQueryWorkbook(
+        query: QueryInfo,
+        initialDataGrid?: Grid,
+        templateFile?: File,
+        docProps?: DocProps
+    ): Promise<Blob> {
+        if (!query.queryMashup) {
+            throw new Error(emptyQueryMashupErr);
+        }
+
         if (!query.queryName) {
             query.queryName = defaults.queryName;
         }
 
+        if (templateFile !== undefined && initialDataGrid !== undefined) {
+            throw new Error(templateWithInitialDataErr);
+        }
+
         this.validateQueryName(query.queryName);
-        const generatedsection1mDoc: string = generateSingleQueryMashup(query.queryName, query.queryMashup);
 
-        return await this.generateSingleQueryWorkbookFromMashupDoc(query.queryName, query.refreshOnOpen, generatedsection1mDoc, templateFile, docProps);
-    }
-
-    async generateSingleQueryWorkbookFromMashupDoc(queryName: string, refreshOnOpen: boolean, section1mDoc: string, templateFile?: File, docProps?: DocProps): Promise<Blob> {
-        this.validateQueryName(queryName);
         const zip: JSZip =
             templateFile === undefined
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
                 : await JSZip.loadAsync(templateFile);
-                
-        await this.updatePowerQueryDocument(zip, queryName, section1mDoc);
-        await this.updateSingleQueryAttributes(zip, queryName, refreshOnOpen);
+
+        const tableData: TableData|undefined = await this.parseInitialDataGrid(initialDataGrid);
+        
+        return await this.generateSingleQueryWorkbookFromZip(zip, query, docProps, tableData);
+    }
+
+    private async parseInitialDataGrid(initialDataGrid?: Grid): Promise<TableData | undefined> {
+        if (!initialDataGrid) {
+            return undefined;
+        }
+
+        const parser: TableDataParser = TableDataParserFactory.createParser(initialDataGrid);
+        const tableData: TableData|undefined = parser.parseToTableData(initialDataGrid);
+        
+        return tableData;
+    }
+
+    private async generateSingleQueryWorkbookFromZip(
+        zip: JSZip,
+        query: QueryInfo,
+        docProps?: DocProps,
+        tableData?: TableData
+    ): Promise<Blob> {
+        if (!query.queryName) {
+            query.queryName = defaults.queryName;
+        }
+
+        await this.updatePowerQueryDocument(zip, query.queryName, generateSingleQueryMashup(query.queryName, query.queryMashup));
+        await this.updateSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
         await this.updateDocProps(zip, docProps);
+        await tableUtils.updateTableInitialDataIfNeeded(zip, tableData);
 
         return await zip.generateAsync({
             type: blobFileType,
@@ -71,24 +123,24 @@ export class WorkbookManager {
         const { doc, properties } = await documentUtils.getDocPropsProperties(zip);
 
         //set auto updated elements
-        const docPropsAutoUpdatedElementsArr: ("created" | "modified")[] = Object.keys(docPropsAutoUpdatedElements) as Array<
-            keyof typeof docPropsAutoUpdatedElements
+        const docPropsAutoUpdatedElementsArr: ("created" | "modified")[] = Object.keys(DocPropsAutoUpdatedElements) as Array<
+            keyof typeof DocPropsAutoUpdatedElements
         >;
 
         const nowTime: string = new Date().toISOString();
 
         docPropsAutoUpdatedElementsArr.forEach((tag) => {
-            documentUtils.createOrUpdateProperty(doc, properties, docPropsAutoUpdatedElements[tag], nowTime);
+            documentUtils.createOrUpdateProperty(doc, properties, DocPropsAutoUpdatedElements[tag], nowTime);
         });
 
         //set modifiable elements
-        const docPropsModifiableElementsArr = Object.keys(docPropsModifiableElements) as Array<
-            keyof typeof docPropsModifiableElements
+        const docPropsModifiableElementsArr = Object.keys(DocPropsModifiableElements) as Array<
+            keyof typeof DocPropsModifiableElements
         >;
 
         docPropsModifiableElementsArr
             .map((key) => ({
-                name: docPropsModifiableElements[key],
+                name: DocPropsModifiableElements[key],
                 value: docProps[key],
             }))
             .forEach((kvp) => {
@@ -101,7 +153,7 @@ export class WorkbookManager {
     }
 
     private async updateSingleQueryAttributes(zip: JSZip, queryName: string, refreshOnOpen: boolean) {
-        //Update connections
+        // Update connections
         const connectionsXmlString: string|undefined = await zip.file(connectionsXmlPath)?.async(textResultType);
         if (connectionsXmlString === undefined) {
             throw new Error(connectionsNotFoundErr);
@@ -110,7 +162,7 @@ export class WorkbookManager {
         const {connectionId, connectionXmlFileString } = await this.updateConnections(connectionsXmlString, queryName, refreshOnOpen);
         zip.file(connectionsXmlPath, connectionXmlFileString );
         
-        //Update sharedStrings
+        // Update sharedStrings
         const sharedStringsXmlString: string|undefined = await zip.file(sharedStringsXmlPath)?.async(textResultType);
         if (sharedStringsXmlString === undefined) {
             throw new Error(sharedStringsNotFoundErr);
@@ -119,7 +171,7 @@ export class WorkbookManager {
         const {sharedStringIndex, newSharedStrings} = await this.updateSharedStrings(sharedStringsXmlString, queryName);
         zip.file(sharedStringsXmlPath, newSharedStrings);
         
-        //Update sheet
+        // Update sheet
         const sheetsXmlString: string|undefined = await zip.file(sheetsXmlPath)?.async(textResultType);
         if (sheetsXmlString === undefined) {
             throw new Error(sheetsNotFoundErr);
@@ -128,7 +180,7 @@ export class WorkbookManager {
         const worksheetString: string = await this.updateWorksheet(sheetsXmlString, sharedStringIndex.toString());
         zip.file(sheetsXmlPath, worksheetString);
         
-        //Update tables
+        // Update tables
         await this.updatePivotTablesandQueryTables(zip, queryName, refreshOnOpen, connectionId!);  
     }
 
@@ -201,7 +253,7 @@ export class WorkbookManager {
         
         return {sharedStringIndex, newSharedStrings};
 }
-
+   
     private async updateWorksheet(sheetsXmlString: string, sharedStringIndex: string) {
         const parser: DOMParser = new DOMParser();
         const serializer: XMLSerializer = new XMLSerializer();
@@ -242,6 +294,7 @@ export class WorkbookManager {
         if (found) {
                 return;
         }
+
         // Find Pivot Table
         const pivotCachePromises: Promise<{
             path: string;
