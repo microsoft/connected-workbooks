@@ -40,18 +40,23 @@ const getDocPropsProperties = async (zip: JSZip): Promise<{ doc: Document; prope
     return { doc, properties };
 };
 
-const getCellReference = (col: number, row: number): string => {
+const getCellReferenceAbsolute = (col: number, row: number): string => {
     // 65 is the ascii value of first column 'A'
-    return String.fromCharCode(col + 65) + "$" + row.toString();
+    return "$" + String.fromCharCode(col + 65) + "$" + row.toString();
+};
+
+const getCellReferenceRelative = (col: number, row: number): string => {
+    // 65 is the ascii value of first column 'A'
+    return String.fromCharCode(col + 65) + row.toString();
 };
 
 const getTableReference = (numberOfCols: number, numberOfRows: number) => {
-    return `A1:${getCellReference(numberOfCols, numberOfRows)}`.replace("$", "");
+    return `A1:${getCellReferenceRelative(numberOfCols, numberOfRows)}`;
 };
 
-const createCellElement = (doc: Document, colIndex: number, rowIndex: number, dataType: number, data: string) => {
+const createCellElement = (doc: Document, colIndex: number, rowIndex: number, dataType: dataTypes, data: string) => {
     const cell: Element = doc.createElementNS(doc.documentElement.namespaceURI, "c");
-    cell.setAttribute("r", getCellReference(colIndex, rowIndex + 1).replace("$", ""));
+    cell.setAttribute("r", getCellReferenceRelative(colIndex, rowIndex + 1));
     const cellData: Element = doc.createElementNS(doc.documentElement.namespaceURI, "v");
     updateCellData(dataType, data, cell, cellData);
     cell.appendChild(cellData);
@@ -59,7 +64,7 @@ const createCellElement = (doc: Document, colIndex: number, rowIndex: number, da
     return cell;
 };
 
-const updateCellData = (dataType: number, data: string, cell: Element, cellData: Element) => {
+const updateCellData = (dataType: dataTypes, data: string, cell: Element, cellData: Element) => {
     switch(dataType) {
     case dataTypes.string:
         cell.setAttribute("t", "str");
@@ -74,4 +79,4 @@ const updateCellData = (dataType: number, data: string, cell: Element, cellData:
     cellData.textContent = data;
 };
 
-export default { createOrUpdateProperty, getDocPropsProperties, getCellReference, createCell: createCellElement, getTableReference };
+export default { createOrUpdateProperty, getDocPropsProperties, getCellReferenceRelative, getCellReferenceAbsolute, createCell: createCellElement, getTableReference };
