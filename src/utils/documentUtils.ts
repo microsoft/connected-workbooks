@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import JSZip from "jszip";
-import { docPropsCoreXmlPath, docPropsRootElement } from "../constants";
+import { dataTypeKind, docPropsCoreXmlPath, docPropsRootElement, element, elementAttributes, textResultType, xmlTextResultType } from "../constants";
 import { DataTypes } from "../types";
 
 const createOrUpdateProperty = (doc: Document, parent: Element, property: string, value?: string | null): void => {
@@ -24,13 +24,13 @@ const createOrUpdateProperty = (doc: Document, parent: Element, property: string
 };
 
 const getDocPropsProperties = async (zip: JSZip): Promise<{ doc: Document; properties: Element }> => {
-    const docPropsCoreXmlString = await zip.file(docPropsCoreXmlPath)?.async("text");
+    const docPropsCoreXmlString = await zip.file(docPropsCoreXmlPath)?.async(textResultType);
     if (docPropsCoreXmlString === undefined) {
         throw new Error("DocProps core.xml was not found in template");
     }
 
     const parser = new DOMParser();
-    const doc = parser.parseFromString(docPropsCoreXmlString, "text/xml");
+    const doc = parser.parseFromString(docPropsCoreXmlString, xmlTextResultType);
 
     const properties = doc.getElementsByTagName(docPropsRootElement).item(0);
     if (properties === null) {
@@ -55,9 +55,9 @@ const getTableReference = (numberOfCols: number, numberOfRows: number) => {
 };
 
 const createCellElement = (doc: Document, colIndex: number, rowIndex: number, dataType: DataTypes, data: string) => {
-    const cell: Element = doc.createElementNS(doc.documentElement.namespaceURI, "c");
-    cell.setAttribute("r", getCellReferenceRelative(colIndex, rowIndex + 1));
-    const cellData: Element = doc.createElementNS(doc.documentElement.namespaceURI, "v");
+    const cell: Element = doc.createElementNS(doc.documentElement.namespaceURI, element.kindCell);
+    cell.setAttribute(elementAttributes.row, getCellReferenceRelative(colIndex, rowIndex + 1));
+    const cellData: Element = doc.createElementNS(doc.documentElement.namespaceURI, element.cellValue);
     updateCellData(dataType, data, cell, cellData);
     cell.appendChild(cellData);
     
@@ -67,13 +67,13 @@ const createCellElement = (doc: Document, colIndex: number, rowIndex: number, da
 const updateCellData = (dataType: DataTypes, data: string, cell: Element, cellData: Element) => {
     switch(dataType) {
     case DataTypes.string:
-        cell.setAttribute("t", "str");
+        cell.setAttribute(element.text, dataTypeKind.number);
         break;
     case DataTypes.number:
-        cell.setAttribute("t", "1");
+        cell.setAttribute(element.text, dataTypeKind.number);
         break;
     case DataTypes.boolean:
-        cell.setAttribute("t", "b");
+        cell.setAttribute(element.text, dataTypeKind.boolean);
         break;
     }
     cellData.textContent = data;

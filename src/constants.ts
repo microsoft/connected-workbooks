@@ -13,6 +13,7 @@ export const section1mPath = "Formulas/Section1.m";
 export const docPropsCoreXmlPath = "docProps/core.xml";
 export const docPropsRootElement = "cp:coreProperties";
 
+
 export const sharedStringsNotFoundErr = "SharedStrings were not found in template";
 export const connectionsNotFoundErr = "Connections were not found in template";
 export const sheetsNotFoundErr = "Sheets were not found in template";
@@ -66,7 +67,8 @@ export const element = {
     queryTableRefresh: "queryTableRefresh",
     sheetData: "sheetData",
     row: "row",
-    dimension: "dimension"
+    dimension: "dimension",
+    kindCell: "c"
 }
 
 export const elementAttributes = {
@@ -98,6 +100,12 @@ export const elementAttributes = {
     spans: "spans",
     x14acDyDescent: "x14ac:dyDescent",
     xr3uid: "xr3:uid",
+};
+
+export const dataTypeKind = {
+    string: "str",
+    number: "1",
+    boolean: "b",
 };
 
 export const elementAttributesValues = {
