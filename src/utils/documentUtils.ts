@@ -55,23 +55,42 @@ const createCellElement = (doc: Document, colIndex: number, rowIndex: number, da
     const cellData: Element = doc.createElementNS(doc.documentElement.namespaceURI, "v");
     updateCellData(dataType, data, cell, cellData);
     cell.appendChild(cellData);
-    
+
     return cell;
 };
 
 const updateCellData = (dataType: number, data: string, cell: Element, cellData: Element) => {
-    switch(dataType) {
-    case dataTypes.string:
-        cell.setAttribute("t", "str");
-        break;
-    case dataTypes.number:
-        cell.setAttribute("t", "1");
-        break;
-    case dataTypes.boolean:
-        cell.setAttribute("t", "b");
-        break;
+    if (dataType == dataTypes.autodetect) {
+        dataType = isNaN(Number(data)) ? dataTypes.string : dataTypes.number;
+        if (dataType == dataTypes.string) {
+            if (data.toLowerCase() == "true" || data.toLowerCase() == "false") {
+                dataType = dataTypes.boolean;
+            } /* else if (!isNaN(Date.parse(data))) {
+                dataType = dataTypes.dateTime;
+            }*/
+        }
+    }
+    switch (dataType) {
+        case dataTypes.string:
+            cell.setAttribute("t", "str");
+            break;
+        case dataTypes.number:
+            cell.setAttribute("t", "1");
+            break;
+        case dataTypes.dateTime:
+            cell.setAttribute("s", "1");
+            break;
+        case dataTypes.boolean:
+            cell.setAttribute("t", "b");
+            break;
     }
     cellData.textContent = data;
 };
 
-export default { createOrUpdateProperty, getDocPropsProperties, getCellReference, createCell: createCellElement, getTableReference };
+export default {
+    createOrUpdateProperty,
+    getDocPropsProperties,
+    getCellReference,
+    createCell: createCellElement,
+    getTableReference,
+};

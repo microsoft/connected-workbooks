@@ -1,9 +1,10 @@
-import { GridNotFoundErr, headerNotFoundErr, invalidDataTypeErr, invalidValueInColumnErr } from "./constants";
+import { dateFormats, GridNotFoundErr, headerNotFoundErr, invalidDataTypeErr, invalidFormatTypeErr, invalidMissingFormatFromDateTimeErr, invalidValueInColumnErr, dateFormatsRegex, milliSecPerDay, numberOfDaysTillExcelBeginYear, monthsbeforeLeap } from "./constants";
 import { ColumnMetadata, dataTypes, Grid, TableData } from "./types";
 
-export default class GridParser {
+export class GridParser {
     public parseToTableData(initialDataGrid: Grid): TableData | undefined {
         if (!initialDataGrid) {
+            
             return undefined;
         }
 
@@ -38,6 +39,13 @@ export default class GridParser {
                     }
                 }
 
+                if (dataType == dataTypes.dateTime) {
+                    if (dateFormatsRegex[columnMetadata[colIndex].format!].test(cellValue.toString())) {
+                        throw new Error(invalidValueInColumnErr); 
+                    }
+                    rowData[prop] = this.convertToExcelDate(cellValue.toString());
+                }
+
                 row.push(rowData[prop].toString());
                 colIndex++;
             }
@@ -47,6 +55,16 @@ export default class GridParser {
         return tableData;
     }
 
+    private convertToExcelDate(dateStr: string) {
+        const [month, day, year, hour, minute] = dateStr.split(/[\/: ]/);
+        const date = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute), 0,0)).getTime();
+        // Excel incorrectly assumes that the year 1900 is a leap year. This is a workaround for that
+        if (parseInt(year) == 1900 && parseInt(month) <= monthsbeforeLeap) {
+            return ((date + numberOfDaysTillExcelBeginYear*milliSecPerDay) / (milliSecPerDay)) - 1;
+        }
+        return (date + numberOfDaysTillExcelBeginYear*milliSecPerDay) / (milliSecPerDay);
+    }
+    
     private validateGridHeader(data: Grid) {
         const headerData: ColumnMetadata[] = data.Header;
         if (!headerData) {
@@ -57,6 +75,15 @@ export default class GridParser {
             if (!(headerData[prop].type in dataTypes)) { 
                 throw new Error(invalidDataTypeErr);
             }
+
+            if (headerData[prop].type == dataTypes.dateTime && headerData[prop].format == undefined) {
+                throw new Error(invalidMissingFormatFromDateTimeErr);
+            }
+
+            if (headerData[prop].format != undefined && !(headerData[prop].format! in dateFormats)) {
+                throw new Error(invalidFormatTypeErr);
+            }
+
         }
     }
 }

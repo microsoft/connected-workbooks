@@ -5,17 +5,41 @@ import JSZip from "jszip";
 import { pqUtils, documentUtils } from "./utils";
 import WorkbookTemplate from "./workbookTemplate";
 import MashupHandler from "./mashupDocumentParser";
+import { v4 } from "uuid";
 import {
     connectionsXmlPath,
     queryTablesPath,
     pivotCachesPath,
-    docPropsCoreXmlPath, defaults, sharedStringsXmlPath, sheetsXmlPath, emptyQueryMashupErr, blobFileType, application, base64NotFoundErr, textResultType, connectionsNotFoundErr, sharedStringsNotFoundErr, sheetsNotFoundErr, trueValue, falseValue, xmlTextResultType, element, elementAttributes, elementAttributesValues, pivotCachesPathPrefix, emptyValue, queryAndPivotTableNotFoundErr,
+    docPropsCoreXmlPath,
+    defaults,
+    sharedStringsXmlPath,
+    sheetsXmlPath,
+    emptyQueryMashupErr,
+    blobFileType,
+    application,
+    base64NotFoundErr,
+    textResultType,
+    connectionsNotFoundErr,
+    sharedStringsNotFoundErr,
+    sheetsNotFoundErr,
+    trueValue,
+    falseValue,
+    xmlTextResultType,
+    element,
+    elementAttributes,
+    elementAttributesValues,
+    pivotCachesPathPrefix,
+    emptyValue,
+    queryAndPivotTableNotFoundErr,
     queryTableXmlPath,
     tableXmlPath,
     workbookXmlPath,
     templateWithInitialDataErr,
     queryTableNotFoundErr,
     tableNotFoundErr,
+    stylesXmlPath,
+    stylesNotFoundErr,
+    dateFormats,
 } from "./constants";
 import {
     DocProps,
@@ -33,6 +57,23 @@ import TableDataParserFactory from "./TableDataParserFactory";
 export class WorkbookManager {
     private mashupHandler: MashupHandler = new MashupHandler();
 
+    async generateTableWorkbook(initialDataGrid: Grid, docProps?: DocProps): Promise<Blob> {
+        const zip: JSZip = await JSZip.loadAsync(WorkbookTemplate.SIMPLE_BLANK_TABLE1_TEMPLATE, { base64: true });
+        const tableData: TableData | undefined = await this.parseInitialDataGrid(initialDataGrid);
+        if (tableData === undefined) {
+            throw new Error(tableNotFoundErr);
+        }
+
+        await this.updateDocProps(zip, docProps);
+        if (tableData) {
+            await this.addInitialData(zip, tableData);
+        }
+
+        return await zip.generateAsync({
+            type: blobFileType,
+            mimeType: application,
+        });
+    }
     async generateSingleQueryWorkbook(
         query: QueryInfo,
         initialDataGrid?: Grid,
@@ -55,8 +96,8 @@ export class WorkbookManager {
             throw new Error(templateWithInitialDataErr);
         }
 
-        const tableData: TableData|undefined = await this.parseInitialDataGrid(initialDataGrid);
-        
+        const tableData: TableData | undefined = await this.parseInitialDataGrid(initialDataGrid);
+
         return await this.generateSingleQueryWorkbookFromZip(zip, query, docProps, tableData);
     }
 
@@ -66,11 +107,10 @@ export class WorkbookManager {
         }
 
         const parser: TableDataParser = TableDataParserFactory.createParser(initialDataGrid);
-        const tableData: TableData|undefined = parser.parseToTableData(initialDataGrid);
-        
+        const tableData: TableData | undefined = parser.parseToTableData(initialDataGrid);
+
         return tableData;
     }
-
 
     private async generateSingleQueryWorkbookFromZip(
         zip: JSZip,
@@ -86,7 +126,7 @@ export class WorkbookManager {
         await this.updateSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
         await this.updateDocProps(zip, docProps);
         if (tableData) {
-            await this.addSingleQueryInitialData(zip, tableData);
+            await this.addInitialData(zip, tableData, true);
         }
 
         return await zip.generateAsync({
@@ -96,7 +136,7 @@ export class WorkbookManager {
     }
 
     private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashup: string) {
-        const old_base64: string|undefined = await pqUtils.getBase64(zip);
+        const old_base64: string | undefined = await pqUtils.getBase64(zip);
 
         if (!old_base64) {
             throw new Error(base64NotFoundErr);
@@ -110,9 +150,9 @@ export class WorkbookManager {
         const { doc, properties } = await documentUtils.getDocPropsProperties(zip);
 
         //set auto updated elements
-        const docPropsAutoUpdatedElementsArr: ("created" | "modified")[] = Object.keys(docPropsAutoUpdatedElements) as Array<
-            keyof typeof docPropsAutoUpdatedElements
-        >;
+        const docPropsAutoUpdatedElementsArr: ("created" | "modified")[] = Object.keys(
+            docPropsAutoUpdatedElements
+        ) as Array<keyof typeof docPropsAutoUpdatedElements>;
 
         const nowTime: string = new Date().toISOString();
 
@@ -139,7 +179,7 @@ export class WorkbookManager {
         zip.file(docPropsCoreXmlPath, newDoc);
     }
 
-    private async addSingleQueryInitialData(zip: JSZip, tableData: TableData) {
+    private async addInitialData(zip: JSZip, tableData: TableData, updateQueryTable = false) {
         const sheetsXmlString: string | undefined = await zip.file(sheetsXmlPath)?.async(textResultType);
         if (sheetsXmlString === undefined) {
             throw new Error(sheetsNotFoundErr);
@@ -148,13 +188,24 @@ export class WorkbookManager {
         const newSheet: string = await this.updateSheetsInitialData(sheetsXmlString, tableData);
         zip.file(sheetsXmlPath, newSheet);
 
-        const queryTableXmlString: string | undefined = await zip.file(queryTableXmlPath)?.async(textResultType);
-        if (queryTableXmlString === undefined) {
-            throw new Error(queryTableNotFoundErr);
-        }
+        if (updateQueryTable) {
+            const queryTableXmlString: string | undefined = await zip.file(queryTableXmlPath)?.async(textResultType);
+            if (queryTableXmlString === undefined) {
+                throw new Error(queryTableNotFoundErr);
+            }
 
-        const newQueryTable: string = await this.updateQueryTablesInitialData(queryTableXmlString, tableData);
-        zip.file(queryTableXmlPath, newQueryTable);
+            const newQueryTable: string = await this.updateQueryTablesInitialData(queryTableXmlString, tableData);
+            zip.file(queryTableXmlPath, newQueryTable);
+
+            // update defined name
+            const workbookXmlString: string | undefined = await zip.file(workbookXmlPath)?.async(textResultType);
+            if (workbookXmlString === undefined) {
+                throw new Error(sheetsNotFoundErr);
+            }
+
+            const newWorkbook: string = await this.updateWorkbookInitialData(workbookXmlString, tableData);
+            zip.file(workbookXmlPath, newWorkbook);
+        }
 
         const tableXmlString: string | undefined = await zip.file(tableXmlPath)?.async(textResultType);
         if (tableXmlString === undefined) {
@@ -164,27 +215,41 @@ export class WorkbookManager {
         const newTable: string = await this.updateTablesInitialData(tableXmlString, tableData);
         zip.file(tableXmlPath, newTable);
 
-        const workbookXmlString = await zip.file(workbookXmlPath)?.async(textResultType);
-        if (workbookXmlString === undefined) {
+        const styleXmlString: string | undefined = await zip.file(stylesXmlPath)?.async(textResultType);
+        if (styleXmlString === undefined) {
             throw new Error(sheetsNotFoundErr);
         }
-        
-        const newWorkbook:string = await this.updateWorkbookInitialData(workbookXmlString, tableData);
-        zip.file(workbookXmlPath, newWorkbook);
+
+        const newStyles: string | undefined = await this.updateStylesFormat(styleXmlString, tableData);
+        if (styleXmlString === undefined) {
+            throw new Error(stylesNotFoundErr);
+        }
+        zip.file(stylesXmlPath, newStyles);
     }
 
-    private async updateTablesInitialData(tableXmlString: string, tableData: TableData) {
+    private async updateTablesInitialData(tableXmlString: string, tableData: TableData, updateQueryTable = false) {
         const parser: DOMParser = new DOMParser();
         const serializer: XMLSerializer = new XMLSerializer();
         const tableDoc: Document = parser.parseFromString(tableXmlString, xmlTextResultType);
         const tableColumns: Element = tableDoc.getElementsByTagName(element.tableColumns)[0];
         tableColumns.textContent = "";
+        let diffFormatId = 0;
         tableData.columnMetadata.forEach((col: ColumnMetadata, columnIndex: number) => {
-            const tableColumn: Element = tableDoc.createElementNS(tableDoc.documentElement.namespaceURI, element.tableColumn);
+            const tableColumn: Element = tableDoc.createElementNS(
+                tableDoc.documentElement.namespaceURI,
+                element.tableColumn
+            );
             tableColumn.setAttribute(elementAttributes.id, (columnIndex + 1).toString());
-            tableColumn.setAttribute(elementAttributes.uniqueName, (columnIndex + 1).toString());
+            if (updateQueryTable) {
+                tableColumn.setAttribute(elementAttributes.uniqueName, (columnIndex + 1).toString());
+                tableColumn.setAttribute(elementAttributes.queryTableFieldId, (columnIndex + 1).toString());
+            }
+            tableColumn.setAttribute("xr3:uid", "{" + v4().toUpperCase() + "}");
             tableColumn.setAttribute(elementAttributes.name, col.name);
-            tableColumn.setAttribute(elementAttributes.queryTableFieldId, (columnIndex + 1).toString());
+            if (col.format !== undefined) {
+                tableColumn.setAttribute(elementAttributes.dataDiffFormatId, diffFormatId.toString());
+                diffFormatId++;
+            }
             tableColumns.appendChild(tableColumn);
         });
 
@@ -207,7 +272,7 @@ export class WorkbookManager {
                     tableData.data.length + 1
                 )}`.replace("$", "")
             );
-        
+
         return serializer.serializeToString(tableDoc);
     }
 
@@ -215,13 +280,58 @@ export class WorkbookManager {
         const newParser: DOMParser = new DOMParser();
         const newSerializer: XMLSerializer = new XMLSerializer();
         const workbookDoc: Document = newParser.parseFromString(workbookXmlString, xmlTextResultType);
-        var definedName: Element = workbookDoc.getElementsByTagName(element.definedName)[0];
+        const definedName: Element = workbookDoc.getElementsByTagName(element.definedName)[0];
         const prefix = queryName === undefined ? defaults.queryName : queryName;
         definedName.textContent =
             prefix +
             `!$A$1:$${documentUtils.getCellReference(tableData.columnMetadata.length - 1, tableData.data.length + 1)}`;
-        
+
         return newSerializer.serializeToString(workbookDoc);
+    }
+
+    private async updateStylesFormat(stylesXmlString: string, tableData: TableData) {
+        const newParser: DOMParser = new DOMParser();
+        const newSerializer: XMLSerializer = new XMLSerializer();
+        const stylesDoc: Document = newParser.parseFromString(stylesXmlString, xmlTextResultType);
+        const differentialFormats: Element = stylesDoc.getElementsByTagName(element.differentialFormats)[0];
+        differentialFormats.textContent = "";
+        differentialFormats.setAttribute(elementAttributes.count, "0");
+        tableData.columnMetadata.forEach((col: ColumnMetadata) => {
+            if (col.format !== undefined) {
+                // Add new diffrential format to styles
+                const diffFormat: Element = stylesDoc.createElementNS(
+                    stylesDoc.documentElement.namespaceURI,
+                    element.differentialFormat
+                );
+                const numberFormat: Element = stylesDoc.createElementNS(
+                    stylesDoc.documentElement.namespaceURI,
+                    element.numberFormat
+                );
+                numberFormat.setAttribute(elementAttributes.numberFormatId, dateFormats[col.format].toString());
+                numberFormat.setAttribute(elementAttributes.formatCode, col.format);
+                diffFormat.appendChild(numberFormat);
+                differentialFormats.appendChild(diffFormat);
+                // Increment format count
+                const formatCount = Number.parseInt(differentialFormats.getAttribute(elementAttributes.count)!);
+                differentialFormats.setAttribute(elementAttributes.count, (formatCount + 1).toString());
+                const cellFormats: Element = stylesDoc.getElementsByTagName(element.cellFormats)[0];
+                const cellFormat: Element = stylesDoc.createElementNS(
+                    stylesDoc.documentElement.namespaceURI,
+                    element.cellFormat
+                );
+                cellFormat.setAttribute(elementAttributes.numberFormatId, dateFormats[col.format].toString());
+                cellFormat.setAttribute(elementAttributes.fontId, "0");
+                cellFormat.setAttribute(elementAttributes.fillId, "0");
+                cellFormat.setAttribute(elementAttributes.borderId, "0");
+                cellFormat.setAttribute(elementAttributes.formatId, "0");
+                cellFormat.setAttribute(elementAttributes.applyNumberFormat, "1");
+                cellFormats.appendChild(cellFormat);
+                const cellformatCount = Number.parseInt(cellFormats.getAttribute(elementAttributes.count)!);
+                cellFormats.setAttribute(elementAttributes.count, (cellformatCount + 1).toString());
+            }
+        });
+
+        return newSerializer.serializeToString(stylesDoc);
     }
 
     private async updateQueryTablesInitialData(queryTableXmlString: string, tableData: TableData) {
@@ -244,7 +354,7 @@ export class WorkbookManager {
         queryTableDoc
             .getElementsByTagName(element.queryTableRefresh)[0]
             .setAttribute(elementAttributes.nextId, (tableData.columnMetadata.length + 1).toString());
-        
+
         return serializer.serializeToString(queryTableDoc);
     }
 
@@ -254,7 +364,7 @@ export class WorkbookManager {
         const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, xmlTextResultType);
         const sheetData: Element = sheetsDoc.getElementsByTagName(element.sheetData)[0];
         sheetData.textContent = "";
-        var rowIndex: number = 0;
+        let rowIndex = 0;
         const columnRow: Element = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, element.row);
         columnRow.setAttribute(elementAttributes.row, (rowIndex + 1).toString());
         columnRow.setAttribute(elementAttributes.spans, "1:" + tableData.columnMetadata.length);
@@ -286,41 +396,51 @@ export class WorkbookManager {
 
         sheetsDoc
             .getElementsByTagName(element.dimension)[0]
-            .setAttribute(elementAttributes.reference, documentUtils.getTableReference(tableData.data[0].length - 1, tableData.data.length));
-        
+            .setAttribute(
+                elementAttributes.reference,
+                documentUtils.getTableReference(tableData.data[0].length - 1, tableData.data.length)
+            );
+
         return serializer.serializeToString(sheetsDoc);
     }
 
     private async updateSingleQueryAttributes(zip: JSZip, queryName: string, refreshOnOpen: boolean) {
         // Update connections
-        const connectionsXmlString: string|undefined = await zip.file(connectionsXmlPath)?.async(textResultType);
+        const connectionsXmlString: string | undefined = await zip.file(connectionsXmlPath)?.async(textResultType);
         if (connectionsXmlString === undefined) {
             throw new Error(connectionsNotFoundErr);
-        }  
-        
-        const {connectionId, connectionXmlFileString } = await this.updateConnections(connectionsXmlString, queryName, refreshOnOpen);
-        zip.file(connectionsXmlPath, connectionXmlFileString );
-        
+        }
+
+        const { connectionId, connectionXmlFileString } = await this.updateConnections(
+            connectionsXmlString,
+            queryName,
+            refreshOnOpen
+        );
+        zip.file(connectionsXmlPath, connectionXmlFileString);
+
         // Update sharedStrings
-        const sharedStringsXmlString: string|undefined = await zip.file(sharedStringsXmlPath)?.async(textResultType);
+        const sharedStringsXmlString: string | undefined = await zip.file(sharedStringsXmlPath)?.async(textResultType);
         if (sharedStringsXmlString === undefined) {
             throw new Error(sharedStringsNotFoundErr);
         }
-        
-        const {sharedStringIndex, newSharedStrings} = await this.updateSharedStrings(sharedStringsXmlString, queryName);
+
+        const { sharedStringIndex, newSharedStrings } = await this.updateSharedStrings(
+            sharedStringsXmlString,
+            queryName
+        );
         zip.file(sharedStringsXmlPath, newSharedStrings);
-        
+
         // Update sheet
-        const sheetsXmlString: string|undefined = await zip.file(sheetsXmlPath)?.async(textResultType);
+        const sheetsXmlString: string | undefined = await zip.file(sheetsXmlPath)?.async(textResultType);
         if (sheetsXmlString === undefined) {
             throw new Error(sheetsNotFoundErr);
         }
 
         const worksheetString: string = await this.updateWorksheet(sheetsXmlString, sharedStringIndex.toString());
         zip.file(sheetsXmlPath, worksheetString);
-        
+
         // Update tables
-        await this.updatePivotTablesandQueryTables(zip, queryName, refreshOnOpen, connectionId!);  
+        await this.updatePivotTablesandQueryTables(zip, queryName, refreshOnOpen, connectionId!);
     }
 
     private async updateConnections(connectionsXmlString: string, queryName: string, refreshOnOpen: boolean) {
@@ -328,23 +448,28 @@ export class WorkbookManager {
         const serializer: XMLSerializer = new XMLSerializer();
         const refreshOnLoadValue: string = refreshOnOpen ? trueValue : falseValue;
         const connectionsDoc: Document = parser.parseFromString(connectionsXmlString, xmlTextResultType);
-        const connectionsProperties: HTMLCollectionOf<Element> = connectionsDoc.getElementsByTagName(element.databaseProperties);
+        const connectionsProperties: HTMLCollectionOf<Element> = connectionsDoc.getElementsByTagName(
+            element.databaseProperties
+        );
         const dbPr: Element = connectionsProperties[0];
         dbPr.setAttribute(elementAttributes.refreshOnLoad, refreshOnLoadValue);
-        
+
         // Update query details to match queryName
         dbPr.parentElement?.setAttribute(elementAttributes.name, elementAttributesValues.connectionName(queryName));
-        dbPr.parentElement?.setAttribute(elementAttributes.description, elementAttributesValues.connectionDescription(queryName));
+        dbPr.parentElement?.setAttribute(
+            elementAttributes.description,
+            elementAttributesValues.connectionDescription(queryName)
+        );
         dbPr.setAttribute(elementAttributes.connection, elementAttributesValues.connection(queryName));
-        dbPr.setAttribute(elementAttributes.command,elementAttributesValues.connectionCommand(queryName));
+        dbPr.setAttribute(elementAttributes.command, elementAttributesValues.connectionCommand(queryName));
         const connectionId: string | null | undefined = dbPr.parentElement?.getAttribute(elementAttributes.id);
-        const connectionXmlFileString: string  = serializer.serializeToString(connectionsDoc);
+        const connectionXmlFileString: string = serializer.serializeToString(connectionsDoc);
 
         if (connectionId === null) {
             throw new Error(connectionsNotFoundErr);
         }
 
-        return {connectionId, connectionXmlFileString};
+        return { connectionId, connectionXmlFileString };
     }
 
     private async updateSharedStrings(sharedStringsXmlString: string, queryName: string) {
@@ -354,10 +479,10 @@ export class WorkbookManager {
         const sharedStringsTable: Element = sharedStringsDoc.getElementsByTagName(element.sharedStringTable)[0];
         if (!sharedStringsTable) {
             throw new Error(sharedStringsNotFoundErr);
-        } 
+        }
 
         const textElementCollection: HTMLCollectionOf<Element> = sharedStringsDoc.getElementsByTagName(element.text);
-        let textElement: Element|null = null;
+        let textElement: Element | null = null;
         let sharedStringIndex: number = textElementCollection.length;
         if (textElementCollection && textElementCollection.length) {
             for (let i = 0; i < textElementCollection.length; i++) {
@@ -365,47 +490,58 @@ export class WorkbookManager {
                     textElement = textElementCollection[i];
                     sharedStringIndex = i + 1;
                     break;
-                } 
+                }
             }
         }
 
-        if (textElement === null) {  
+        if (textElement === null) {
             if (sharedStringsDoc.documentElement.namespaceURI) {
-                textElement = sharedStringsDoc.createElementNS(sharedStringsDoc.documentElement.namespaceURI, element.text);
+                textElement = sharedStringsDoc.createElementNS(
+                    sharedStringsDoc.documentElement.namespaceURI,
+                    element.text
+                );
                 textElement.textContent = queryName;
-                const siElement: Element = sharedStringsDoc.createElementNS(sharedStringsDoc.documentElement.namespaceURI, element.sharedStringItem);
+                const siElement: Element = sharedStringsDoc.createElementNS(
+                    sharedStringsDoc.documentElement.namespaceURI,
+                    element.sharedStringItem
+                );
                 siElement.appendChild(textElement);
                 sharedStringsDoc.getElementsByTagName(element.sharedStringTable)[0].appendChild(siElement);
             }
 
-            const value: string|null = sharedStringsTable.getAttribute(elementAttributes.count);
+            const value: string | null = sharedStringsTable.getAttribute(elementAttributes.count);
             if (value) {
-                sharedStringsTable.setAttribute(elementAttributes.count, (parseInt(value)+1).toString()); 
+                sharedStringsTable.setAttribute(elementAttributes.count, (parseInt(value) + 1).toString());
             }
 
-            const uniqueValue: string|null = sharedStringsTable.getAttribute(elementAttributes.uniqueCount);
+            const uniqueValue: string | null = sharedStringsTable.getAttribute(elementAttributes.uniqueCount);
             if (uniqueValue) {
-                sharedStringsTable.setAttribute(elementAttributes.uniqueCount, (parseInt(uniqueValue)+1).toString()); 
+                sharedStringsTable.setAttribute(elementAttributes.uniqueCount, (parseInt(uniqueValue) + 1).toString());
             }
         }
         const newSharedStrings: string = serializer.serializeToString(sharedStringsDoc);
-        
-        return {sharedStringIndex, newSharedStrings};
-}
-   
+
+        return { sharedStringIndex, newSharedStrings };
+    }
+
     private async updateWorksheet(sheetsXmlString: string, sharedStringIndex: string) {
         const parser: DOMParser = new DOMParser();
         const serializer: XMLSerializer = new XMLSerializer();
         const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, xmlTextResultType);
         sheetsDoc.getElementsByTagName(element.cellValue)[0].innerHTML = sharedStringIndex.toString();
         const newSheet: string = serializer.serializeToString(sheetsDoc);
-        
+
         return newSheet;
     }
 
-    private async updatePivotTablesandQueryTables(zip: JSZip, queryName: string, refreshOnOpen: boolean, connectionId: string) {
+    private async updatePivotTablesandQueryTables(
+        zip: JSZip,
+        queryName: string,
+        refreshOnOpen: boolean,
+        connectionId: string
+    ) {
         // Find Query Table
-        let found: boolean = false;
+        let found = false;
         const queryTablePromises: Promise<{
             path: string;
             queryTableXmlString: string;
@@ -422,16 +558,20 @@ export class WorkbookManager {
                 })()
             );
         });
-        
+
         (await Promise.all(queryTablePromises)).forEach(({ path, queryTableXmlString }) => {
-            const {isQueryTableUpdated, newQueryTable} = this.updateQueryTable(queryTableXmlString, connectionId, refreshOnOpen);
+            const { isQueryTableUpdated, newQueryTable } = this.updateQueryTable(
+                queryTableXmlString,
+                connectionId,
+                refreshOnOpen
+            );
             zip.file(queryTablesPath + path, newQueryTable);
             if (isQueryTableUpdated) {
                 found = true;
             }
         });
         if (found) {
-                return;
+            return;
         }
 
         // Find Pivot Table
@@ -455,7 +595,11 @@ export class WorkbookManager {
             }
         });
         (await Promise.all(pivotCachePromises)).forEach(({ path, pivotCacheXmlString }) => {
-            const {isPivotTableUpdated, newPivotTable} = this.updatePivotTable(pivotCacheXmlString, connectionId, refreshOnOpen);
+            const { isPivotTableUpdated, newPivotTable } = this.updatePivotTable(
+                pivotCacheXmlString,
+                connectionId,
+                refreshOnOpen
+            );
             zip.file(pivotCachesPath + path, newPivotTable);
             if (isPivotTableUpdated) {
                 found = true;
@@ -468,29 +612,29 @@ export class WorkbookManager {
 
     private updateQueryTable(tableXmlString: string, connectionId: string, refreshOnOpen: boolean) {
         const refreshOnLoadValue: string = refreshOnOpen ? trueValue : falseValue;
-        let isQueryTableUpdated: boolean = false;
+        let isQueryTableUpdated = false;
         const parser: DOMParser = new DOMParser();
         const serializer: XMLSerializer = new XMLSerializer();
         const queryTableDoc: Document = parser.parseFromString(tableXmlString, xmlTextResultType);
         const queryTable: Element = queryTableDoc.getElementsByTagName(element.queryTable)[0];
-        var newQueryTable: string = emptyValue;
+        let newQueryTable = emptyValue;
         if (queryTable.getAttribute(elementAttributes.connectionId) == connectionId) {
             queryTable.setAttribute(elementAttributes.refreshOnLoad, refreshOnLoadValue);
             newQueryTable = serializer.serializeToString(queryTableDoc);
             isQueryTableUpdated = true;
         }
 
-        return {isQueryTableUpdated, newQueryTable};
+        return { isQueryTableUpdated, newQueryTable };
     }
 
     private updatePivotTable(tableXmlString: string, connectionId: string, refreshOnOpen: boolean) {
         const refreshOnLoadValue: string = refreshOnOpen ? trueValue : falseValue;
-        let isPivotTableUpdated: boolean = false;
+        let isPivotTableUpdated = false;
         const parser: DOMParser = new DOMParser();
         const serializer: XMLSerializer = new XMLSerializer();
         const pivotCacheDoc: Document = parser.parseFromString(tableXmlString, xmlTextResultType);
         let cacheSource: Element = pivotCacheDoc.getElementsByTagName(element.cacheSource)[0];
-        var newPivotTable: string = emptyValue;
+        let newPivotTable = emptyValue;
         if (cacheSource.getAttribute(elementAttributes.connectionId) == connectionId) {
             cacheSource = cacheSource.parentElement!;
             cacheSource.setAttribute(elementAttributes.refreshOnLoad, refreshOnLoadValue);
@@ -498,7 +642,6 @@ export class WorkbookManager {
             isPivotTableUpdated = true;
         }
 
-        return {isPivotTableUpdated, newPivotTable};
+        return { isPivotTableUpdated, newPivotTable };
     }
-
-} 
+}

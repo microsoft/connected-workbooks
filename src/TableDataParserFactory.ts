@@ -1,4 +1,4 @@
-import GridParser from "./GridParser";
+import {GridParser} from "./GridParser";
 import { TableDataParser } from "./types";
 
 export default class TableDataParserFactory {
