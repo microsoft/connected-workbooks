@@ -64,19 +64,19 @@ const updateTablesInitialData = async (tableXmlString: string, tableData: TableD
             .getElementsByTagName(element.table)[0]
             .setAttribute(
                 elementAttributes.reference,
-                `A1:${documentUtils.getCellReference(
+                `A1:${documentUtils.getCellReferenceRelative(
                     tableData.columnMetadata.length - 1,
                     tableData.data.length + 1
-                )}`.replace("$", "")
+                )}`
             );
         tableDoc
             .getElementsByTagName(element.autoFilter)[0]
             .setAttribute(
                 elementAttributes.reference,
-                `A1:${documentUtils.getCellReference(
+                `A1:${documentUtils.getCellReferenceRelative(
                     tableData.columnMetadata.length - 1,
                     tableData.data.length + 1
-                )}`.replace("$", "")
+                )}`
             );
         
         return serializer.serializeToString(tableDoc);
@@ -90,7 +90,7 @@ const updateTablesInitialData = async (tableXmlString: string, tableData: TableD
         const prefix = queryName === undefined ? defaults.queryName : queryName;
         definedName.textContent =
             prefix +
-            `!$A$1:$${documentUtils.getCellReference(tableData.columnMetadata.length - 1, tableData.data.length + 1)}`;
+            `!$A$1:${documentUtils.getCellReferenceAbsolute(tableData.columnMetadata.length - 1, tableData.data.length + 1)}`;
         
         return newSerializer.serializeToString(workbookDoc);
     }
