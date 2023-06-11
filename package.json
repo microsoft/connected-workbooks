@@ -1,6 +1,6 @@
 {
   "name": "@microsoft/connected-workbooks",
-  "version": "1.0.0",
+  "version": "2.1.10-beta",
   "description": "Use this library to generate Excel workbooks with a custom Mashup Query loaded to the grid, to be used by applications for 'Export to Excel' features to allow refreshable workbooks",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -40,6 +40,7 @@
     "@types/base64-js": "^1.3.0",
     "@types/jest": "^26.0.24",
     "@types/jszip": "^3.4.1",
+    "@types/uuid": "^9.0.2",
     "@typescript-eslint/eslint-plugin": "^4.28.2",
     "@typescript-eslint/parser": "^4.28.2",
     "babel-jest": "^27.0.6",

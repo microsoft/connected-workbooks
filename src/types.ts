@@ -36,7 +36,7 @@ export interface ColumnMetadata {
 
 export interface Grid {
     Header: ColumnMetadata[];
-    GridData: (string|number|boolean)[][];
+    GridData: (string | number | boolean)[][];
 }
 
 export interface TableDataParser {
@@ -44,13 +44,13 @@ export interface TableDataParser {
 }
 
 export enum dataTypes {
+    autodetect = -1,
     null = 0,
     string = 1,
     number = 2,
     boolean = 3,
-    dateTime = 4
+    dateTime = 4,
 }
-
 
 export enum docPropsModifiableElements {
     title = "dc:title",
