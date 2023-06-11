@@ -163,5 +163,5 @@ const updateTablesInitialData = async (tableXmlString: string, tableData: TableD
     }
 
 export default {
-    updateTableInitialDataIfNeeded
+    updateTableInitialDataIfNeeded, updateSheetsInitialData, updateWorkbookInitialData, updateTablesInitialData, updateQueryTablesInitialData
 };

@@ -67,7 +67,7 @@ const createCellElement = (doc: Document, colIndex: number, rowIndex: number, da
 const updateCellData = (dataType: DataTypes, data: string, cell: Element, cellData: Element) => {
     switch(dataType) {
     case DataTypes.string:
-        cell.setAttribute(element.text, dataTypeKind.number);
+        cell.setAttribute(element.text, dataTypeKind.string);
         break;
     case DataTypes.number:
         cell.setAttribute(element.text, dataTypeKind.number);
