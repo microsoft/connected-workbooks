@@ -24,32 +24,32 @@ export interface Metadata {
 
 export interface TableData {
     columnMetadata: ColumnMetadata[];
-    data: string[][];
+    rows: string[][];
     columnwidth?: number;
 }
 
 export interface ColumnMetadata {
     name: string;
-    type: number;
+    type: DataTypes;
 }
 
 export interface Grid {
-    Header: ColumnMetadata[];
-    GridData: (string|number|boolean)[][];
+    header: ColumnMetadata[];
+    gridData: (string|number|boolean)[][];
 }
 
 export interface TableDataParser {
     parseToTableData: (grid: any) => TableData | undefined;
 }
 
-export enum dataTypes {
+export enum DataTypes {
     null = 0,
     string = 1,
     number = 2,
     boolean = 3,
 }
 
-export enum docPropsModifiableElements {
+export enum DocPropsModifiableElements {
     title = "dc:title",
     subject = "dc:subject",
     keywords = "cp:keywords",
@@ -60,7 +60,7 @@ export enum docPropsModifiableElements {
     revision = "cp:revision",
 }
 
-export enum docPropsAutoUpdatedElements {
+export enum DocPropsAutoUpdatedElements {
     created = "dcterms:created",
     modified = "dcterms:modified",
 }

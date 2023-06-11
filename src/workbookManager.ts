@@ -15,8 +15,8 @@ import {
 import {
     DocProps,
     QueryInfo,
-    docPropsAutoUpdatedElements,
-    docPropsModifiableElements,
+    DocPropsAutoUpdatedElements,
+    DocPropsModifiableElements,
     TableData,
     Grid,
     TableDataParser,
@@ -40,13 +40,14 @@ export class WorkbookManager {
             query.queryName = defaults.queryName;
         }
 
+        if (templateFile !== undefined && initialDataGrid !== undefined) {
+            throw new Error(templateWithInitialDataErr);
+        }
+
         const zip: JSZip =
             templateFile === undefined
                 ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
                 : await JSZip.loadAsync(templateFile);
-        if (templateFile !== undefined && initialDataGrid !== undefined) {
-            throw new Error(templateWithInitialDataErr);
-        }
 
         const tableData: TableData|undefined = await this.parseInitialDataGrid(initialDataGrid);
         
@@ -100,24 +101,24 @@ export class WorkbookManager {
         const { doc, properties } = await documentUtils.getDocPropsProperties(zip);
 
         //set auto updated elements
-        const docPropsAutoUpdatedElementsArr: ("created" | "modified")[] = Object.keys(docPropsAutoUpdatedElements) as Array<
-            keyof typeof docPropsAutoUpdatedElements
+        const docPropsAutoUpdatedElementsArr: ("created" | "modified")[] = Object.keys(DocPropsAutoUpdatedElements) as Array<
+            keyof typeof DocPropsAutoUpdatedElements
         >;
 
         const nowTime: string = new Date().toISOString();
 
         docPropsAutoUpdatedElementsArr.forEach((tag) => {
-            documentUtils.createOrUpdateProperty(doc, properties, docPropsAutoUpdatedElements[tag], nowTime);
+            documentUtils.createOrUpdateProperty(doc, properties, DocPropsAutoUpdatedElements[tag], nowTime);
         });
 
         //set modifiable elements
-        const docPropsModifiableElementsArr = Object.keys(docPropsModifiableElements) as Array<
-            keyof typeof docPropsModifiableElements
+        const docPropsModifiableElementsArr = Object.keys(DocPropsModifiableElements) as Array<
+            keyof typeof DocPropsModifiableElements
         >;
 
         docPropsModifiableElementsArr
             .map((key) => ({
-                name: docPropsModifiableElements[key],
+                name: DocPropsModifiableElements[key],
                 value: docProps[key],
             }))
             .forEach((kvp) => {

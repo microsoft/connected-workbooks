@@ -1,5 +1,5 @@
 import JSZip from "jszip";
-import { ColumnMetadata, TableData, dataTypes } from "../types";
+import { ColumnMetadata, TableData, DataTypes } from "../types";
 import { defaults, element, elementAttributes, queryTableNotFoundErr, queryTableXmlPath, sheetsNotFoundErr, sheetsXmlPath, tableNotFoundErr, tableXmlPath, textResultType, workbookXmlPath, xmlTextResultType } from "../constants";
 import documentUtils from "./documentUtils";
 import { v4 } from "uuid";
@@ -66,7 +66,7 @@ const updateTablesInitialData = async (tableXmlString: string, tableData: TableD
                 elementAttributes.reference,
                 `A1:${documentUtils.getCellReferenceRelative(
                     tableData.columnMetadata.length - 1,
-                    tableData.data.length + 1
+                    tableData.rows.length + 1
                 )}`
             );
         tableDoc
@@ -75,7 +75,7 @@ const updateTablesInitialData = async (tableXmlString: string, tableData: TableD
                 elementAttributes.reference,
                 `A1:${documentUtils.getCellReferenceRelative(
                     tableData.columnMetadata.length - 1,
-                    tableData.data.length + 1
+                    tableData.rows.length + 1
                 )}`
             );
         
@@ -90,7 +90,7 @@ const updateTablesInitialData = async (tableXmlString: string, tableData: TableD
         const prefix = queryName === undefined ? defaults.queryName : queryName;
         definedName.textContent =
             prefix +
-            `!$A$1:${documentUtils.getCellReferenceAbsolute(tableData.columnMetadata.length - 1, tableData.data.length + 1)}`;
+            `!$A$1:${documentUtils.getCellReferenceAbsolute(tableData.columnMetadata.length - 1, tableData.rows.length + 1)}`;
         
         return newSerializer.serializeToString(workbookDoc);
     }
@@ -131,11 +131,11 @@ const updateTablesInitialData = async (tableXmlString: string, tableData: TableD
         columnRow.setAttribute(elementAttributes.spans, "1:" + tableData.columnMetadata.length);
         columnRow.setAttribute(elementAttributes.x14acDyDescent, "0.3");
         tableData.columnMetadata.forEach((col, colIndex) => {
-            columnRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, dataTypes.string, col.name));
+            columnRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, DataTypes.string, col.name));
         });
         sheetData.appendChild(columnRow);
         rowIndex++;
-        tableData.data.forEach((row) => {
+        tableData.rows.forEach((row) => {
             const newRow = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, element.row);
             newRow.setAttribute(elementAttributes.row, (rowIndex + 1).toString());
             newRow.setAttribute(elementAttributes.spans, "1:" + row.length);
@@ -157,7 +157,7 @@ const updateTablesInitialData = async (tableXmlString: string, tableData: TableD
 
         sheetsDoc
             .getElementsByTagName(element.dimension)[0]
-            .setAttribute(elementAttributes.reference, documentUtils.getTableReference(tableData.data[0].length - 1, tableData.data.length));
+            .setAttribute(elementAttributes.reference, documentUtils.getTableReference(tableData.rows[0].length - 1, tableData.rows.length));
         
         return serializer.serializeToString(sheetsDoc);
     }

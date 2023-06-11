@@ -3,7 +3,7 @@
 
 import JSZip from "jszip";
 import { docPropsCoreXmlPath, docPropsRootElement } from "../constants";
-import { dataTypes } from "../types";
+import { DataTypes } from "../types";
 
 const createOrUpdateProperty = (doc: Document, parent: Element, property: string, value?: string | null): void => {
     if (value === undefined) {
@@ -54,7 +54,7 @@ const getTableReference = (numberOfCols: number, numberOfRows: number) => {
     return `A1:${getCellReferenceRelative(numberOfCols, numberOfRows)}`;
 };
 
-const createCellElement = (doc: Document, colIndex: number, rowIndex: number, dataType: dataTypes, data: string) => {
+const createCellElement = (doc: Document, colIndex: number, rowIndex: number, dataType: DataTypes, data: string) => {
     const cell: Element = doc.createElementNS(doc.documentElement.namespaceURI, "c");
     cell.setAttribute("r", getCellReferenceRelative(colIndex, rowIndex + 1));
     const cellData: Element = doc.createElementNS(doc.documentElement.namespaceURI, "v");
@@ -64,15 +64,15 @@ const createCellElement = (doc: Document, colIndex: number, rowIndex: number, da
     return cell;
 };
 
-const updateCellData = (dataType: dataTypes, data: string, cell: Element, cellData: Element) => {
+const updateCellData = (dataType: DataTypes, data: string, cell: Element, cellData: Element) => {
     switch(dataType) {
-    case dataTypes.string:
+    case DataTypes.string:
         cell.setAttribute("t", "str");
         break;
-    case dataTypes.number:
+    case DataTypes.number:
         cell.setAttribute("t", "1");
         break;
-    case dataTypes.boolean:
+    case DataTypes.boolean:
         cell.setAttribute("t", "b");
         break;
     }
