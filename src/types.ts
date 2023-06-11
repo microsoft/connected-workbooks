@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 export interface QueryInfo {
-    queryMashup: string;
     refreshOnOpen: boolean;
+    queryMashup: string;
     queryName?: string;
 }
 

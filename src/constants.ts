@@ -19,6 +19,7 @@ export const connectionsNotFoundErr = "Connections were not found in template";
 export const sheetsNotFoundErr = "Sheets were not found in template";
 export const base64NotFoundErr = "Base64 was not found in template";
 export const emptyQueryMashupErr = "Query mashup is empty";
+export const queryNameNotFoundErr = "Query name was not found";
 export const queryAndPivotTableNotFoundErr = "No such query found in Query Table or Pivot Table found in given template";
 export const queryConnectionNotFoundErr = "No connection found for query";
 export const formulaSectionNotFoundErr = "Formula section wasn't found in template";
@@ -29,6 +30,8 @@ export const gridNotFoundErr = "Invalid JSON file, grid data is missing";
 export const invalidValueInColumnErr = "Invalid cell value in column";
 export const headerNotFoundErr = "Invalid JSON file, header is missing";
 export const invalidDataTypeErr = "Invalid JSON file, invalid data type";
+export const QueryNameMaxLengthErr = "Query names are limited to 80 characters";
+export const EmptyQueryNameErr = "Query name cannot be empty";
 
 export const blobFileType = "blob";
 export const uint8ArrayType = "uint8array";
@@ -41,6 +44,7 @@ export const falseValue = "0";
 export const emptyValue = "";
 export const section1PathPrefix = "Section1/";
 export const divider = "/";
+export const maxQueryLength = 80;
 
 export const element = {
     sharedStringTable: "sst",

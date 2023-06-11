@@ -11,6 +11,9 @@ import {
     pivotCachesPath,
     docPropsCoreXmlPath, defaults, sharedStringsXmlPath, sheetsXmlPath, emptyQueryMashupErr, blobFileType, application, base64NotFoundErr, textResultType, connectionsNotFoundErr, sharedStringsNotFoundErr, sheetsNotFoundErr, trueValue, falseValue, xmlTextResultType, element, elementAttributes, elementAttributesValues, pivotCachesPathPrefix, emptyValue, queryAndPivotTableNotFoundErr,
     templateWithInitialDataErr,
+    maxQueryLength,
+    QueryNameMaxLengthErr,
+    EmptyQueryNameErr,
 } from "./constants";
 import {
     DocProps,
@@ -43,6 +46,8 @@ export class WorkbookManager {
         if (templateFile !== undefined && initialDataGrid !== undefined) {
             throw new Error(templateWithInitialDataErr);
         }
+
+        this.validateQueryName(query.queryName);
 
         const zip: JSZip =
             templateFile === undefined
@@ -85,15 +90,31 @@ export class WorkbookManager {
             mimeType: application,
         });
     }
+    
+    private validateQueryName (newName: string) {
+        if (!!newName) {
+            if (newName.length > maxQueryLength) {
+                throw new Error(QueryNameMaxLengthErr);
+            }
 
-    private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashup: string) {
+            if (pqUtils.queryNameHasInvalidChars(newName)) {
+                throw new Error(QueryNameMaxLengthErr);
+            }
+        }
+
+        if (!newName.trim()) {
+            throw new Error(EmptyQueryNameErr);
+        }
+    }
+    
+    private async updatePowerQueryDocument(zip: JSZip, queryName: string, queryMashupDoc: string) {
         const old_base64: string|undefined = await pqUtils.getBase64(zip);
 
         if (!old_base64) {
             throw new Error(base64NotFoundErr);
         }
 
-        const new_base64: string = await this.mashupHandler.ReplaceSingleQuery(old_base64, queryName, queryMashup);
+        const new_base64: string = await this.mashupHandler.ReplaceSingleQuery(old_base64, queryName, queryMashupDoc);
         await pqUtils.setBase64(zip, new_base64);
     }
 
