@@ -3,7 +3,7 @@
 
 import JSZip from "jszip";
 import iconv from "iconv-lite";
-import { EmptyQueryNameErr, QueryNameMaxLengthErr, maxQueryLength, URLS } from "../constants";
+import { EmptyQueryNameErr, QueryNameMaxLengthErr, maxQueryLength, URLS } from "./constants";
 import { generateMashupXMLTemplate, generateCustomXmlFilePath } from "../generators";
 
 type CustomXmlFile = {
