@@ -142,7 +142,7 @@ export class WorkbookManager {
     }
 
     private validateQueryName(newName: string) {
-        if (!!newName) {
+        if (newName) {
             if (newName.length > maxQueryLength) {
                 throw new Error(QueryNameMaxLengthErr);
             }
@@ -338,7 +338,7 @@ export class WorkbookManager {
         connectionId: string
     ) {
         // Find Query Table
-        let found: boolean = false;
+        let found = false;
         const queryTablePromises: Promise<{
             path: string;
             queryTableXmlString: string;
@@ -409,12 +409,12 @@ export class WorkbookManager {
 
     private updateQueryTable(tableXmlString: string, connectionId: string, refreshOnOpen: boolean) {
         const refreshOnLoadValue: string = refreshOnOpen ? trueValue : falseValue;
-        let isQueryTableUpdated: boolean = false;
+        let isQueryTableUpdated = false;
         const parser: DOMParser = new DOMParser();
         const serializer: XMLSerializer = new XMLSerializer();
         const queryTableDoc: Document = parser.parseFromString(tableXmlString, xmlTextResultType);
         const queryTable: Element = queryTableDoc.getElementsByTagName(element.queryTable)[0];
-        var newQueryTable: string = emptyValue;
+        let newQueryTable: string = emptyValue;
         if (queryTable.getAttribute(elementAttributes.connectionId) == connectionId) {
             queryTable.setAttribute(elementAttributes.refreshOnLoad, refreshOnLoadValue);
             newQueryTable = serializer.serializeToString(queryTableDoc);
@@ -426,12 +426,12 @@ export class WorkbookManager {
 
     private updatePivotTable(tableXmlString: string, connectionId: string, refreshOnOpen: boolean) {
         const refreshOnLoadValue: string = refreshOnOpen ? trueValue : falseValue;
-        let isPivotTableUpdated: boolean = false;
+        let isPivotTableUpdated = false;
         const parser: DOMParser = new DOMParser();
         const serializer: XMLSerializer = new XMLSerializer();
         const pivotCacheDoc: Document = parser.parseFromString(tableXmlString, xmlTextResultType);
         let cacheSource: Element = pivotCacheDoc.getElementsByTagName(element.cacheSource)[0];
-        var newPivotTable: string = emptyValue;
+        let newPivotTable: string = emptyValue;
         if (cacheSource.getAttribute(elementAttributes.connectionId) == connectionId) {
             cacheSource = cacheSource.parentElement!;
             cacheSource.setAttribute(elementAttributes.refreshOnLoad, refreshOnLoadValue);
