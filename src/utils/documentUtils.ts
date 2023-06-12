@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import JSZip from "jszip";
-import { dataTypeKind, docPropsCoreXmlPath, docPropsRootElement, element, elementAttributes, textResultType, xmlTextResultType } from "../constants";
+import { dataTypeKind, docPropsCoreXmlPath, docPropsRootElement, element, elementAttributes, falseStr, textResultType, trueStr, xmlTextResultType } from "../constants";
 import { DataTypes } from "../types";
 
 const createOrUpdateProperty = (doc: Document, parent: Element, property: string, value?: string | null): void => {
@@ -65,7 +65,7 @@ const createCellElement = (doc: Document, colIndex: number, rowIndex: number, da
 };
 
 const updateCellData = (dataType: DataTypes, data: string, cell: Element, cellData: Element) => {
-    switch(dataType) {
+    switch(resolveType(dataType, data)) {
     case DataTypes.string:
         cell.setAttribute(element.text, dataTypeKind.string);
         break;
@@ -79,4 +79,21 @@ const updateCellData = (dataType: DataTypes, data: string, cell: Element, cellDa
     cellData.textContent = data;
 };
 
-export default { createOrUpdateProperty, getDocPropsProperties, getCellReferenceRelative, getCellReferenceAbsolute, createCell: createCellElement, getTableReference };
+const resolveType = (originalDataType: DataTypes, originalData: string | number | boolean) : DataTypes => {
+    if (originalDataType !== DataTypes.autodetect)
+    {
+        return originalDataType;
+    }
+    
+    const data: string = originalData as string
+    let dataType : DataTypes = isNaN(Number(data)) ? DataTypes.string : DataTypes.number;
+    if (dataType == DataTypes.string) {
+       if (data.toLowerCase().trim() == trueStr || data.toLowerCase().trim() == falseStr) {
+            dataType = DataTypes.boolean;
+        }
+    }
+
+    return dataType;
+}
+
+export default { createOrUpdateProperty, getDocPropsProperties, getCellReferenceRelative, getCellReferenceAbsolute, createCell: createCellElement, getTableReference, resolveType };

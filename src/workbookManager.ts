@@ -14,6 +14,7 @@ import {
     maxQueryLength,
     QueryNameMaxLengthErr,
     EmptyQueryNameErr,
+    tableNotFoundErr,
 } from "./constants";
 import {
     DocProps,
@@ -60,6 +61,21 @@ export class WorkbookManager {
         return await this.generateSingleQueryWorkbookFromZip(zip, query, docProps, tableData);
     }
 
+    async generateTableWorkbook(initialDataGrid: Grid, docProps?: DocProps): Promise<Blob> {
+        const zip: JSZip = await JSZip.loadAsync(WorkbookTemplate.SIMPLE_BLANK_TABLE_TEMPLATE, { base64: true });
+        const tableData: TableData | undefined = await this.parseInitialDataGrid(initialDataGrid);
+        if (tableData === undefined) {
+            throw new Error(tableNotFoundErr);
+        }
+
+        await this.updateWorkbookInitialDataIfNeeded(zip, docProps, tableData)
+
+        return await zip.generateAsync({
+            type: blobFileType,
+            mimeType: application,
+        });
+    }
+
     private async parseInitialDataGrid(initialDataGrid?: Grid): Promise<TableData | undefined> {
         if (!initialDataGrid) {
             return undefined;
@@ -83,13 +99,22 @@ export class WorkbookManager {
 
         await this.updatePowerQueryDocument(zip, query.queryName, generateSingleQueryMashup(query.queryName, query.queryMashup));
         await this.updateSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
-        await this.updateDocProps(zip, docProps);
-        await tableUtils.updateTableInitialDataIfNeeded(zip, tableData);
+        await this.updateWorkbookInitialDataIfNeeded(zip, docProps, tableData, true /*updateQueryTable*/);
 
         return await zip.generateAsync({
             type: blobFileType,
             mimeType: application,
         });
+    }
+
+    private async updateWorkbookInitialDataIfNeeded(
+        zip: JSZip,
+        docProps?: DocProps,
+        tableData?: TableData,
+        updateQueryTable = false
+    ) {
+        await this.updateDocProps(zip, docProps);
+        await tableUtils.updateTableInitialDataIfNeeded(zip, tableData, updateQueryTable);
     }
     
     private validateQueryName (newName: string) {

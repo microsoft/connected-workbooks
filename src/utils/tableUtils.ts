@@ -4,7 +4,7 @@ import { defaults, element, elementAttributes, queryTableNotFoundErr, queryTable
 import documentUtils from "./documentUtils";
 import { v4 } from "uuid";
 
-const updateTableInitialDataIfNeeded = async (zip: JSZip, tableData?: TableData) : Promise<void> => {
+    const updateTableInitialDataIfNeeded = async (zip: JSZip, tableData?: TableData, updateQueryTable?: boolean) : Promise<void> => {
         if (!tableData)
         {
             return;
@@ -18,32 +18,35 @@ const updateTableInitialDataIfNeeded = async (zip: JSZip, tableData?: TableData)
         const newSheet: string = await updateSheetsInitialData(sheetsXmlString, tableData);
         zip.file(sheetsXmlPath, newSheet);
 
-        const queryTableXmlString: string | undefined = await zip.file(queryTableXmlPath)?.async(textResultType);
-        if (queryTableXmlString === undefined) {
-            throw new Error(queryTableNotFoundErr);
-        }
+        if (updateQueryTable) {
+            const queryTableXmlString: string | undefined = await zip.file(queryTableXmlPath)?.async(textResultType);
+            if (queryTableXmlString === undefined) {
+                throw new Error(queryTableNotFoundErr);
+            }
 
-        const newQueryTable: string = await updateQueryTablesInitialData(queryTableXmlString, tableData);
-        zip.file(queryTableXmlPath, newQueryTable);
+            const newQueryTable: string = await updateQueryTablesInitialData(queryTableXmlString, tableData);
+            zip.file(queryTableXmlPath, newQueryTable);
+
+            // update defined name
+            const workbookXmlString: string | undefined = await zip.file(workbookXmlPath)?.async(textResultType);
+            if (workbookXmlString === undefined) {
+                throw new Error(sheetsNotFoundErr);
+            }
+
+            const newWorkbook: string = await updateWorkbookInitialData(workbookXmlString, tableData);
+            zip.file(workbookXmlPath, newWorkbook);
+        }
 
         const tableXmlString: string | undefined = await zip.file(tableXmlPath)?.async(textResultType);
         if (tableXmlString === undefined) {
             throw new Error(tableNotFoundErr);
         }
 
-        const newTable: string = await updateTablesInitialData(tableXmlString, tableData);
+        const newTable: string = await updateTablesInitialData(tableXmlString, tableData, updateQueryTable);
         zip.file(tableXmlPath, newTable);
-
-        const workbookXmlString = await zip.file(workbookXmlPath)?.async(textResultType);
-        if (workbookXmlString === undefined) {
-            throw new Error(sheetsNotFoundErr);
-        }
-        
-        const newWorkbook:string = await updateWorkbookInitialData(workbookXmlString, tableData);
-        zip.file(workbookXmlPath, newWorkbook);
     };
 
-const updateTablesInitialData = async (tableXmlString: string, tableData: TableData) : Promise<string> => {
+    const updateTablesInitialData = async (tableXmlString: string, tableData: TableData, updateQueryTable: boolean = false) : Promise<string> => {
         const parser: DOMParser = new DOMParser();
         const serializer: XMLSerializer = new XMLSerializer();
         const tableDoc: Document = parser.parseFromString(tableXmlString, xmlTextResultType);
@@ -52,11 +55,14 @@ const updateTablesInitialData = async (tableXmlString: string, tableData: TableD
         tableData.columnMetadata.forEach((col: ColumnMetadata, columnIndex: number) => {
             const tableColumn: Element = tableDoc.createElementNS(tableDoc.documentElement.namespaceURI, element.tableColumn);
             tableColumn.setAttribute(elementAttributes.id, (columnIndex + 1).toString());
-            tableColumn.setAttribute(elementAttributes.uniqueName, (columnIndex + 1).toString());
             tableColumn.setAttribute(elementAttributes.name, col.name);
-            tableColumn.setAttribute(elementAttributes.queryTableFieldId, (columnIndex + 1).toString());
             tableColumns.appendChild(tableColumn);
             tableColumn.setAttribute(elementAttributes.xr3uid, "{" + v4().toUpperCase() + "}");
+
+            if (updateQueryTable) {
+                tableColumn.setAttribute(elementAttributes.uniqueName, (columnIndex + 1).toString());
+                tableColumn.setAttribute(elementAttributes.queryTableFieldId, (columnIndex + 1).toString());
+            }
         });
 
         tableColumns.setAttribute(elementAttributes.count, tableData.columnMetadata.length.toString());
