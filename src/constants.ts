@@ -47,7 +47,7 @@ export const section1PathPrefix = "Section1/";
 export const divider = "/";
 export const maxQueryLength = 80;
 export const trueStr = "true";
-export const fasleStr = "false";
+export const falseStr = "false";
 
 export const element = {
     sharedStringTable: "sst",

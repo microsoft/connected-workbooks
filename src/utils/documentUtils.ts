@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import JSZip from "jszip";
-import { dataTypeKind, docPropsCoreXmlPath, docPropsRootElement, element, elementAttributes, fasleStr, textResultType, trueStr, xmlTextResultType } from "../constants";
+import { dataTypeKind, docPropsCoreXmlPath, docPropsRootElement, element, elementAttributes, falseStr, textResultType, trueStr, xmlTextResultType } from "../constants";
 import { DataTypes } from "../types";
 
 const createOrUpdateProperty = (doc: Document, parent: Element, property: string, value?: string | null): void => {
@@ -88,7 +88,7 @@ const resolveType = (originalDataType: DataTypes, originalData: string | number 
     const data: string = originalData as string
     let dataType : DataTypes = isNaN(Number(data)) ? DataTypes.string : DataTypes.number;
     if (dataType == DataTypes.string) {
-       if (data.toLowerCase() == trueStr || data.toLowerCase() == fasleStr) {
+       if (data.toLowerCase().trim() == trueStr || data.toLowerCase().trim() == falseStr) {
             dataType = DataTypes.boolean;
         }
     }
