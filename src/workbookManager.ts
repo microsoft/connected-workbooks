@@ -31,9 +31,6 @@ import {
     emptyValue,
     queryAndPivotTableNotFoundErr,
     templateWithInitialDataErr,
-    maxQueryLength,
-    QueryNameMaxLengthErr,
-    EmptyQueryNameErr,
     tableNotFoundErr,
 } from "./constants";
 import {
@@ -66,7 +63,7 @@ export const generateSingleQueryWorkbook = async (
         throw new Error(templateWithInitialDataErr);
     }
 
-    validateQueryName(query.queryName);
+    pqUtils.validateQueryName(query.queryName);
 
     const zip: JSZip =
         templateFile === undefined
@@ -132,22 +129,6 @@ const updateWorkbookInitialDataIfNeeded = async (
 ): Promise<void> => {
     await updateDocProps(zip, docProps);
     await tableUtils.updateTableInitialDataIfNeeded(zip, tableData, updateQueryTable);
-};
-
-const validateQueryName = (newName: string) => {
-    if (newName) {
-        if (newName.length > maxQueryLength) {
-            throw new Error(QueryNameMaxLengthErr);
-        }
-
-        if (pqUtils.queryNameHasInvalidChars(newName)) {
-            throw new Error(QueryNameMaxLengthErr);
-        }
-    }
-
-    if (!newName.trim()) {
-        throw new Error(EmptyQueryNameErr);
-    }
 };
 
 const updatePowerQueryDocument = async (zip: JSZip, queryName: string, queryMashupDoc: string) => {
