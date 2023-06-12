@@ -9,8 +9,8 @@ export default class GridParser implements TableDataParser {
 
         this.validateGridHeader(initialDataGrid);
         const rows: string[][] = this.parseGridRows(initialDataGrid, initialDataGrid.header);
-        
-        return { columnMetadata : initialDataGrid.header, rows: rows };
+
+        return { columnMetadata: initialDataGrid.header, rows: rows };
     }
 
     private parseGridRows(initialDataGrid: Grid, columnMetadata: ColumnMetadata[]) : string[][] {
@@ -31,8 +31,7 @@ export default class GridParser implements TableDataParser {
                         throw new Error(invalidValueInColumnErr);
                     }
                 }
-
-                if (dataType == DataTypes.boolean) {
+                else if (dataType == DataTypes.boolean) {
                     if (cellValue != "1" && cellValue != "0") {
                         throw new Error(invalidValueInColumnErr);
                     }
@@ -52,7 +51,7 @@ export default class GridParser implements TableDataParser {
         if (!headerData) {
             throw new Error(headerNotFoundErr);
         }
-
+        
         for (const prop in headerData) {
             if (!(headerData[prop].type in DataTypes)) { 
                 throw new Error(invalidDataTypeErr);

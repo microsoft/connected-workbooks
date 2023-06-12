@@ -51,15 +51,37 @@ describe("Workbook Manager tests", () => {
 
     test("tests Pivot Tables contain initial data", async () => {
         const defaultString = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\r\n<table xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" mc:Ignorable=\"xr xr3\" xmlns:xr=\"http://schemas.microsoft.com/office/spreadsheetml/2014/revision\" xmlns:xr3=\"http://schemas.microsoft.com/office/spreadsheetml/2016/revision3\" id=\"1\" xr:uid=\"{D8539CF6-04E5-464D-9950-5A36C5A1FCFE}\" name=\"Query1\" displayName=\"Query1\" ref=\"A1:A2\" tableType=\"queryTable\" totalsRowShown=\"0\"><autoFilter ref=\"A1:A2\" xr:uid=\"{D8539CF6-04E5-464D-9950-5A36C5A1FCFE}\"/><tableColumns count=\"1\"><tableColumn id=\"1\" xr3:uid=\"{D1084858-8AE5-4728-A9BE-FE78821CDFFF}\" uniqueName=\"1\" name=\"Query1\" queryTableFieldId=\"1\" dataDxfId=\"0\"/></tableColumns><tableStyleInfo name=\"TableStyleMedium7\" showFirstColumn=\"0\" showLastColumn=\"0\" showRowStripes=\"1\" showColumnStripes=\"0\"/></table>";
-        const tableXmlSheet = await tableUtils.updateTablesInitialData(defaultString, {columnMetadata: [{name: 'Column1', type: DataTypes.string}, {name: 'Column2', type: DataTypes.number} ],
-                rows: [['1', '2']]});
+        const tableXmlSheet = await tableUtils.updateTablesInitialData(defaultString, {columnMetadata: [{name: 'Column1', type: DataTypes.string}, {name: 'Column2', type: DataTypes.number}],
+                rows: [['1', '2']]}, true);
         expect(tableXmlSheet).toContain('count="2"');
         expect(tableXmlSheet).toContain('ref="A1:B2');
-        expect(tableXmlSheet).toContain('uniqueName="1" name="Column1" queryTableFieldId="1"');
-        expect(tableXmlSheet).toContain('uniqueName="2" name="Column2" queryTableFieldId="2"'); 
+        
+        expect(tableXmlSheet).toContain('uniqueName="1"');
+        expect(tableXmlSheet).toContain('name="Column1"');
+        expect(tableXmlSheet).toContain('queryTableFieldId="1"');
+
+        expect(tableXmlSheet).toContain('uniqueName="2"');
+        expect(tableXmlSheet).toContain('name="Column2"');
+        expect(tableXmlSheet).toContain('queryTableFieldId="2"');
+    })
+
+        test("tests blank Table contain initial data", async () => {
+        const defaultString = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\r\n<table xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" mc:Ignorable=\"xr xr3\" xmlns:xr=\"http://schemas.microsoft.com/office/spreadsheetml/2014/revision\" xmlns:xr3=\"http://schemas.microsoft.com/office/spreadsheetml/2016/revision3\" id=\"1\" xr:uid=\"{D8539CF6-04E5-464D-9950-5A36C5A1FCFE}\" name=\"Query1\" displayName=\"Query1\" ref=\"A1:A2\" tableType=\"queryTable\" totalsRowShown=\"0\"><autoFilter ref=\"A1:A2\" xr:uid=\"{D8539CF6-04E5-464D-9950-5A36C5A1FCFE}\"/><tableColumns count=\"1\"><tableColumn id=\"1\" xr3:uid=\"{D1084858-8AE5-4728-A9BE-FE78821CDFFF}\" uniqueName=\"1\" name=\"Query1\" queryTableFieldId=\"1\" dataDxfId=\"0\"/></tableColumns><tableStyleInfo name=\"TableStyleMedium7\" showFirstColumn=\"0\" showLastColumn=\"0\" showRowStripes=\"1\" showColumnStripes=\"0\"/></table>";
+        const tableXmlSheet = await tableUtils.updateTablesInitialData(defaultString, {columnMetadata: [{name: 'Column1', type: DataTypes.string}, {name: 'Column2', type: DataTypes.number}],
+                rows: [['1', '2']]}, false);
+        expect(tableXmlSheet).toContain('count="2"');
+        expect(tableXmlSheet).toContain('ref="A1:B2');
+        expect(tableXmlSheet).toContain('name="Column2"');
+        expect(tableXmlSheet).toContain('name="Column1"');
+        
+        // Not contains query table metadata.
+        expect(tableXmlSheet).not.toContain('uniqueName="1"');
+        expect(tableXmlSheet).not.toContain('queryTableFieldId="1"');
+
+        expect(tableXmlSheet).not.toContain('uniqueName="2"');
+        expect(tableXmlSheet).not.toContain('queryTableFieldId="2"');
     })
     
-
     test("SharedStrings XML returns existing index", async () => {
         const {sharedStringIndex} = await workbookManager.updateSharedStrings('<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="1" uniqueCount="1"><si><t>newQueryName</t></si><si><t/></si></sst>', "newQueryName");
         expect(sharedStringIndex).toEqual(1);

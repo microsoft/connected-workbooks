@@ -32,6 +32,7 @@ export const headerNotFoundErr = "Invalid JSON file, header is missing";
 export const invalidDataTypeErr = "Invalid JSON file, invalid data type";
 export const QueryNameMaxLengthErr = "Query names are limited to 80 characters";
 export const EmptyQueryNameErr = "Query name cannot be empty";
+export const stylesNotFoundErr = "Styles were not found in template";
 
 export const blobFileType = "blob";
 export const uint8ArrayType = "uint8array";
@@ -45,6 +46,8 @@ export const emptyValue = "";
 export const section1PathPrefix = "Section1/";
 export const divider = "/";
 export const maxQueryLength = 80;
+export const trueStr = "true";
+export const fasleStr = "false";
 
 export const element = {
     sharedStringTable: "sst",
