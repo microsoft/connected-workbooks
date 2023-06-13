@@ -82,12 +82,12 @@ const generateSingleQueryWorkbookFromZip = async (
         query.queryName = defaults.queryName;
     }
 
-    await xmlPartsUtils.updatePowerQueryDocument(
+    await xmlPartsUtils.updateWorkbookPowerQueryDocument(
         zip,
         query.queryName,
         generateSingleQueryMashup(query.queryName, query.queryMashup)
     );
-    await xmlPartsUtils.updateSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
+    await xmlPartsUtils.updateWorkbookSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
     await xmlPartsUtils.updateWorkbookInitialDataIfNeeded(zip, docProps, tableData, true /*updateQueryTable*/);
 
     return await zip.generateAsync({
