@@ -1,7 +1,7 @@
 import workbookTemplate from "../src/workbookTemplate";
 import { pqUtils } from "../src/utils";
-import { section1mPath, textResultType, URLS } from "../src/constants";
-import MashupHandler from "../src/mashupDocumentParser";
+import { section1mPath, textResultType, URLS } from "../src/utils/constants";
+import MashupHandler from "../src/utils/mashupDocumentParser";
 import {
     section1mBlankQueryMock,
     pqEmptySingleQueryBase64,
