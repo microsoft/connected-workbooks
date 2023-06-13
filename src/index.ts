@@ -2,4 +2,5 @@
 // Licensed under the MIT license.
 
 export { default as workbookManager } from "./workbookManager";
+export { DataTypes } from "./types";
 export type { QueryInfo } from "./types";
