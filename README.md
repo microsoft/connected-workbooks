@@ -62,7 +62,7 @@ workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
     
       workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
 ```
-![image](https://github.com/microsoft/connected-workbooks/assets/7674478/c267c9eb-6367-419d-832d-5a835c7683f9)
+<img width="450" alt="image" src="https://github.com/microsoft/connected-workbooks/assets/7674478/c267c9eb-6367-419d-832d-5a835c7683f9">
 
 ### 4. Export a Power Query connected workbook:
 ```typescript
@@ -90,6 +90,7 @@ const blob = await workbookManager.generateSingleQueryWorkbook(
   templateFile);
 workbookManager.downloadWorkbook(blob, "MyBrandedWorkbook.xlsx");
 ```
+
 ![image](https://github.com/microsoft/connected-workbooks/assets/7674478/e5377946-4348-4229-9b88-1910ff7ee025)
 
 Template requirements:
