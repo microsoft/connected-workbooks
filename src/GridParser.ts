@@ -20,13 +20,22 @@ export default class GridParser implements TableDataParser {
         }
 
         const rows: string[][] = [];
-        for (const rowData of gridData) {
+        if (initialDataGrid.promoteHeaders) {
             const row: string[] = [];
-            let colIndex = 0;
+            for (const prop in gridData[0]) {
+                const cellValue: string | number | boolean =  gridData[0][prop];
+                row.push(cellValue.toString());
+            }
+            
+            rows.push(row);
+        }
+
+        for (let i = 1; i < gridData.length; i++) {
+            let rowData: (string | number | boolean)[] = gridData[i];
+            const row: string[] = [];
             for (const prop in rowData) {
                 const cellValue: string | number | boolean = rowData[prop];
                 row.push(cellValue.toString());
-                colIndex++;
             }
             
             rows.push(row);
