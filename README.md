@@ -90,7 +90,7 @@ const blob = await workbookManager.generateSingleQueryWorkbook(
   templateFile);
 workbookManager.downloadWorkbook(blob, "MyBrandedWorkbook.xlsx");
 ```
-![image](https://github.com/microsoft/connected-workbooks/assets/7674478/e5377946-4348-4229-9b88-1910ff7ee025)
+<img width="500" alt="image" src="https://github.com/microsoft/connected-workbooks/assets/7674478/e5377946-4348-4229-9b88-1910ff7ee025">
 
 Template requirements:
 
