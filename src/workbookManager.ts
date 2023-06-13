@@ -12,11 +12,12 @@ import {
     templateWithInitialDataErr,
     tableNotFoundErr,
 } from "./utils/constants";
-import { DocProps, QueryInfo, TableData, Grid, TableDataParser } from "./types";
+import { DocProps, QueryInfo, TableData, Grid, TableDataParser, DataTypes } from "./types";
 import TableDataParserFactory from "./TableDataParserFactory";
 import { generateSingleQueryMashup } from "./generators";
+import { extractTableValues } from "./utils/htmlUtils";
 
-export const generateSingleQueryWorkbook = async (
+const generateSingleQueryWorkbook = async (
     query: QueryInfo,
     initialDataGrid?: Grid,
     templateFile?: File,
@@ -46,7 +47,13 @@ export const generateSingleQueryWorkbook = async (
     return await generateSingleQueryWorkbookFromZip(zip, query, docProps, tableData);
 };
 
-export const generateTableWorkbook = async (initialDataGrid: Grid, docProps?: DocProps): Promise<Blob> => {
+const generateTableWorkbookFromHtml = async (htmlTable: HTMLTableElement, docProps?: DocProps): Promise<Blob> => {
+    const [headers, gridData] = extractTableValues(htmlTable);
+    const header = headers.map((column) => ({ name: column, type: DataTypes.autodetect }));
+    return await generateTableWorkbookFromGrid({ gridData, header }, docProps);
+};
+
+const generateTableWorkbookFromGrid = async (initialDataGrid: Grid, docProps?: DocProps): Promise<Blob> => {
     const zip: JSZip = await JSZip.loadAsync(WorkbookTemplate.SIMPLE_BLANK_TABLE_TEMPLATE, { base64: true });
     const tableData: TableData | undefined = await parseInitialDataGrid(initialDataGrid);
     if (tableData === undefined) {
@@ -94,4 +101,31 @@ const generateSingleQueryWorkbookFromZip = async (
         type: blobFileType,
         mimeType: application,
     });
+};
+
+const downloadWorkbook = (file: Blob, filename: string): void => {
+    const nav = window.navigator as any;
+    if (nav.msSaveOrOpenBlob)
+        // IE10+
+        nav.msSaveOrOpenBlob(file, filename);
+    else {
+        // Others
+        const a = document.createElement("a");
+        const url = URL.createObjectURL(file);
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 0);
+    }
+};
+
+export default {
+    generateSingleQueryWorkbook,
+    generateTableWorkbookFromHtml,
+    generateTableWorkbookFromGrid,
+    downloadWorkbook,
 };
