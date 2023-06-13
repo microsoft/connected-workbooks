@@ -33,6 +33,11 @@ export interface Grid {
     promoteHeaders?: boolean;
 }
 
+export interface FileConfigs {
+    templateFile?: File;
+    docProps?: DocProps;
+}
+
 export interface TableDataParser {
     parseToTableData: (grid: any) => TableData | undefined;
 }

@@ -12,7 +12,7 @@ import {
     templateWithInitialDataErr,
     tableNotFoundErr,
 } from "./utils/constants";
-import { DocProps, QueryInfo, TableData, Grid, TableDataParser } from "./types";
+import { DocProps, QueryInfo, TableData, Grid, TableDataParser, FileConfigs } from "./types";
 import TableDataParserFactory from "./TableDataParserFactory";
 import { generateSingleQueryMashup } from "./generators";
 import { extractTableValues } from "./utils/htmlUtils";
@@ -20,8 +20,7 @@ import { extractTableValues } from "./utils/htmlUtils";
 const generateSingleQueryWorkbook = async (
     query: QueryInfo,
     initialDataGrid?: Grid,
-    templateFile?: File,
-    docProps?: DocProps
+    fileConfigs?: FileConfigs
 ): Promise<Blob> => {
     if (!query.queryMashup) {
         throw new Error(emptyQueryMashupErr);
@@ -31,6 +30,7 @@ const generateSingleQueryWorkbook = async (
         query.queryName = defaults.queryName;
     }
 
+    const templateFile: File | undefined = fileConfigs?.templateFile;
     if (templateFile !== undefined && initialDataGrid !== undefined) {
         throw new Error(templateWithInitialDataErr);
     }
@@ -44,7 +44,7 @@ const generateSingleQueryWorkbook = async (
 
     const tableData: TableData | undefined = await parseInitialDataGrid(initialDataGrid);
 
-    return await generateSingleQueryWorkbookFromZip(zip, query, docProps, tableData);
+    return await generateSingleQueryWorkbookFromZip(zip, query, fileConfigs?.docProps, tableData);
 };
 
 const generateTableWorkbookFromHtml = async (htmlTable: HTMLTableElement, docProps?: DocProps): Promise<Blob> => {
