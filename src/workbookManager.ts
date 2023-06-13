@@ -12,7 +12,7 @@ import {
     templateWithInitialDataErr,
     tableNotFoundErr,
 } from "./utils/constants";
-import { DocProps, QueryInfo, TableData, Grid, TableDataParser, DataTypes } from "./types";
+import { DocProps, QueryInfo, TableData, Grid, TableDataParser } from "./types";
 import TableDataParserFactory from "./TableDataParserFactory";
 import { generateSingleQueryMashup } from "./generators";
 import { extractTableValues } from "./utils/htmlUtils";
@@ -48,9 +48,8 @@ const generateSingleQueryWorkbook = async (
 };
 
 const generateTableWorkbookFromHtml = async (htmlTable: HTMLTableElement, docProps?: DocProps): Promise<Blob> => {
-    const [headers, gridData] = extractTableValues(htmlTable);
-    const header = headers.map((column) => ({ name: column, type: DataTypes.autodetect }));
-    return await generateTableWorkbookFromGrid({ gridData, header }, docProps);
+    const gridData = extractTableValues(htmlTable);
+    return await generateTableWorkbookFromGrid({ gridData: gridData, promoteHeaders: false }, docProps);
 };
 
 const generateTableWorkbookFromGrid = async (initialDataGrid: Grid, docProps?: DocProps): Promise<Blob> => {

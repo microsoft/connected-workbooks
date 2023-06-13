@@ -1,16 +1,9 @@
-export const extractTableValues = (table: HTMLTableElement): [string[], string[][]] => {
+export const extractTableValues = (table: HTMLTableElement): string[][] => {
     const headers: string[] = [];
     const rows: string[][] = [];
 
-    // Extract headers
-    const headerRow = table.rows[0];
-    for (let i = 0; i < headerRow.cells.length; i++) {
-        const cell = headerRow.cells[i];
-        headers.push(cell.textContent || "");
-    }
-
     // Extract values from each row
-    for (let i = 1; i < table.rows.length; i++) {
+    for (let i = 0; i < table.rows.length; i++) {
         const row = table.rows[i];
         const rowData: string[] = [];
 
@@ -22,5 +15,5 @@ export const extractTableValues = (table: HTMLTableElement): [string[], string[]
         rows.push(rowData);
     }
 
-    return [headers, rows];
+    return rows;
 };
