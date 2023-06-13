@@ -7,6 +7,8 @@ import JSZip from "jszip";
 import WorkbookTemplate from "../src/workbookTemplate";
 import { section1mPath } from "../src/utils/constants";
 
+import util from "util";
+
 (global as any).TextDecoder = TextDecoder;
 (global as any).TextEncoder = TextEncoder;
 
@@ -44,7 +46,6 @@ describe("Mashup Document Parser tests", () => {
             const handler = new MashupHandler() as any;
             const { metadata } = handler.getPackageComponents(originalBase64Str);
             const newMetadataArray = handler.editSingleQueryMetadata(metadata, { queryName: "newQueryName" });
-            const util = require("util");
             const metadataString = new util.TextDecoder("utf-8").decode(newMetadataArray);
             expect(metadataString.replace(/ /g, "")).toContain(pqMetadataXmlMockPart1.replace(/ /g, ""));
             expect(metadataString.replace(/ /g, "")).toContain(pqMetadataXmlMockPart2.replace(/ /g, ""));
