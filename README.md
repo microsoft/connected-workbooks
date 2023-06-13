@@ -34,14 +34,9 @@ workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
 import { workbookManager } from '@microsoft/connected-workbooks';
 
 const grid = {
-  "header": [
-      { "name": "Product", "type": DataTypes.autodetect },
-      { "name": "Price", "type": DataTypes.autodetect },
-      { "name": "InStock", "type": DataTypes.autodetect },
-      { "name": "Category", "type": DataTypes.autodetect },
-      { "name": "Date", "type": DataTypes.autodetect }
-  ],
+  "promoteHeaders": false,
   "gridData": [
+      ["Product", "Price", "InStock", "Category", "Date"],
       ["Widget A", 19.99, true, "Electronics", "10/26/2024"],
       ["Gizmo B", 9.99, true, "Accessories", "10/26/2024"],
       ["Bubala", 14.99, false, "Accessories", "10/22/2023"],
