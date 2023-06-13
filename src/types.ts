@@ -23,19 +23,14 @@ export interface Metadata {
 }
 
 export interface TableData {
-    columnMetadata: ColumnMetadata[];
+    columnNames: string[];
     rows: string[][];
     columnwidth?: number;
 }
 
-export interface ColumnMetadata {
-    name: string;
-    type: DataTypes;
-}
-
 export interface Grid {
-    header: ColumnMetadata[];
     gridData: (string|number|boolean)[][];
+    promoteHeaders?: boolean;
 }
 
 export interface TableDataParser {
@@ -43,7 +38,6 @@ export interface TableDataParser {
 }
 
 export enum DataTypes {
-    autodetect = -1,
     null = 0,
     string = 1,
     number = 2,
