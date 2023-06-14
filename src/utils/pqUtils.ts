@@ -3,7 +3,7 @@
 
 import JSZip from "jszip";
 import iconv from "iconv-lite";
-import { URLS } from "../constants";
+import { EmptyQueryNameErr, QueryNameMaxLengthErr, maxQueryLength, URLS } from "./constants";
 import { generateMashupXMLTemplate, generateCustomXmlFilePath } from "../generators";
 
 type CustomXmlFile = {
@@ -79,7 +79,7 @@ const getCustomXmlFile = async (zip: JSZip, url: string, encoding = "UTF-16"): P
 };
 
 const queryNameHasInvalidChars = (queryName: string) => {
-    let invalidQueryNameChars = ['"', "."];
+    const invalidQueryNameChars = ['"', "."];
 
     // Control characters as defined in Unicode
     for (let c = 0; c <= 0x001f; ++c) {
@@ -90,15 +90,28 @@ const queryNameHasInvalidChars = (queryName: string) => {
         invalidQueryNameChars.push(String.fromCharCode(c));
     }
 
-    return queryName
-        .split("")
-        .some((ch) => invalidQueryNameChars.indexOf(ch) !== -1);
+    return queryName.split("").some((ch) => invalidQueryNameChars.indexOf(ch) !== -1);
 };
 
+const validateQueryName = (queryName: string): void => {
+    if (queryName) {
+        if (queryName.length > maxQueryLength) {
+            throw new Error(QueryNameMaxLengthErr);
+        }
+
+        if (queryNameHasInvalidChars(queryName)) {
+            throw new Error(QueryNameMaxLengthErr);
+        }
+    }
+
+    if (!queryName.trim()) {
+        throw new Error(EmptyQueryNameErr);
+    }
+};
 export default {
     getBase64,
     setBase64,
     getCustomXmlFile,
     getDataMashupFile,
-    queryNameHasInvalidChars,
+    validateQueryName,
 };

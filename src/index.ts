@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export { WorkbookManager } from "./workbookManager";
-export type { QueryInfo } from "./types";
-export type {ArrayReader} from "././utils/arrayUtils";
+export { default as workbookManager } from "./workbookManager";
+export { DataTypes } from "./types";
+export type { QueryInfo, FileConfigs } from "./types";

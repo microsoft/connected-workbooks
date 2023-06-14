@@ -13,15 +13,36 @@ A pure JS library, Microsoft backed, that provides xlsx workbook generation capa
 Connected Workbooks allows you to avoid "data dumps" in CSV form, providing a richer experience with Tables and/or connected Queries for when your business application supports it.
 
 [Learn about Power Query here](https://powerquery.microsoft.com/en-us/)
+[![License](https://img.shields.io/github/license/microsoft/connected-workbooks)](https://github.com/microsoft/connected-workbooks/blob/master/LICENSE)
+[![Snyk Vulnerabilities](https://img.shields.io/snyk/vulnerabilities/github/microsoft/connected-workbooks)](https://snyk.io/test/github/microsoft/connected-workbooks)
 
+A pure JS library, Microsoft backed, that provides xlsx workbook generation capabilities, allowing for:
+1. Fundemental **"Export to Excel"** capabilities for tabular data (landing in a table in Excel).
+2. Advanced capabilities of **"Export a Power Query connected workbook"**:
+    - Can refresh your data on open and/or on demand.
+    - Allows for initial data population.
+    - Supports more advanced scenarios where you provide branded/custom workbooks, and load your data into PivotTables or PivotCharts.
+
+Connected Workbooks allows you to avoid "data dumps" in CSV form, providing a richer experience with Tables and/or connected Queries for when your business application supports it.
+
+[Learn about Power Query here](https://powerquery.microsoft.com/en-us/)
+
+## Where is this library used? here are some examples:
 ## Where is this library used? here are some examples:
 
 |<img src="https://github.com/microsoft/connected-workbooks/assets/7674478/b7a0c989-7ba4-4da8-851e-04650d8b600e" alt="Kusto" width="32"/>| <img src="https://github.com/microsoft/connected-workbooks/assets/7674478/76d22d23-5f2b-465f-992d-f1c71396904c" alt="LogAnalytics" width="32"/>	| <img src="https://github.com/microsoft/connected-workbooks/assets/7674478/436b4f53-bf25-4c45-aae5-55ee1b1feafc" alt="Datamart" width="32"/>	| <img src="https://github.com/microsoft/connected-workbooks/assets/7674478/3965f684-b461-42fe-9c62-e3059c0286eb" alt="VivaSales" width="32"/>	|
 |---------------------------------	|-------------------	|--------------	|----------------	|
 | **Azure Data Explorer** 	| **Log Analytics** 	| **Datamart** 	| **Viva Sales** 	|
+|<img src="https://github.com/microsoft/connected-workbooks/assets/7674478/b7a0c989-7ba4-4da8-851e-04650d8b600e" alt="Kusto" width="32"/>| <img src="https://github.com/microsoft/connected-workbooks/assets/7674478/76d22d23-5f2b-465f-992d-f1c71396904c" alt="LogAnalytics" width="32"/>	| <img src="https://github.com/microsoft/connected-workbooks/assets/7674478/436b4f53-bf25-4c45-aae5-55ee1b1feafc" alt="Datamart" width="32"/>	| <img src="https://github.com/microsoft/connected-workbooks/assets/7674478/3965f684-b461-42fe-9c62-e3059c0286eb" alt="VivaSales" width="32"/>	|
+|---------------------------------	|-------------------	|--------------	|----------------	|
+| **Azure Data Explorer** 	| **Log Analytics** 	| **Datamart** 	| **Viva Sales** 	|
 
 ## How do I use it? here are some examples:
+## How do I use it? here are some examples:
 
+### 1. Export a table directly from an Html page:
+```typescript
+import { workbookManager } from '@microsoft/connected-workbooks';
 ### 1. Export a table directly from an Html page:
 ```typescript
 import { workbookManager } from '@microsoft/connected-workbooks';
@@ -30,18 +51,17 @@ const blob = await workbookManager.generateTableWorkbookFromHtml(document.queryS
 workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
 ```
 ### 2. Export a table from raw data:
+const blob = await workbookManager.generateTableWorkbookFromHtml(document.querySelector('table') as HTMLTableElement);    
+workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
+```
+### 2. Export a table from raw data:
 ```typescript
 import { workbookManager } from '@microsoft/connected-workbooks';
 
 const grid = {
-  "header": [
-      { "name": "Product", "type": DataTypes.autodetect },
-      { "name": "Price", "type": DataTypes.autodetect },
-      { "name": "InStock", "type": DataTypes.autodetect },
-      { "name": "Category", "type": DataTypes.autodetect },
-      { "name": "Date", "type": DataTypes.autodetect }
-  ],
+  "promoteHeaders": false,
   "gridData": [
+      ["Product", "Price", "InStock", "Category", "Date"],
       ["Widget A", 19.99, true, "Electronics", "10/26/2024"],
       ["Gizmo B", 9.99, true, "Accessories", "10/26/2024"],
       ["Bubala", 14.99, false, "Accessories", "10/22/2023"],
@@ -62,10 +82,21 @@ workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
     
       workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
 ```
-<img width="450" alt="image" src="https://github.com/microsoft/connected-workbooks/assets/7674478/c267c9eb-6367-419d-832d-5a835c7683f9">
+![image](https://github.com/microsoft/connected-workbooks/assets/7674478/c267c9eb-6367-419d-832d-5a835c7683f9)
 
 ### 4. Export a Power Query connected workbook:
+### 4. Export a Power Query connected workbook:
 ```typescript
+import { workbookManager } from '@microsoft/connected-workbooks';
+
+const blob = await workbookManager.generateSingleQueryWorkbook({
+  queryMashup: 'let \
+                    Source = {1..10} \
+                in \
+                    Source',
+  refreshOnOpen: true});
+workbookManager.downloadWorkbook(blob, "MyConnectedWorkbook.xlsx");
+});
 import { workbookManager } from '@microsoft/connected-workbooks';
 
 const blob = await workbookManager.generateSingleQueryWorkbook({
@@ -79,8 +110,11 @@ workbookManager.downloadWorkbook(blob, "MyConnectedWorkbook.xlsx");
 ```
 ![image](https://github.com/microsoft/connected-workbooks/assets/7674478/57bd986c-6309-4963-8d86-911ccf496c3f)
 (after refreshing on open)
+![image](https://github.com/microsoft/connected-workbooks/assets/7674478/57bd986c-6309-4963-8d86-911ccf496c3f)
+(after refreshing on open)
 ### Advanced Usage - bring your own template:
 
+You can use the library with your own workbook as a template!
 You can use the library with your own workbook as a template!
 
 ```typescript
@@ -89,8 +123,12 @@ const blob = await workbookManager.generateSingleQueryWorkbook(
   undefined /* optional gridData */,
   templateFile);
 workbookManager.downloadWorkbook(blob, "MyBrandedWorkbook.xlsx");
+const blob = await workbookManager.generateSingleQueryWorkbook(
+  { queryMashup: query, refreshOnOpen: true },
+  undefined /* optional gridData */,
+  templateFile);
+workbookManager.downloadWorkbook(blob, "MyBrandedWorkbook.xlsx");
 ```
-
 ![image](https://github.com/microsoft/connected-workbooks/assets/7674478/e5377946-4348-4229-9b88-1910ff7ee025)
 
 Template requirements:
@@ -104,7 +142,12 @@ Have a single query named **Query1** loaded to a **Query Table**, **Pivot Table*
 
 ```typescript
 const [templateFile, setTemplateFile] = useState<File | null>(null);
+const [templateFile, setTemplateFile] = useState<File | null>(null);
 ...
+<input type="file" id="file" accept=".xlsx" style={{ display: "none" }} onChange={(e) => {
+  if (e?.target?.files?.item(0) == null) return;
+  setTemplateFile(e!.target!.files!.item(0));
+}}/>
 <input type="file" id="file" accept=".xlsx" style={{ display: "none" }} onChange={(e) => {
   if (e?.target?.files?.item(0) == null) return;
   setTemplateFile(e!.target!.files!.item(0));
