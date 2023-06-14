@@ -44,7 +44,7 @@ describe("Single query template tests", () => {
         const { found, path, xmlString } = await pqUtils.getCustomXmlFile(
             defaultZipFile,
             URLS.CONNECTED_WORKBOOK,
-            "UTF-8"
+            'utf-8'
         );
 
         expect(found).toBeTruthy();
