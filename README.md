@@ -14,18 +14,6 @@ Connected Workbooks allows you to avoid "data dumps" in CSV form, providing a ri
 
 [Learn about Power Query here](https://powerquery.microsoft.com/en-us/)
 
-A pure JS library, Microsoft backed, that provides xlsx workbook generation capabilities, allowing for:
-1. Fundemental **"Export to Excel"** capabilities for tabular data (landing in a table in Excel).
-2. Advanced capabilities of **"Export a Power Query connected workbook"**:
-    - Can refresh your data on open and/or on demand.
-    - Allows for initial data population.
-    - Supports more advanced scenarios where you provide branded/custom workbooks, and load your data into PivotTables or PivotCharts.
-
-Connected Workbooks allows you to avoid "data dumps" in CSV form, providing a richer experience with Tables and/or connected Queries for when your business application supports it.
-
-[Learn about Power Query here](https://powerquery.microsoft.com/en-us/)
-
-## Where is this library used? here are some examples:
 ## Where is this library used? here are some examples:
 
 |<img src="https://github.com/microsoft/connected-workbooks/assets/7674478/b7a0c989-7ba4-4da8-851e-04650d8b600e" alt="Kusto" width="32"/>| <img src="https://github.com/microsoft/connected-workbooks/assets/7674478/76d22d23-5f2b-465f-992d-f1c71396904c" alt="LogAnalytics" width="32"/>	| <img src="https://github.com/microsoft/connected-workbooks/assets/7674478/436b4f53-bf25-4c45-aae5-55ee1b1feafc" alt="Datamart" width="32"/>	| <img src="https://github.com/microsoft/connected-workbooks/assets/7674478/3965f684-b461-42fe-9c62-e3059c0286eb" alt="VivaSales" width="32"/>	|
@@ -37,23 +25,17 @@ Connected Workbooks allows you to avoid "data dumps" in CSV form, providing a ri
 ### 1. Export a table directly from an Html page:
 ```typescript
 import { workbookManager } from '@microsoft/connected-workbooks';
-### 1. Export a table directly from an Html page:
-```typescript
-import { workbookManager } from '@microsoft/connected-workbooks';
 
 const blob = await workbookManager.generateTableWorkbookFromHtml(document.querySelector('table') as HTMLTableElement);    
 workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
 ```
+
 ### 2. Export a table from raw data:
-const blob = await workbookManager.generateTableWorkbookFromHtml(document.querySelector('table') as HTMLTableElement);    
-workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
 ```
-### 2. Export a table from raw data:
-```typescript
 import { workbookManager } from '@microsoft/connected-workbooks';
 
 const grid = {
-  "promoteHeaders": false,
+  "promoteHeaders": true,
   "gridData": [
       ["Product", "Price", "InStock", "Category", "Date"],
       ["Widget A", 19.99, true, "Electronics", "10/26/2024"],
@@ -74,7 +56,7 @@ workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
       document.querySelector('table') as HTMLTableElement, 
       {createdBy: 'John Doe', lastModifiedBy: 'Jane Doe', description: 'This is a sample table'});
     
-      workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
+    workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
 ```
 ![image](https://github.com/microsoft/connected-workbooks/assets/7674478/c267c9eb-6367-419d-832d-5a835c7683f9)
 
@@ -89,30 +71,15 @@ const blob = await workbookManager.generateSingleQueryWorkbook({
                     Source',
   refreshOnOpen: true});
 workbookManager.downloadWorkbook(blob, "MyConnectedWorkbook.xlsx");
-});
-import { workbookManager } from '@microsoft/connected-workbooks';
-
-const blob = await workbookManager.generateSingleQueryWorkbook({
-  queryMashup: 'let \
-                    Source = {1..10} \
-                in \
-                    Source',
-  refreshOnOpen: true});
-workbookManager.downloadWorkbook(blob, "MyConnectedWorkbook.xlsx");
-});
 ```
 ![image](https://github.com/microsoft/connected-workbooks/assets/7674478/57bd986c-6309-4963-8d86-911ccf496c3f)
+
 (after refreshing on open)
 ### Advanced Usage - bring your own template:
 
 You can use the library with your own workbook as a template!
 
 ```typescript
-const blob = await workbookManager.generateSingleQueryWorkbook(
-  { queryMashup: query, refreshOnOpen: true },
-  undefined /* optional gridData */,
-  templateFile);
-workbookManager.downloadWorkbook(blob, "MyBrandedWorkbook.xlsx");
 const blob = await workbookManager.generateSingleQueryWorkbook(
   { queryMashup: query, refreshOnOpen: true },
   undefined /* optional gridData */,
@@ -132,12 +99,7 @@ Have a single query named **Query1** loaded to a **Query Table**, **Pivot Table*
 
 ```typescript
 const [templateFile, setTemplateFile] = useState<File | null>(null);
-const [templateFile, setTemplateFile] = useState<File | null>(null);
 ...
-<input type="file" id="file" accept=".xlsx" style={{ display: "none" }} onChange={(e) => {
-  if (e?.target?.files?.item(0) == null) return;
-  setTemplateFile(e!.target!.files!.item(0));
-}}/>
 <input type="file" id="file" accept=".xlsx" style={{ display: "none" }} onChange={(e) => {
   if (e?.target?.files?.item(0) == null) return;
   setTemplateFile(e!.target!.files!.item(0));
