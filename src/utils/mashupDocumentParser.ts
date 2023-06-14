@@ -3,21 +3,44 @@
 
 import * as base64 from "base64-js";
 import JSZip from "jszip";
-import { section1mPath, defaults, uint8ArrayType, emptyValue, textResultType, formulaSectionNotFoundErr, xmlTextResultType, element, section1PathPrefix, divider, elementAttributes, elementAttributesValues } from "./constants";
-import { arrayUtils } from "./utils";
-import { Metadata } from "./types";
-import { ArrayReader } from "././utils/arrayUtils"; 
+import {
+    section1mPath,
+    defaults,
+    uint8ArrayType,
+    emptyValue,
+    textResultType,
+    formulaSectionNotFoundErr,
+    xmlTextResultType,
+    element,
+    section1PathPrefix,
+    divider,
+    elementAttributes,
+    elementAttributesValues,
+} from "./constants";
+import { arrayUtils } from ".";
+import { Metadata } from "../types";
+import { ArrayReader } from "./arrayUtils";
 
 export default class MashupHandler {
     async ReplaceSingleQuery(base64Str: string, queryName: string, queryMashupDoc: string): Promise<string> {
-        const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } = this.getPackageComponents(base64Str);
+        const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } =
+            this.getPackageComponents(base64Str);
         const newPackageBuffer: Uint8Array = await this.editSingleQueryPackage(packageOPC, queryMashupDoc);
         const packageSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(newPackageBuffer.byteLength);
         const permissionsSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(permissionsSize);
         const newMetadataBuffer: Uint8Array = this.editSingleQueryMetadata(metadata, { queryName });
         const metadataSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(newMetadataBuffer.byteLength);
-        const newMashup: Uint8Array = arrayUtils.concatArrays(version, packageSizeBuffer, newPackageBuffer, permissionsSizeBuffer, permissions, metadataSizeBuffer, newMetadataBuffer, endBuffer);
-        
+        const newMashup: Uint8Array = arrayUtils.concatArrays(
+            version,
+            packageSizeBuffer,
+            newPackageBuffer,
+            permissionsSizeBuffer,
+            permissions,
+            metadataSizeBuffer,
+            newMetadataBuffer,
+            endBuffer
+        );
+
         return base64.fromByteArray(newMashup);
     }
 
@@ -39,7 +62,7 @@ export default class MashupHandler {
             permissionsSize,
             permissions,
             metadata,
-            endBuffer
+            endBuffer,
         };
     }
 
@@ -60,7 +83,7 @@ export default class MashupHandler {
             compression: emptyValue,
         });
     };
-    
+
     private editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Metadata) => {
         //extract metadataXml
         const mashupArray: ArrayReader = new arrayUtils.ArrayReader(metadataArray.buffer);
@@ -87,56 +110,73 @@ export default class MashupHandler {
                     strArr[1] = metadata.queryName;
                     const newContent: string = strArr.join(divider);
                     itemPath.textContent = newContent;
-                    }    
                 }
             }
+        }
 
         const entries = parsedMetadata.getElementsByTagName(element.entry);
-            if (entries && entries.length) {
-                for (let i = 0; i < entries.length; i++) {
-                    const entry: Element = entries[i];
-                    const entryAttributes: NamedNodeMap = entry.attributes;
-                    const entryAttributesArr: Attr[] = [...entryAttributes]; 
-                    const entryProp: Attr | undefined = entryAttributesArr.find((prop) => {
-                    return prop?.name === elementAttributes.type});
-                    if (entryProp?.nodeValue == elementAttributes.relationshipInfo) {
-                        const newValue: string | undefined = entry.getAttribute(elementAttributes.value)?.replace(/Query1/g, metadata.queryName);
-                        if (newValue) {
-                            entry.setAttribute(elementAttributes.value, newValue);
-                        }
+        if (entries && entries.length) {
+            for (let i = 0; i < entries.length; i++) {
+                const entry: Element = entries[i];
+                const entryAttributes: NamedNodeMap = entry.attributes;
+                const entryAttributesArr: Attr[] = [...entryAttributes];
+                const entryProp: Attr | undefined = entryAttributesArr.find((prop) => {
+                    return prop?.name === elementAttributes.type;
+                });
+                if (entryProp?.nodeValue == elementAttributes.relationshipInfo) {
+                    const newValue: string | undefined = entry
+                        .getAttribute(elementAttributes.value)
+                        ?.replace(/Query1/g, metadata.queryName);
+                    if (newValue) {
+                        entry.setAttribute(elementAttributes.value, newValue);
                     }
-                    if (entryProp?.nodeValue == elementAttributes.resultType) {
-                        entry.setAttribute(elementAttributes.value, elementAttributesValues.tableResultType());
-                    }
+                }
+                if (entryProp?.nodeValue == elementAttributes.resultType) {
+                    entry.setAttribute(elementAttributes.value, elementAttributesValues.tableResultType());
+                }
 
-                    if (entryProp?.nodeValue == elementAttributes.fillColumnNames) {
-                        const oldValue: string | null = entry.getAttribute(elementAttributes.value);
-                        if (oldValue) {
-                            entry.setAttribute(elementAttributes.value, oldValue.replace(defaults.queryName, metadata.queryName));
-                        }    
+                if (entryProp?.nodeValue == elementAttributes.fillColumnNames) {
+                    const oldValue: string | null = entry.getAttribute(elementAttributes.value);
+                    if (oldValue) {
+                        entry.setAttribute(
+                            elementAttributes.value,
+                            oldValue.replace(defaults.queryName, metadata.queryName)
+                        );
                     }
+                }
 
-                    if (entryProp?.nodeValue == elementAttributes.fillTarget) {
-                        const oldValue: string | null = entry.getAttribute(elementAttributes.value);
-                        if (oldValue) {
-                            entry.setAttribute(elementAttributes.value, oldValue.replace(defaults.queryName, metadata.queryName));
-                        }    
+                if (entryProp?.nodeValue == elementAttributes.fillTarget) {
+                    const oldValue: string | null = entry.getAttribute(elementAttributes.value);
+                    if (oldValue) {
+                        entry.setAttribute(
+                            elementAttributes.value,
+                            oldValue.replace(defaults.queryName, metadata.queryName)
+                        );
                     }
+                }
 
-                    if (entryProp?.nodeValue == elementAttributes.fillLastUpdated) {
-                        const nowTime: string = new Date().toISOString();
-                        entry.setAttribute(elementAttributes.value, (elementAttributes.day + nowTime).replace(/Z/, '0000Z'));
-                    }   
+                if (entryProp?.nodeValue == elementAttributes.fillLastUpdated) {
+                    const nowTime: string = new Date().toISOString();
+                    entry.setAttribute(
+                        elementAttributes.value,
+                        (elementAttributes.day + nowTime).replace(/Z/, "0000Z")
+                    );
                 }
             }
+        }
 
         // Convert new metadataXml to Uint8Array
         const newMetadataString: string = serializer.serializeToString(parsedMetadata);
         const encoder: TextEncoder = new TextEncoder();
         const newMetadataXml: Uint8Array = encoder.encode(newMetadataString);
         const newMetadataXmlSize: Uint8Array = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
-        const newMetadataArray: Uint8Array = arrayUtils.concatArrays(metadataVersion, newMetadataXmlSize, newMetadataXml, endBuffer);
-        
+        const newMetadataArray: Uint8Array = arrayUtils.concatArrays(
+            metadataVersion,
+            newMetadataXmlSize,
+            newMetadataXml,
+            endBuffer
+        );
+
         return newMetadataArray;
     };
 }

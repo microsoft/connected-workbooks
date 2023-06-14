@@ -1,6 +1,6 @@
 import workbookTemplate from "../src/workbookTemplate";
 import { pqUtils } from "../src/utils";
-import { queryTableXmlPath, tableXmlPath, textResultType } from "../src/constants";
+import { queryTableXmlPath, tableXmlPath, textResultType } from "../src/utils/constants";
 import JSZip from "jszip";
 
 const getZip = async (template: string) =>
@@ -25,19 +25,18 @@ describe("Single blank table template tests", () => {
     test("DataMashup XML doesn't exists", async () => {
         try {
             await pqUtils.getDataMashupFile(defaultZipFile);
-        }
-        catch (error) {
-            expect(error);
+        } catch (error) {
+            expect(error).toBeTruthy();
         }
     });
 
     test("A single blank table exists", async () => {
         const tableXml: string | undefined = await defaultZipFile.file(tableXmlPath)?.async(textResultType);
-        expect(tableXml).toContain("name=\"Table1\" displayName=\"Table1\" ref=\"A1:A2\"");
+        expect(tableXml).toContain('name="Table1" displayName="Table1" ref="A1:A2"');
     });
 
     test("Does not contains query table", async () => {
         const queryTableXml: string | undefined = await defaultZipFile.file(queryTableXmlPath)?.async(textResultType);
-        expect(!queryTableXml);
+        expect(queryTableXml).toBeFalsy();
     });
 });

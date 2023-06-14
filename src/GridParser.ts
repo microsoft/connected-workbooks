@@ -1,5 +1,5 @@
-import { gridNotFoundErr, headerNotFoundErr, invalidDataTypeErr, invalidValueInColumnErr } from "./constants";
-import { ColumnMetadata, DataTypes, Grid, TableData, TableDataParser} from "./types";
+import { gridNotFoundErr, headerNotFoundErr, invalidDataTypeErr, invalidValueInColumnErr } from "./utils/constants";
+import { ColumnMetadata, DataTypes, Grid, TableData, TableDataParser } from "./types";
 
 export default class GridParser implements TableDataParser {
     public parseToTableData(initialDataGrid: Grid): TableData | undefined {
@@ -13,16 +13,16 @@ export default class GridParser implements TableDataParser {
         return { columnMetadata: initialDataGrid.header, rows: rows };
     }
 
-    private parseGridRows(initialDataGrid: Grid, columnMetadata: ColumnMetadata[]) : string[][] {
+    private parseGridRows(initialDataGrid: Grid, columnMetadata: ColumnMetadata[]): string[][] {
         const gridData: (string | number | boolean)[][] = initialDataGrid.gridData;
         if (!gridData) {
             throw new Error(gridNotFoundErr);
         }
-        
+
         const rows: string[][] = [];
         for (const rowData of gridData) {
             const row: string[] = [];
-            var colIndex: number = 0;
+            let colIndex = 0;
             for (const prop in rowData) {
                 const dataType: DataTypes = columnMetadata[colIndex].type;
                 const cellValue: string | number | boolean = rowData[prop];
@@ -30,8 +30,7 @@ export default class GridParser implements TableDataParser {
                     if (isNaN(Number(cellValue))) {
                         throw new Error(invalidValueInColumnErr);
                     }
-                }
-                else if (dataType == DataTypes.boolean) {
+                } else if (dataType == DataTypes.boolean) {
                     if (cellValue != "1" && cellValue != "0") {
                         throw new Error(invalidValueInColumnErr);
                     }
@@ -51,12 +50,11 @@ export default class GridParser implements TableDataParser {
         if (!headerData) {
             throw new Error(headerNotFoundErr);
         }
-        
+
         for (const prop in headerData) {
-            if (!(headerData[prop].type in DataTypes)) { 
+            if (!(headerData[prop].type in DataTypes)) {
                 throw new Error(invalidDataTypeErr);
             }
         }
     }
 }
-

@@ -2,7 +2,17 @@
 // Licensed under the MIT license.
 
 import JSZip from "jszip";
-import { dataTypeKind, docPropsCoreXmlPath, docPropsRootElement, element, elementAttributes, falseStr, textResultType, trueStr, xmlTextResultType } from "../constants";
+import {
+    dataTypeKind,
+    docPropsCoreXmlPath,
+    docPropsRootElement,
+    element,
+    elementAttributes,
+    falseStr,
+    textResultType,
+    trueStr,
+    xmlTextResultType,
+} from "./constants";
 import { DataTypes } from "../types";
 
 const createOrUpdateProperty = (doc: Document, parent: Element, property: string, value?: string | null): void => {
@@ -60,40 +70,47 @@ const createCellElement = (doc: Document, colIndex: number, rowIndex: number, da
     const cellData: Element = doc.createElementNS(doc.documentElement.namespaceURI, element.cellValue);
     updateCellData(dataType, data, cell, cellData);
     cell.appendChild(cellData);
-    
+
     return cell;
 };
 
 const updateCellData = (dataType: DataTypes, data: string, cell: Element, cellData: Element) => {
-    switch(resolveType(dataType, data)) {
-    case DataTypes.string:
-        cell.setAttribute(element.text, dataTypeKind.string);
-        break;
-    case DataTypes.number:
-        cell.setAttribute(element.text, dataTypeKind.number);
-        break;
-    case DataTypes.boolean:
-        cell.setAttribute(element.text, dataTypeKind.boolean);
-        break;
+    switch (resolveType(dataType, data)) {
+        case DataTypes.string:
+            cell.setAttribute(element.text, dataTypeKind.string);
+            break;
+        case DataTypes.number:
+            cell.setAttribute(element.text, dataTypeKind.number);
+            break;
+        case DataTypes.boolean:
+            cell.setAttribute(element.text, dataTypeKind.boolean);
+            break;
     }
     cellData.textContent = data;
 };
 
-const resolveType = (originalDataType: DataTypes, originalData: string | number | boolean) : DataTypes => {
-    if (originalDataType !== DataTypes.autodetect)
-    {
+const resolveType = (originalDataType: DataTypes, originalData: string | number | boolean): DataTypes => {
+    if (originalDataType !== DataTypes.autodetect) {
         return originalDataType;
     }
-    
-    const data: string = originalData as string
-    let dataType : DataTypes = isNaN(Number(data)) ? DataTypes.string : DataTypes.number;
+
+    const data: string = originalData as string;
+    let dataType: DataTypes = isNaN(Number(data)) ? DataTypes.string : DataTypes.number;
     if (dataType == DataTypes.string) {
-       if (data.toLowerCase().trim() == trueStr || data.toLowerCase().trim() == falseStr) {
+        if (data.toLowerCase().trim() == trueStr || data.toLowerCase().trim() == falseStr) {
             dataType = DataTypes.boolean;
         }
     }
 
     return dataType;
-}
+};
 
-export default { createOrUpdateProperty, getDocPropsProperties, getCellReferenceRelative, getCellReferenceAbsolute, createCell: createCellElement, getTableReference, resolveType };
+export default {
+    createOrUpdateProperty,
+    getDocPropsProperties,
+    getCellReferenceRelative,
+    getCellReferenceAbsolute,
+    createCell: createCellElement,
+    getTableReference,
+    resolveType,
+};
