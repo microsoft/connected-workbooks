@@ -105,7 +105,7 @@ const [templateFile, setTemplateFile] = useState<File | null>(null);
 }}/>
 ```
 ### API
-`connected-workbook` exposes __WorkbookManager__, which can be used to generate a workbook with a single query or containing table data.
+`connected-workbook` exposes __WorkbookManager__, which generates a workbook with a single loaded query or table data.
 
 
 #### async `generateSingleQueryWorkbook`: `Promise<Blob>`
