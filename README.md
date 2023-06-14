@@ -29,19 +29,15 @@ import { workbookManager } from '@microsoft/connected-workbooks';
 const blob = await workbookManager.generateTableWorkbookFromHtml(document.querySelector('table') as HTMLTableElement);    
 workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
 ```
+
 ### 2. Export a table from raw data:
-```typescript
+```
 import { workbookManager } from '@microsoft/connected-workbooks';
 
 const grid = {
-  "header": [
-      { "name": "Product", "type": DataTypes.autodetect },
-      { "name": "Price", "type": DataTypes.autodetect },
-      { "name": "InStock", "type": DataTypes.autodetect },
-      { "name": "Category", "type": DataTypes.autodetect },
-      { "name": "Date", "type": DataTypes.autodetect }
-  ],
+  "promoteHeaders": true,
   "gridData": [
+      ["Product", "Price", "InStock", "Category", "Date"],
       ["Widget A", 19.99, true, "Electronics", "10/26/2024"],
       ["Gizmo B", 9.99, true, "Accessories", "10/26/2024"],
       ["Bubala", 14.99, false, "Accessories", "10/22/2023"],
@@ -60,9 +56,9 @@ workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
       document.querySelector('table') as HTMLTableElement, 
       {createdBy: 'John Doe', lastModifiedBy: 'Jane Doe', description: 'This is a sample table'});
     
-      workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
+    workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
 ```
-<img width="450" alt="image" src="https://github.com/microsoft/connected-workbooks/assets/7674478/c267c9eb-6367-419d-832d-5a835c7683f9">
+![image](https://github.com/microsoft/connected-workbooks/assets/7674478/c267c9eb-6367-419d-832d-5a835c7683f9)
 
 ### 4. Export a Power Query connected workbook:
 ```typescript
@@ -75,9 +71,9 @@ const blob = await workbookManager.generateSingleQueryWorkbook({
                     Source',
   refreshOnOpen: true});
 workbookManager.downloadWorkbook(blob, "MyConnectedWorkbook.xlsx");
-});
 ```
 ![image](https://github.com/microsoft/connected-workbooks/assets/7674478/57bd986c-6309-4963-8d86-911ccf496c3f)
+
 (after refreshing on open)
 ### Advanced Usage - bring your own template:
 
@@ -90,7 +86,6 @@ const blob = await workbookManager.generateSingleQueryWorkbook(
   templateFile);
 workbookManager.downloadWorkbook(blob, "MyBrandedWorkbook.xlsx");
 ```
-
 ![image](https://github.com/microsoft/connected-workbooks/assets/7674478/e5377946-4348-4229-9b88-1910ff7ee025)
 
 Template requirements:

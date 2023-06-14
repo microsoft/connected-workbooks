@@ -64,18 +64,18 @@ const getTableReference = (numberOfCols: number, numberOfRows: number) => {
     return `A1:${getCellReferenceRelative(numberOfCols, numberOfRows)}`;
 };
 
-const createCellElement = (doc: Document, colIndex: number, rowIndex: number, dataType: DataTypes, data: string) => {
+const createCellElement = (doc: Document, colIndex: number, rowIndex: number, data: string) => {
     const cell: Element = doc.createElementNS(doc.documentElement.namespaceURI, element.kindCell);
     cell.setAttribute(elementAttributes.row, getCellReferenceRelative(colIndex, rowIndex + 1));
     const cellData: Element = doc.createElementNS(doc.documentElement.namespaceURI, element.cellValue);
-    updateCellData(dataType, data, cell, cellData);
+    updateCellData(data, cell, cellData);
     cell.appendChild(cellData);
 
     return cell;
 };
 
-const updateCellData = (dataType: DataTypes, data: string, cell: Element, cellData: Element) => {
-    switch (resolveType(dataType, data)) {
+const updateCellData = (data: string, cell: Element, cellData: Element) => {
+    switch (resolveType(data)) {
         case DataTypes.string:
             cell.setAttribute(element.text, dataTypeKind.string);
             break;
@@ -89,11 +89,7 @@ const updateCellData = (dataType: DataTypes, data: string, cell: Element, cellDa
     cellData.textContent = data;
 };
 
-const resolveType = (originalDataType: DataTypes, originalData: string | number | boolean): DataTypes => {
-    if (originalDataType !== DataTypes.autodetect) {
-        return originalDataType;
-    }
-
+const resolveType = (originalData: string | number | boolean): DataTypes => {
     const data: string = originalData as string;
     let dataType: DataTypes = isNaN(Number(data)) ? DataTypes.string : DataTypes.number;
     if (dataType == DataTypes.string) {

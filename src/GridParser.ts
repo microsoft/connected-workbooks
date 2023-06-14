@@ -1,5 +1,5 @@
-import { gridNotFoundErr, headerNotFoundErr, invalidDataTypeErr, invalidValueInColumnErr } from "./utils/constants";
-import { ColumnMetadata, DataTypes, Grid, TableData, TableDataParser } from "./types";
+import { gridNotFoundErr } from "./utils/constants";
+import { Grid, TableData, TableDataParser } from "./types";
 
 export default class GridParser implements TableDataParser {
     public parseToTableData(initialDataGrid: Grid): TableData | undefined {
@@ -7,54 +7,54 @@ export default class GridParser implements TableDataParser {
             return undefined;
         }
 
-        this.validateGridHeader(initialDataGrid);
-        const rows: string[][] = this.parseGridRows(initialDataGrid, initialDataGrid.header);
+        const columnNames: string[] = this.generateColumnNames(initialDataGrid);
+        const rows: string[][] = this.parseGridRows(initialDataGrid);
 
-        return { columnMetadata: initialDataGrid.header, rows: rows };
+        return { columnNames: columnNames, rows: rows };
     }
 
-    private parseGridRows(initialDataGrid: Grid, columnMetadata: ColumnMetadata[]): string[][] {
+    private parseGridRows(initialDataGrid: Grid): string[][] {
         const gridData: (string | number | boolean)[][] = initialDataGrid.gridData;
         if (!gridData) {
             throw new Error(gridNotFoundErr);
         }
 
         const rows: string[][] = [];
-        for (const rowData of gridData) {
+        if (!initialDataGrid.promoteHeaders) {
             const row: string[] = [];
-            let colIndex = 0;
-            for (const prop in rowData) {
-                const dataType: DataTypes = columnMetadata[colIndex].type;
-                const cellValue: string | number | boolean = rowData[prop];
-                if (dataType == DataTypes.number) {
-                    if (isNaN(Number(cellValue))) {
-                        throw new Error(invalidValueInColumnErr);
-                    }
-                } else if (dataType == DataTypes.boolean) {
-                    if (cellValue != "1" && cellValue != "0") {
-                        throw new Error(invalidValueInColumnErr);
-                    }
-                }
-
-                row.push(rowData[prop].toString());
-                colIndex++;
+            for (const prop in gridData[0]) {
+                const cellValue: string | number | boolean =  gridData[0][prop];
+                row.push(cellValue.toString());
             }
+            
+            rows.push(row);
+        }
+
+        for (let i = 1; i < gridData.length; i++) {
+            let rowData: (string | number | boolean)[] = gridData[i];
+            const row: string[] = [];
+            for (const prop in rowData) {
+                const cellValue: string | number | boolean = rowData[prop];
+                row.push(cellValue.toString());
+            }
+            
             rows.push(row);
         }
 
         return rows;
     }
 
-    private validateGridHeader(data: Grid) {
-        const headerData: ColumnMetadata[] = data.header;
-        if (!headerData) {
-            throw new Error(headerNotFoundErr);
+    private generateColumnNames(initialDataGrid: Grid): string[] {  
+        if (initialDataGrid.promoteHeaders) {
+            return initialDataGrid.gridData[0].map((columnName) => (columnName.toString()));
         }
-
-        for (const prop in headerData) {
-            if (!(headerData[prop].type in DataTypes)) {
-                throw new Error(invalidDataTypeErr);
-            }
+        
+        let columnNames: string[] = [];
+        for (let i = 0; i < initialDataGrid.gridData[0].length; i++) {
+            columnNames.push(`Column ${i + 1}`);
         }
+        
+        return columnNames;
     }
+
 }
