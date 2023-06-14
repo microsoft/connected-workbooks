@@ -104,6 +104,66 @@ const [templateFile, setTemplateFile] = useState<File | null>(null);
   setTemplateFile(e!.target!.files!.item(0));
 }}/>
 ```
+### API
+`connected-workbook` exposes __WorkbookManager__, which can be used to generate a workbook with a single query or containing table data.
+
+
+#### async `generateSingleQueryWorkbook`: `Promise<Blob>`
+
+|param   | type   | required   | description   |
+|---      |---    |---          |---            |
+|query   | [QueryInfo](#queryinfo)   | __required__  | Power Query mashup  | 
+| initialDataGrid  | [Grid](#grid)   | optional   | Initial grid data  | 
+| fileConfigs  | [FileConfigs](#fileconfigs)   | optional  | Custom file configurations |
+
+#### async `generateTableWorkbookFromHtml`: `Promise<Blob>`
+
+|param   | type   | required   | description   |
+|---      |---    |---          |---            |
+| htmlTable  | HTMLTableElement   | __required__   | Initial data loaded to workbook  | 
+| docProps  | [DocProps](#docprops)   | optional  | Custom workbook properties |
+
+#### async `generateTableWorkbookFromGrid`: `Promise<Blob>`
+
+|param   | type   | required   | description   |
+|---      |---    |---          |---            |
+| initialDataGrid  | [Grid](#grid)   | __required__   | Initial data loaded to workbook  | 
+| docProps  | [DocProps](#docprops)   | optional  | Custom workbook properties |
+</br>
+
+### Types
+
+### QueryInfo
+| param | type | required | description |
+|---|---|---|---|
+| queryMashup | string | __required__ | Mashup string
+| refreshOnOpen | boolean | __required__ | Should workbook data refresh upon open
+| queryName | string | optional | Query name, defaults to "Query1"
+
+### Grid
+| param | type | required | description |
+|---|---|---|---|
+| gridData | string[][] | __required__ | Grid data
+| promoteHeaders | boolean | optional | Should first row of gridData be used as the header, header defaults to "Column1", "Column2"...
+
+
+### FileConfigs
+| param | type | required | description |
+|---|---|---|---|
+| templateFile | File | optional   | Custom Excel workbook  |
+| docProps  | [DocProps](#docprops)   | optional  | Custom workbook properties |
+
+### DocProps
+| param | type | required | 
+|---|---|---|
+| title | string | optional 
+| subject | string | optional 
+| keywords | string | optional 
+| createdBy | string | optional 
+| description | string | optional 
+| lastModifiedBy | string | optional 
+| category | string | optional 
+| revision | number | optional 
 
 ## Contributing
 
