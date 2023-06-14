@@ -33,11 +33,7 @@ Connected Workbooks allows you to avoid "data dumps" in CSV form, providing a ri
 |<img src="https://github.com/microsoft/connected-workbooks/assets/7674478/b7a0c989-7ba4-4da8-851e-04650d8b600e" alt="Kusto" width="32"/>| <img src="https://github.com/microsoft/connected-workbooks/assets/7674478/76d22d23-5f2b-465f-992d-f1c71396904c" alt="LogAnalytics" width="32"/>	| <img src="https://github.com/microsoft/connected-workbooks/assets/7674478/436b4f53-bf25-4c45-aae5-55ee1b1feafc" alt="Datamart" width="32"/>	| <img src="https://github.com/microsoft/connected-workbooks/assets/7674478/3965f684-b461-42fe-9c62-e3059c0286eb" alt="VivaSales" width="32"/>	|
 |---------------------------------	|-------------------	|--------------	|----------------	|
 | **Azure Data Explorer** 	| **Log Analytics** 	| **Datamart** 	| **Viva Sales** 	|
-|<img src="https://github.com/microsoft/connected-workbooks/assets/7674478/b7a0c989-7ba4-4da8-851e-04650d8b600e" alt="Kusto" width="32"/>| <img src="https://github.com/microsoft/connected-workbooks/assets/7674478/76d22d23-5f2b-465f-992d-f1c71396904c" alt="LogAnalytics" width="32"/>	| <img src="https://github.com/microsoft/connected-workbooks/assets/7674478/436b4f53-bf25-4c45-aae5-55ee1b1feafc" alt="Datamart" width="32"/>	| <img src="https://github.com/microsoft/connected-workbooks/assets/7674478/3965f684-b461-42fe-9c62-e3059c0286eb" alt="VivaSales" width="32"/>	|
-|---------------------------------	|-------------------	|--------------	|----------------	|
-| **Azure Data Explorer** 	| **Log Analytics** 	| **Datamart** 	| **Viva Sales** 	|
 
-## How do I use it? here are some examples:
 ## How do I use it? here are some examples:
 
 ### 1. Export a table directly from an Html page:
@@ -85,7 +81,6 @@ workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
 ![image](https://github.com/microsoft/connected-workbooks/assets/7674478/c267c9eb-6367-419d-832d-5a835c7683f9)
 
 ### 4. Export a Power Query connected workbook:
-### 4. Export a Power Query connected workbook:
 ```typescript
 import { workbookManager } from '@microsoft/connected-workbooks';
 
@@ -110,11 +105,8 @@ workbookManager.downloadWorkbook(blob, "MyConnectedWorkbook.xlsx");
 ```
 ![image](https://github.com/microsoft/connected-workbooks/assets/7674478/57bd986c-6309-4963-8d86-911ccf496c3f)
 (after refreshing on open)
-![image](https://github.com/microsoft/connected-workbooks/assets/7674478/57bd986c-6309-4963-8d86-911ccf496c3f)
-(after refreshing on open)
 ### Advanced Usage - bring your own template:
 
-You can use the library with your own workbook as a template!
 You can use the library with your own workbook as a template!
 
 ```typescript
