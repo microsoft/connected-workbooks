@@ -20,7 +20,7 @@ export default class GridParser implements TableDataParser {
         }
 
         const rows: string[][] = [];
-        if (initialDataGrid.promoteHeaders) {
+        if (!initialDataGrid.promoteHeaders) {
             const row: string[] = [];
             for (const prop in gridData[0]) {
                 const cellValue: string | number | boolean =  gridData[0][prop];
@@ -45,7 +45,7 @@ export default class GridParser implements TableDataParser {
     }
 
     private generateColumnNames(initialDataGrid: Grid): string[] {  
-        if (!initialDataGrid.promoteHeaders) {
+        if (initialDataGrid.promoteHeaders) {
             return initialDataGrid.gridData[0].map((columnName) => (columnName.toString()));
         }
         
