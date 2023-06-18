@@ -105,27 +105,35 @@ const [templateFile, setTemplateFile] = useState<File | null>(null);
 }}/>
 ```
 ### API
-`connected-workbook` exposes __WorkbookManager__, which generates a workbook with a single loaded query or table data.
+The library exposes a workbookManager, which generates a workbook via several APIs:
 
-
-#### async `generateSingleQueryWorkbook`: `Promise<Blob>`
-
-|param   | type   | required   | description   |
+#### 1. Generate a Power Query connected workbook
+```typescript
+ async function `generateSingleQueryWorkbook`: `Promise<Blob>`
+```
+ 
+|Parameter   | Type   | Required   | Description   |
 |---      |---    |---          |---            |
 |query   | [QueryInfo](#queryinfo)   | __required__  | Power Query mashup  | 
 | initialDataGrid  | [Grid](#grid)   | optional   | Initial grid data  | 
 | fileConfigs  | [FileConfigs](#fileconfigs)   | optional  | Custom file configurations |
 
-#### async `generateTableWorkbookFromHtml`: `Promise<Blob>`
+#### 2. Generate a table workbook from a Html page
+```typescript
+async function `generateTableWorkbookFromHtml`: `Promise<Blob>`
+```
 
-|param   | type   | required   | description   |
+|Parameter   | Type   | Required   | Description   |
 |---      |---    |---          |---            |
 | htmlTable  | HTMLTableElement   | __required__   | Initial data loaded to workbook  | 
 | docProps  | [DocProps](#docprops)   | optional  | Custom workbook properties |
 
-#### async `generateTableWorkbookFromGrid`: `Promise<Blob>`
+#### 3. Generate a table workbook with raw data
+```typescript
+async function `generateTableWorkbookFromGrid`: `Promise<Blob>`
+```
 
-|param   | type   | required   | description   |
+|Parameter   | Type   | Required   | Description   |
 |---      |---    |---          |---            |
 | initialDataGrid  | [Grid](#grid)   | __required__   | Initial data loaded to workbook  | 
 | docProps  | [DocProps](#docprops)   | optional  | Custom workbook properties |
@@ -133,28 +141,28 @@ const [templateFile, setTemplateFile] = useState<File | null>(null);
 
 ### Types
 
-### QueryInfo
-| param | type | required | description |
+#### QueryInfo
+|Parameter   | Type   | Required   | Description   |
 |---|---|---|---|
 | queryMashup | string | __required__ | Mashup string
 | refreshOnOpen | boolean | __required__ | Should workbook data refresh upon open
 | queryName | string | optional | Query name, defaults to "Query1"
 
-### Grid
-| param | type | required | description |
+#### Grid
+|Parameter   | Type   | Required   | Description   |
 |---|---|---|---|
 | gridData | string[][] | __required__ | Grid data
-| promoteHeaders | boolean | optional | Should first row of gridData be used as the header, header defaults to "Column1", "Column2"...
+| promoteHeaders | boolean | optional | Should first row of gridData be used as the header, defaults to "Column1", "Column2"...
 
 
-### FileConfigs
-| param | type | required | description |
+#### FileConfigs
+|Parameter   | Type   | Required   | Description   |
 |---|---|---|---|
 | templateFile | File | optional   | Custom Excel workbook  |
 | docProps  | [DocProps](#docprops)   | optional  | Custom workbook properties |
 
-### DocProps
-| param | type | required | 
+#### DocProps
+|Parameter   | Type   | Required  
 |---|---|---|
 | title | string | optional 
 | subject | string | optional 
