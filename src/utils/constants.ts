@@ -127,6 +127,7 @@ export const elementAttributesValues = {
 
 export const defaults = {
     queryName: "Query1",
+    sheetName: "Sheet1"
 };
 
 export const URLS = {

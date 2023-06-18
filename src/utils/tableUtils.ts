@@ -114,15 +114,13 @@ const updateTablesInitialData = async (
 const updateWorkbookInitialData = async (
     workbookXmlString: string,
     tableData: TableData,
-    queryName?: string
 ): Promise<string> => {
     const newParser: DOMParser = new DOMParser();
     const newSerializer: XMLSerializer = new XMLSerializer();
     const workbookDoc: Document = newParser.parseFromString(workbookXmlString, xmlTextResultType);
     const definedName: Element = workbookDoc.getElementsByTagName(element.definedName)[0];
-    const prefix = queryName === undefined ? defaults.queryName : queryName;
     definedName.textContent =
-        prefix +
+        defaults.sheetName +
         `!$A$1:${documentUtils.getCellReferenceAbsolute(
             tableData.columnNames.length - 1,
             tableData.rows.length + 1
