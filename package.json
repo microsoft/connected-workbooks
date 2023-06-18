@@ -1,6 +1,6 @@
 {
   "name": "@microsoft/connected-workbooks",
-  "version": "2.1.16-beta",
+  "version": "2.1.17-beta",
   "description": "Use this library to generate Excel workbooks with a custom Mashup Query loaded to the grid, to be used by applications for 'Export to Excel' features to allow refreshable workbooks",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -8,7 +8,8 @@
     "/dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "webpack --mode=production --node-env=production",
+    "build-development": "webpack --mode=development --node-env=development",
     "test": "jest",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" --config .prettierrc"
   },
@@ -30,7 +31,6 @@
   "homepage": "https://github.com/microsoft/connected-workbooks#readme",
   "dependencies": {
     "base64-js": "^1.5.1",
-    "iconv-lite": "^0.6.2",
     "jszip": "^3.5.0"
   },
   "devDependencies": {
@@ -41,8 +41,10 @@
     "@types/jest": "^26.0.24",
     "@types/jszip": "^3.4.1",
     "@types/uuid": "^9.0.2",
+    "@types/webpack-bundle-analyzer": "^4.6.0",
     "@typescript-eslint/eslint-plugin": "^4.28.2",
     "@typescript-eslint/parser": "^4.28.2",
+    "@webpack-cli/generators": "^3.0.7",
     "babel-jest": "^27.0.6",
     "eslint": "^7.30.0",
     "eslint-config-prettier": "^8.3.0",
@@ -51,7 +53,12 @@
     "jest": "^27.0.6",
     "nyc": "^15.1.0",
     "prettier": "2.3.2",
+    "terser-webpack-plugin": "^5.3.9",
+    "ts-loader": "^9.4.3",
     "ts-node": "^9.0.0",
-    "typescript": "^4.0.5"
+    "typescript": "^4.9.5",
+    "webpack": "^5.86.0",
+    "webpack-bundle-analyzer": "^4.9.0",
+    "webpack-cli": "^5.1.4"
   }
 }
