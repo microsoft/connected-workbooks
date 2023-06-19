@@ -3,7 +3,7 @@
 
 import JSZip from "jszip";
 import { pqUtils, xmlPartsUtils } from "./utils";
-import WorkbookTemplate from "./workbookTemplate";
+import { SIMPLE_BLANK_TABLE_TEMPLATE, SIMPLE_QUERY_WORKBOOK_TEMPLATE } from "./workbookTemplate";
 import {
     defaults,
     emptyQueryMashupErr,
@@ -39,7 +39,7 @@ const generateSingleQueryWorkbook = async (
 
     const zip: JSZip =
         templateFile === undefined
-            ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
+            ? await JSZip.loadAsync(SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
             : await JSZip.loadAsync(templateFile);
 
     const tableData: TableData | undefined = await parseInitialDataGrid(initialDataGrid);
@@ -53,7 +53,7 @@ const generateTableWorkbookFromHtml = async (htmlTable: HTMLTableElement, docPro
 };
 
 const generateTableWorkbookFromGrid = async (grid: Grid, docProps?: DocProps): Promise<Blob> => {
-    const zip: JSZip = await JSZip.loadAsync(WorkbookTemplate.SIMPLE_BLANK_TABLE_TEMPLATE, { base64: true });
+    const zip: JSZip = await JSZip.loadAsync(SIMPLE_BLANK_TABLE_TEMPLATE, { base64: true });
     const tableData: TableData | undefined = await parseInitialDataGrid(grid);
     if (tableData === undefined) {
         throw new Error(tableNotFoundErr);
