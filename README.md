@@ -105,6 +105,74 @@ const [templateFile, setTemplateFile] = useState<File | null>(null);
   setTemplateFile(e!.target!.files!.item(0));
 }}/>
 ```
+### API
+The library exposes a workbookManager, which generates a workbook via several APIs:
+
+#### 1. Generate a Power Query connected workbook
+```typescript
+ async function `generateSingleQueryWorkbook`: `Promise<Blob>`
+```
+ 
+|Parameter   | Type   | Required   | Description   |
+|---      |---    |---          |---            |
+|query   | [QueryInfo](#queryinfo)   | __required__  | Power Query mashup  | 
+| initialDataGrid  | [Grid](#grid)   | optional   | Initial grid data  | 
+| fileConfigs  | [FileConfigs](#fileconfigs)   | optional  | Custom file configurations |
+
+#### 2. Generate a table workbook from a Html page
+```typescript
+async function `generateTableWorkbookFromHtml`: `Promise<Blob>`
+```
+
+|Parameter   | Type   | Required   | Description   |
+|---      |---    |---          |---            |
+| htmlTable  | HTMLTableElement   | __required__   | Initial data loaded to workbook  | 
+| docProps  | [DocProps](#docprops)   | optional  | Custom workbook properties |
+
+#### 3. Generate a table workbook with raw data
+```typescript
+async function `generateTableWorkbookFromGrid`: `Promise<Blob>`
+```
+
+|Parameter   | Type   | Required   | Description   |
+|---      |---    |---          |---            |
+| initialDataGrid  | [Grid](#grid)   | __required__   | Initial data loaded to workbook  | 
+| docProps  | [DocProps](#docprops)   | optional  | Custom workbook properties |
+</br>
+
+### Types
+
+#### QueryInfo
+|Parameter   | Type   | Required   | Description   |
+|---|---|---|---|
+| queryMashup | string | __required__ | Mashup string
+| refreshOnOpen | boolean | __required__ | Should workbook data refresh upon open
+| queryName | string | optional | Query name, defaults to "Query1"
+
+#### Grid
+|Parameter   | Type   | Required   | Description   |
+|---|---|---|---|
+| gridData | string[][] | __required__ | Grid data
+| promoteHeaders | boolean | optional | Should first row of gridData be used as the header, defaults to false - generating "Column1", "Column2"...
+
+
+#### FileConfigs
+|Parameter   | Type   | Required   | Description   |
+|---|---|---|---|
+| templateFile | File | optional   | Custom Excel workbook  |
+| docProps  | [DocProps](#docprops)   | optional  | Custom workbook properties |
+
+#### DocProps
+|Parameter   | Type   | Required  
+|---|---|---|
+| title | string | optional 
+| subject | string | optional 
+| keywords | string | optional 
+| createdBy | string | optional 
+| description | string | optional 
+| lastModifiedBy | string | optional 
+| category | string | optional 
+| revision | number | optional 
 
 ## Contributing
 
