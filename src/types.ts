@@ -38,10 +38,6 @@ export interface FileConfigs {
     docProps?: DocProps;
 }
 
-export interface TableDataParser {
-    parseToTableData: (grid: any) => TableData | undefined;
-}
-
 export enum DataTypes {
     null = 0,
     string = 1,

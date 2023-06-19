@@ -12,10 +12,10 @@ import {
     templateWithInitialDataErr,
     tableNotFoundErr,
 } from "./utils/constants";
-import { DocProps, QueryInfo, TableData, Grid, TableDataParser, FileConfigs } from "./types";
-import TableDataParserFactory from "./TableDataParserFactory";
+import { DocProps, QueryInfo, TableData, Grid, FileConfigs } from "./types";
 import { generateSingleQueryMashup } from "./generators";
 import { extractTableValues } from "./utils/htmlUtils";
+import { parseToTableData } from "./GridParser";
 
 const generateSingleQueryWorkbook = async (
     query: QueryInfo,
@@ -72,8 +72,7 @@ const parseInitialDataGrid = async (grid?: Grid): Promise<TableData | undefined>
         return undefined;
     }
 
-    const parser: TableDataParser = TableDataParserFactory.createParser(grid);
-    const tableData: TableData | undefined = parser.parseToTableData(grid);
+    const tableData: TableData | undefined = parseToTableData(grid);
 
     return tableData;
 };
