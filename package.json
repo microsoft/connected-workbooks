@@ -1,15 +1,19 @@
 {
   "name": "@microsoft/connected-workbooks",
-  "version": "2.1.17-beta",
-  "description": "Use this library to generate Excel workbooks with a custom Mashup Query loaded to the grid, to be used by applications for 'Export to Excel' features to allow refreshable workbooks",
+  "version": "2.1.18-beta",
+  "description": "Microsoft backed, Excel advanced xlsx workbook generation JavaScript library",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "/dist"
+    "dist/**/*.js",
+    "dist/workbookManager.d.ts",
+    "dist/types.d.ts",
+    "dist/index.d.ts"
   ],
   "scripts": {
-    "build": "webpack --mode=production --node-env=production",
-    "build-development": "webpack --mode=development --node-env=development",
+    "build": "tsc",
+    "build-webpack-prod": "webpack --mode=production --node-env=production",
+    "build-webpack-dev": "webpack --mode=development --node-env=development",
     "test": "jest",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" --config .prettierrc"
   },
@@ -20,8 +24,11 @@
   "keywords": [
     "Power Query",
     "Excel",
+    "Office",
     "Workbook",
-    "Refresh"
+    "Refresh",
+    "Table",
+    "xlsx"
   ],
   "author": "Microsoft",
   "license": "MIT",
