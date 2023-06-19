@@ -49,12 +49,12 @@ const generateSingleQueryWorkbook = async (
 
 const generateTableWorkbookFromHtml = async (htmlTable: HTMLTableElement, docProps?: DocProps): Promise<Blob> => {
     const gridData = extractTableValues(htmlTable);
-    return await generateTableWorkbookFromGrid({ gridData: gridData, promoteHeaders: false }, docProps);
+    return await generateTableWorkbookFromGrid({ data: gridData, promoteHeaders: false }, docProps);
 };
 
-const generateTableWorkbookFromGrid = async (initialDataGrid: Grid, docProps?: DocProps): Promise<Blob> => {
+const generateTableWorkbookFromGrid = async (grid: Grid, docProps?: DocProps): Promise<Blob> => {
     const zip: JSZip = await JSZip.loadAsync(WorkbookTemplate.SIMPLE_BLANK_TABLE_TEMPLATE, { base64: true });
-    const tableData: TableData | undefined = await parseInitialDataGrid(initialDataGrid);
+    const tableData: TableData | undefined = await parseInitialDataGrid(grid);
     if (tableData === undefined) {
         throw new Error(tableNotFoundErr);
     }
@@ -67,13 +67,13 @@ const generateTableWorkbookFromGrid = async (initialDataGrid: Grid, docProps?: D
     });
 };
 
-const parseInitialDataGrid = async (initialDataGrid?: Grid): Promise<TableData | undefined> => {
-    if (!initialDataGrid) {
+const parseInitialDataGrid = async (grid?: Grid): Promise<TableData | undefined> => {
+    if (!grid) {
         return undefined;
     }
 
-    const parser: TableDataParser = TableDataParserFactory.createParser(initialDataGrid);
-    const tableData: TableData | undefined = parser.parseToTableData(initialDataGrid);
+    const parser: TableDataParser = TableDataParserFactory.createParser(grid);
+    const tableData: TableData | undefined = parser.parseToTableData(grid);
 
     return tableData;
 };

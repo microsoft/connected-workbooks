@@ -29,7 +29,7 @@ export interface TableData {
 }
 
 export interface Grid {
-    gridData: (string|number|boolean)[][];
+    data: (string | number | boolean)[][];
     promoteHeaders?: boolean;
 }
 
