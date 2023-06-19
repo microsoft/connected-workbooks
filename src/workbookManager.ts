@@ -49,7 +49,7 @@ const generateSingleQueryWorkbook = async (
 
 const generateTableWorkbookFromHtml = async (htmlTable: HTMLTableElement, docProps?: DocProps): Promise<Blob> => {
     const gridData = extractTableValues(htmlTable);
-    return await generateTableWorkbookFromGrid({ gridData: gridData, promoteHeaders: false }, docProps);
+    return await generateTableWorkbookFromGrid({ gridData: gridData, promoteHeaders: true }, docProps);
 };
 
 const generateTableWorkbookFromGrid = async (initialDataGrid: Grid, docProps?: DocProps): Promise<Blob> => {
