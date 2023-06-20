@@ -36,7 +36,7 @@ import { workbookManager } from '@microsoft/connected-workbooks';
 
 const grid = {
   "promoteHeaders": true,
-  "gridData": [
+  "data": [
       ["Product", "Price", "InStock", "Category", "Date"],
       ["Widget A", 19.99, true, "Electronics", "10/26/2024"],
       ["Gizmo B", 9.99, true, "Accessories", "10/26/2024"],
@@ -82,7 +82,7 @@ You can use the library with your own workbook as a template!
 ```typescript
 const blob = await workbookManager.generateSingleQueryWorkbook(
   { queryMashup: query, refreshOnOpen: true },
-  undefined /* optional gridData */,
+  undefined /* optional Grid */,
   templateFile);
 workbookManager.downloadWorkbook(blob, "MyBrandedWorkbook.xlsx");
 ```
@@ -116,7 +116,7 @@ The library exposes a workbookManager, which generates a workbook via several AP
 |Parameter   | Type   | Required   | Description   |
 |---      |---    |---          |---            |
 |query   | [QueryInfo](#queryinfo)   | __required__  | Power Query mashup  | 
-| initialDataGrid  | [Grid](#grid)   | optional   | Initial grid data  | 
+| grid  | [Grid](#grid)   | optional   | Initial grid data  | 
 | fileConfigs  | [FileConfigs](#fileconfigs)   | optional  | Custom file configurations |
 
 #### 2. Generate a table workbook from a Html page
@@ -136,7 +136,7 @@ async function `generateTableWorkbookFromGrid`: `Promise<Blob>`
 
 |Parameter   | Type   | Required   | Description   |
 |---      |---    |---          |---            |
-| initialDataGrid  | [Grid](#grid)   | __required__   | Initial data loaded to workbook  | 
+| grid  | [Grid](#grid)   | __required__   | Initial data loaded to workbook  | 
 | docProps  | [DocProps](#docprops)   | optional  | Custom workbook properties |
 </br>
 
@@ -152,7 +152,7 @@ async function `generateTableWorkbookFromGrid`: `Promise<Blob>`
 #### Grid
 |Parameter   | Type   | Required   | Description   |
 |---|---|---|---|
-| gridData | string[][] | __required__ | Grid data
+| data | (string | number | boolean)[][] | __required__ | Grid data
 | promoteHeaders | boolean | optional | Should first row of gridData be used as the header, defaults to false - generating "Column1", "Column2"...
 
 
