@@ -1,11 +1,13 @@
 {
   "name": "@microsoft/connected-workbooks",
-  "version": "2.1.21-beta",
+  "version": "2.1.24-beta",
   "description": "Microsoft backed, Excel advanced xlsx workbook generation JavaScript library",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist/**/*.js",
+    "dist/workbookManager.d.ts",
+    "dist/types.d.ts",
     "dist/index.d.ts"
   ],
   "scripts": {
