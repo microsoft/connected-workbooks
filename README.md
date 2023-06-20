@@ -24,7 +24,7 @@ Connected Workbooks allows you to avoid "data dumps" in CSV form, providing a ri
 
 ### 1. Export a table directly from an Html page:
 ```typescript
-import { workbookManager } from '@microsoft/connected-workbooks';
+import workbookManager from '@microsoft/connected-workbooks';
 
 const blob = await workbookManager.generateTableWorkbookFromHtml(document.querySelector('table') as HTMLTableElement);    
 workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
@@ -32,7 +32,7 @@ workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
 
 ### 2. Export a table from raw data:
 ```
-import { workbookManager } from '@microsoft/connected-workbooks';
+import workbookManager from '@microsoft/connected-workbooks';
 
 const grid = {
   "promoteHeaders": true,
@@ -62,7 +62,7 @@ workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
 
 ### 4. Export a Power Query connected workbook:
 ```typescript
-import { workbookManager } from '@microsoft/connected-workbooks';
+import workbookManager from '@microsoft/connected-workbooks';
 
 const blob = await workbookManager.generateSingleQueryWorkbook({
   queryMashup: 'let \
