@@ -1,5 +1,6 @@
-import { gridNotFoundErr } from "./utils/constants";
+import { gridNotFoundErr, invalidColumnNamesErr } from "./utils/constants";
 import { Grid, TableData } from "./types";
+import tableUtils from "./utils/tableUtils";
 
 export const parseToTableData = (grid: Grid): TableData | undefined => {
     if (!grid) {
@@ -7,6 +8,10 @@ export const parseToTableData = (grid: Grid): TableData | undefined => {
     }
 
     const columnNames: string[] = generateColumnNames(grid);
+    if (tableUtils.validateColumnNames(columnNames) === false) {
+        throw new Error(invalidColumnNamesErr);
+    }
+
     const rows: string[][] = parseGridRows(grid);
 
     return { columnNames: columnNames, rows: rows };
@@ -45,7 +50,12 @@ const parseGridRows = (grid: Grid): string[][] => {
 
 const generateColumnNames = (grid: Grid): string[] => {
     if (grid.promoteHeaders) {
-        return grid.data[0].map((columnName) => columnName.toString());
+        const columnNames: string[] = grid.data[0].map((columnName) => columnName.toString());
+        if (!tableUtils.validateColumnNames(columnNames)) {
+            throw new Error(invalidColumnNamesErr);
+        }
+        
+        return columnNames;
     }
 
     const columnNames: string[] = [];

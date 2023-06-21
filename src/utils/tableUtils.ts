@@ -198,10 +198,22 @@ const updateSheetsInitialData = async (sheetsXmlString: string, tableData: Table
     return serializer.serializeToString(sheetsDoc);
 };
 
+const validateColumnNames = (columnNames: string[]): boolean => {
+    let uniqueNames: string[] = [];
+    columnNames.forEach((columnName) => {
+        if ((!columnName.trim()) || uniqueNames.includes(columnName)) {
+            return false;
+        }
+    });
+    
+    return true;
+}
+
 export default {
     updateTableInitialDataIfNeeded,
     updateSheetsInitialData,
     updateWorkbookInitialData,
     updateTablesInitialData,
     updateQueryTablesInitialData,
+    validateColumnNames
 };
