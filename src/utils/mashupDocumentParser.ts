@@ -68,7 +68,7 @@ export const getPackageComponents = (base64Str: string) => {
     };
 };
 
-export const editSingleQueryPackage = async (packageOPC: ArrayBuffer, queryMashupDoc: string) => {
+const editSingleQueryPackage = async (packageOPC: ArrayBuffer, queryMashupDoc: string) => {
     const packageZip: JSZip = await JSZip.loadAsync(packageOPC);
     setSection1m(queryMashupDoc, packageZip);
 
@@ -86,7 +86,7 @@ const setSection1m = (queryMashupDoc: string, zip: JSZip): void => {
     });
 };
 
-const editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Metadata) => {
+export const editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Metadata) => {
     //extract metadataXml
     const mashupArray: ArrayReader = new arrayUtils.ArrayReader(metadataArray.buffer);
     const metadataVersion: Uint8Array = mashupArray.getBytes(4);
