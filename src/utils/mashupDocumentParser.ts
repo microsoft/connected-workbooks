@@ -46,7 +46,7 @@ export const replaceSingleQuery = async (
     return base64.fromByteArray(newMashup);
 };
 
-const getPackageComponents = (base64Str: string) => {
+export const getPackageComponents = (base64Str: string) => {
     const buffer: ArrayBufferLike = base64.toByteArray(base64Str).buffer;
     const mashupArray: ArrayReader = new arrayUtils.ArrayReader(buffer);
     const version: Uint8Array = mashupArray.getBytes(4);
@@ -68,7 +68,7 @@ const getPackageComponents = (base64Str: string) => {
     };
 };
 
-const editSingleQueryPackage = async (packageOPC: ArrayBuffer, queryMashupDoc: string) => {
+export const editSingleQueryPackage = async (packageOPC: ArrayBuffer, queryMashupDoc: string) => {
     const packageZip: JSZip = await JSZip.loadAsync(packageOPC);
     setSection1m(queryMashupDoc, packageZip);
 
