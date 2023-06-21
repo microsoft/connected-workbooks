@@ -11,8 +11,6 @@ describe("Document Utils tests", () => {
         expect(documentUtils.resolveType("sTrIng")).toEqual(DataTypes.string);
         expect(documentUtils.resolveType("True")).toEqual(DataTypes.string);
         expect(documentUtils.resolveType("False")).toEqual(DataTypes.string);
-
-
     });
     
     test("ResolveType boolean success", async () => {
