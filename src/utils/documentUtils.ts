@@ -93,7 +93,7 @@ const resolveType = (originalData: string | number | boolean): DataTypes => {
     const data: string = originalData as string;
     let dataType: DataTypes = isNaN(Number(data)) ? DataTypes.string : DataTypes.number;
     if (dataType == DataTypes.string) {
-        if (data.toLowerCase().trim() == trueStr || data.toLowerCase().trim() == falseStr) {
+        if (data.trim() == trueStr || data.trim() == falseStr) {
             dataType = DataTypes.boolean;
         }
     }

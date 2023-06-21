@@ -9,15 +9,17 @@ describe("Document Utils tests", () => {
 
     test("ResolveType string success", async () => {
         expect(documentUtils.resolveType("sTrIng")).toEqual(DataTypes.string);
+        expect(documentUtils.resolveType("True")).toEqual(DataTypes.string);
+        expect(documentUtils.resolveType("False")).toEqual(DataTypes.string);
+
+
     });
     
     test("ResolveType boolean success", async () => {
         expect(documentUtils.resolveType("true")).toEqual(DataTypes.boolean);
         expect(documentUtils.resolveType( "   true")).toEqual(DataTypes.boolean);
-        expect(documentUtils.resolveType("True")).toEqual(DataTypes.boolean);
         expect(documentUtils.resolveType("false")).toEqual(DataTypes.boolean);
-        expect(documentUtils.resolveType("False")).toEqual(DataTypes.boolean);
-        expect(documentUtils.resolveType("   False")).toEqual(DataTypes.boolean); 
+        expect(documentUtils.resolveType("   false")).toEqual(DataTypes.boolean); 
     });
 
     test("ResolveType number success", async () => {
