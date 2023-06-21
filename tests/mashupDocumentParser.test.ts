@@ -1,10 +1,10 @@
 import { TextDecoder, TextEncoder } from "util";
-import MashupHandler from "../src/utils/mashupDocumentParser";
+import { replaceSingleQuery, getPackageComponents, editSingleQueryMetadata } from "../src/utils/mashupDocumentParser";
 import { arrayUtils, pqUtils } from "../src/utils";
 import { section1mNewQueryNameSimpleMock, pqMetadataXmlMockPart1, pqMetadataXmlMockPart2 } from "./mocks";
 import base64 from "base64-js";
 import JSZip from "jszip";
-import WorkbookTemplate from "../src/workbookTemplate";
+import {SIMPLE_QUERY_WORKBOOK_TEMPLATE} from "../src/workbookTemplate";
 import { section1mPath } from "../src/utils/constants";
 
 import util from "util";
@@ -14,13 +14,11 @@ import util from "util";
 
 describe("Mashup Document Parser tests", () => {
     test("ReplaceSingleQuery test", async () => {
-        const mashupHandler = new MashupHandler();
-
-        const defaultZipFile = await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true });
+        const defaultZipFile = await JSZip.loadAsync(SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true });
         const originalBase64Str = await pqUtils.getBase64(defaultZipFile);
 
         if (originalBase64Str) {
-            const replacedQueryBase64Str = await mashupHandler.ReplaceSingleQuery(
+            const replacedQueryBase64Str = await replaceSingleQuery(
                 originalBase64Str,
                 "newQueryName",
                 section1mNewQueryNameSimpleMock
@@ -40,12 +38,11 @@ describe("Mashup Document Parser tests", () => {
     });
 
     test("Power Query MetadataXml test", async () => {
-        const defaultZipFile = await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true });
+        const defaultZipFile = await JSZip.loadAsync(SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true });
         const originalBase64Str = await pqUtils.getBase64(defaultZipFile);
         if (originalBase64Str) {
-            const handler = new MashupHandler() as any;
-            const { metadata } = handler.getPackageComponents(originalBase64Str);
-            const newMetadataArray = handler.editSingleQueryMetadata(metadata, { queryName: "newQueryName" });
+            const { metadata } = getPackageComponents(originalBase64Str);
+            const newMetadataArray = editSingleQueryMetadata(metadata, { queryName: "newQueryName" });
             const metadataString = new util.TextDecoder("utf-8").decode(newMetadataArray);
             expect(metadataString.replace(/ /g, "")).toContain(pqMetadataXmlMockPart1.replace(/ /g, ""));
             expect(metadataString.replace(/ /g, "")).toContain(pqMetadataXmlMockPart2.replace(/ /g, ""));

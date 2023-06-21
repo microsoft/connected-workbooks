@@ -1,7 +1,7 @@
-import workbookTemplate from "../src/workbookTemplate";
 import { pqUtils } from "../src/utils";
 import { section1mPath, textResultType, URLS } from "../src/utils/constants";
-import MashupHandler from "../src/utils/mashupDocumentParser";
+import { getPackageComponents } from "../src/utils/mashupDocumentParser";
+import { SIMPLE_QUERY_WORKBOOK_TEMPLATE } from "../src/workbookTemplate";
 import {
     section1mBlankQueryMock,
     pqEmptySingleQueryBase64,
@@ -17,7 +17,7 @@ const getZip = async (template: string) =>
     });
 
 describe("Single query template tests", () => {
-    const singleQueryDefaultTemplate = workbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE;
+    const singleQueryDefaultTemplate = SIMPLE_QUERY_WORKBOOK_TEMPLATE;
     let defaultZipFile;
 
     beforeAll(async () => {
@@ -53,9 +53,8 @@ describe("Single query template tests", () => {
     });
 
     test("A single blank query named Query1 exists", async () => {
-        const handler = new MashupHandler() as any;
         const base64Str = await pqUtils.getBase64(defaultZipFile);
-        const { packageOPC } = handler.getPackageComponents(base64Str);
+        const { packageOPC } = getPackageComponents(base64Str!);
         const packageZip = await JSZip.loadAsync(packageOPC);
         const section1m: string | undefined = await packageZip.file(section1mPath)?.async(textResultType);
         if (section1m == undefined) {

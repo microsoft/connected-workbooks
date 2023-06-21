@@ -3,7 +3,7 @@
 
 import JSZip from "jszip";
 import { pqUtils, xmlPartsUtils } from "./utils";
-import WorkbookTemplate from "./workbookTemplate";
+import { SIMPLE_BLANK_TABLE_TEMPLATE, SIMPLE_QUERY_WORKBOOK_TEMPLATE } from "./workbookTemplate";
 import {
     defaults,
     emptyQueryMashupErr,
@@ -12,12 +12,12 @@ import {
     templateWithInitialDataErr,
     tableNotFoundErr,
 } from "./utils/constants";
-import { DocProps, QueryInfo, TableData, Grid, TableDataParser, FileConfigs } from "./types";
-import TableDataParserFactory from "./TableDataParserFactory";
+import { DocProps, QueryInfo, TableData, Grid, FileConfigs } from "./types";
 import { generateSingleQueryMashup } from "./generators";
 import { extractTableValues } from "./utils/htmlUtils";
+import { parseToTableData } from "./GridParser";
 
-const generateSingleQueryWorkbook = async (
+export const generateSingleQueryWorkbook = async (
     query: QueryInfo,
     initialDataGrid?: Grid,
     fileConfigs?: FileConfigs
@@ -39,7 +39,7 @@ const generateSingleQueryWorkbook = async (
 
     const zip: JSZip =
         templateFile === undefined
-            ? await JSZip.loadAsync(WorkbookTemplate.SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
+            ? await JSZip.loadAsync(SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
             : await JSZip.loadAsync(templateFile);
 
     const tableData: TableData | undefined = await parseInitialDataGrid(initialDataGrid);
@@ -47,14 +47,17 @@ const generateSingleQueryWorkbook = async (
     return await generateSingleQueryWorkbookFromZip(zip, query, fileConfigs?.docProps, tableData);
 };
 
-const generateTableWorkbookFromHtml = async (htmlTable: HTMLTableElement, docProps?: DocProps): Promise<Blob> => {
+export const generateTableWorkbookFromHtml = async (
+    htmlTable: HTMLTableElement,
+    docProps?: DocProps
+): Promise<Blob> => {
     const gridData = extractTableValues(htmlTable);
-    return await generateTableWorkbookFromGrid({ gridData: gridData, promoteHeaders: true }, docProps);
+    return await generateTableWorkbookFromGrid({ data: gridData, promoteHeaders: true }, docProps);
 };
 
-const generateTableWorkbookFromGrid = async (initialDataGrid: Grid, docProps?: DocProps): Promise<Blob> => {
-    const zip: JSZip = await JSZip.loadAsync(WorkbookTemplate.SIMPLE_BLANK_TABLE_TEMPLATE, { base64: true });
-    const tableData: TableData | undefined = await parseInitialDataGrid(initialDataGrid);
+export const generateTableWorkbookFromGrid = async (grid: Grid, docProps?: DocProps): Promise<Blob> => {
+    const zip: JSZip = await JSZip.loadAsync(SIMPLE_BLANK_TABLE_TEMPLATE, { base64: true });
+    const tableData: TableData | undefined = await parseInitialDataGrid(grid);
     if (tableData === undefined) {
         throw new Error(tableNotFoundErr);
     }
@@ -67,13 +70,12 @@ const generateTableWorkbookFromGrid = async (initialDataGrid: Grid, docProps?: D
     });
 };
 
-const parseInitialDataGrid = async (initialDataGrid?: Grid): Promise<TableData | undefined> => {
-    if (!initialDataGrid) {
+const parseInitialDataGrid = async (grid?: Grid): Promise<TableData | undefined> => {
+    if (!grid) {
         return undefined;
     }
 
-    const parser: TableDataParser = TableDataParserFactory.createParser(initialDataGrid);
-    const tableData: TableData | undefined = parser.parseToTableData(initialDataGrid);
+    const tableData: TableData | undefined = parseToTableData(grid);
 
     return tableData;
 };
@@ -102,7 +104,7 @@ const generateSingleQueryWorkbookFromZip = async (
     });
 };
 
-const downloadWorkbook = (file: Blob, filename: string): void => {
+export const downloadWorkbook = (file: Blob, filename: string): void => {
     const nav = window.navigator as any;
     if (nav.msSaveOrOpenBlob)
         // IE10+
@@ -120,11 +122,4 @@ const downloadWorkbook = (file: Blob, filename: string): void => {
             window.URL.revokeObjectURL(url);
         }, 0);
     }
-};
-
-export default {
-    generateSingleQueryWorkbook,
-    generateTableWorkbookFromHtml,
-    generateTableWorkbookFromGrid,
-    downloadWorkbook,
 };

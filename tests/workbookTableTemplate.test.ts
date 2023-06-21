@@ -1,4 +1,4 @@
-import workbookTemplate from "../src/workbookTemplate";
+import {SIMPLE_BLANK_TABLE_TEMPLATE} from "../src/workbookTemplate";
 import { pqUtils } from "../src/utils";
 import { queryTableXmlPath, tableXmlPath, textResultType } from "../src/utils/constants";
 import JSZip from "jszip";
@@ -9,7 +9,7 @@ const getZip = async (template: string) =>
     });
 
 describe("Single blank table template tests", () => {
-    const simpleTableDefaultTemplate = workbookTemplate.SIMPLE_BLANK_TABLE_TEMPLATE;
+    const simpleTableDefaultTemplate = SIMPLE_BLANK_TABLE_TEMPLATE;
     let defaultZipFile;
 
     beforeAll(async () => {

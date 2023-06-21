@@ -9,7 +9,7 @@ import {
     sheetsXmlPath,
     sheetsNotFoundErr,
 } from "./constants";
-import MashupHandler from "./mashupDocumentParser";
+import { replaceSingleQuery } from "./mashupDocumentParser";
 import { DocProps, TableData } from "../types";
 import pqUtils from "./pqUtils";
 import xmlInnerPartsUtils from "./xmlInnerPartsUtils";
@@ -36,7 +36,7 @@ const updateWorkbookPowerQueryDocument = async (
         throw new Error(base64NotFoundErr);
     }
 
-    const new_base64: string = await new MashupHandler().ReplaceSingleQuery(old_base64, queryName, queryMashupDoc);
+    const new_base64: string = await replaceSingleQuery(old_base64, queryName, queryMashupDoc);
     await pqUtils.setBase64(zip, new_base64);
 };
 

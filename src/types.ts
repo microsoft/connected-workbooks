@@ -29,17 +29,13 @@ export interface TableData {
 }
 
 export interface Grid {
-    gridData: (string|number|boolean)[][];
+    data: (string | number | boolean)[][];
     promoteHeaders?: boolean;
 }
 
 export interface FileConfigs {
     templateFile?: File;
     docProps?: DocProps;
-}
-
-export interface TableDataParser {
-    parseToTableData: (grid: any) => TableData | undefined;
 }
 
 export enum DataTypes {
