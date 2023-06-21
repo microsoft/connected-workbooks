@@ -204,6 +204,8 @@ const validateColumnNames = (columnNames: string[]): boolean => {
         if ((!columnName.trim()) || uniqueNames.includes(columnName)) {
             return false;
         }
+        
+        uniqueNames.push(columnName);
     });
     
     return true;
