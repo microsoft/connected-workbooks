@@ -34,7 +34,7 @@ const parseGridRows = (grid: Grid): string[][] => {
         const row: string[] = [];
         for (const prop in rowData) {
             const cellValue: string | number | boolean = rowData[prop];
-            row.push(cellValue.toString());
+            row.push(cellValue?.toString() ?? "");
         }
 
         rows.push(row);
