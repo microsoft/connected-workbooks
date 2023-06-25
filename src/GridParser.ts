@@ -54,9 +54,11 @@ const generateColumnNames = async (grid: Grid): Promise<string[]> => {
         return columnNames;
     }
 
-    if (grid.headerCofings?.promoteHeaders) {
-        return await tableUtils.getColumnNames(grid.data[0]);
+    // We are adjusting column names by default.
+    if ((!grid.headerCofings || grid.headerCofings.adjustColumnNames === undefined || grid.headerCofings.adjustColumnNames)) {
+        return await tableUtils.getAdjustedColumnNames(grid.data[0]);
     }
 
-    return columnNames;
+    // Get column names and failed if it's not a legal name.
+    return tableUtils.getRawColumnNames(grid.data[0]);;
 };
