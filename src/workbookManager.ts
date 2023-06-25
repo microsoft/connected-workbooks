@@ -52,7 +52,7 @@ export const generateTableWorkbookFromHtml = async (
     docProps?: DocProps
 ): Promise<Blob> => {
     const gridData = extractTableValues(htmlTable);
-    return await generateTableWorkbookFromGrid({ data: gridData, promoteHeaders: true }, docProps);
+    return await generateTableWorkbookFromGrid({ data: gridData, headerCofings: { promoteHeaders: true }}, docProps);
 };
 
 export const generateTableWorkbookFromGrid = async (grid: Grid, docProps?: DocProps): Promise<Blob> => {
@@ -75,7 +75,7 @@ const parseInitialDataGrid = async (grid?: Grid): Promise<TableData | undefined>
         return undefined;
     }
 
-    const tableData: TableData | undefined = parseToTableData(grid);
+    const tableData: TableData | undefined = await parseToTableData(grid);
 
     return tableData;
 };

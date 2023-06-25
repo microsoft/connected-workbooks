@@ -16,6 +16,7 @@ import {
 } from "./constants";
 import documentUtils from "./documentUtils";
 import { v4 } from "uuid";
+import { string } from "yargs";
 
 const updateTableInitialDataIfNeeded = async (
     zip: JSZip,
@@ -180,7 +181,7 @@ const updateSheetsInitialData = async (sheetsXmlString: string, tableData: Table
                     sheetsDoc,
                     colIndex,
                     rowIndex,
-                    cellContent
+                    cellContent,
                 )
             );
         });
@@ -198,10 +199,38 @@ const updateSheetsInitialData = async (sheetsXmlString: string, tableData: Table
     return serializer.serializeToString(sheetsDoc);
 };
 
+const getColumnNames = async (columnNames: (string | number | boolean)[]) : Promise<string[]> => {
+    const newColumnNames: string[] = [];
+    columnNames.forEach((columnName) => newColumnNames.push(getNextAvaiableColumnName(newColumnNames, getColumnNameToString(columnName))));
+    return newColumnNames;
+};
+
+const getColumnNameToString = (columnName: (string | number | boolean)) : string => {
+    if ((columnName === null) || (typeof columnName === 'string' && columnName.length == 0)) {
+        return defaults.columnName;
+    }
+
+    return columnName.toString();
+}
+
+const getNextAvaiableColumnName = (columnNames: string[], columnName: string) : string => {
+    let index = 1;
+    let nextAvaiableName = columnName;
+    while (columnNames.includes(nextAvaiableName))
+    {
+        nextAvaiableName = `${columnName} (${index})`;
+        index++;
+    }
+
+    return nextAvaiableName;
+};
+
 export default {
     updateTableInitialDataIfNeeded,
     updateSheetsInitialData,
     updateWorkbookInitialData,
     updateTablesInitialData,
     updateQueryTablesInitialData,
+    getNextAvaiableColumnName,
+    getColumnNames,
 };

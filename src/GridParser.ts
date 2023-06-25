@@ -1,12 +1,13 @@
-import { gridNotFoundErr } from "./utils/constants";
+import { defaults, gridNotFoundErr } from "./utils/constants";
 import { Grid, TableData } from "./types";
+import { tableUtils } from "./utils";
 
-export const parseToTableData = (grid: Grid): TableData | undefined => {
+export const parseToTableData = async (grid: Grid): Promise<TableData | undefined> => {
     if (!grid) {
         return undefined;
     }
 
-    const columnNames: string[] = generateColumnNames(grid);
+    const columnNames: string[] = await generateColumnNames(grid);
     const rows: string[][] = parseGridRows(grid);
 
     return { columnNames: columnNames, rows: rows };
@@ -19,7 +20,7 @@ const parseGridRows = (grid: Grid): string[][] => {
     }
 
     const rows: string[][] = [];
-    if (!grid.promoteHeaders) {
+    if (!grid.headerCofings?.promoteHeaders) {
         const row: string[] = [];
         for (const prop in gridData[0]) {
             const cellValue: string | number | boolean = gridData[0][prop];
@@ -43,14 +44,18 @@ const parseGridRows = (grid: Grid): string[][] => {
     return rows;
 };
 
-const generateColumnNames = (grid: Grid): string[] => {
-    if (grid.promoteHeaders) {
-        return grid.data[0].map((columnName) => columnName.toString());
+const generateColumnNames = async (grid: Grid): Promise<string[]> => {
+    const columnNames: string[] = [];
+    if (!grid.headerCofings?.promoteHeaders) {
+        for (let i = 0; i < grid.data[0].length; i++) {
+            columnNames.push(`${defaults.columnName} ${i + 1}`);
+        }
+
+        return columnNames;
     }
 
-    const columnNames: string[] = [];
-    for (let i = 0; i < grid.data[0].length; i++) {
-        columnNames.push(`Column ${i + 1}`);
+    if (grid.headerCofings?.promoteHeaders) {
+        return await tableUtils.getColumnNames(grid.data[0]);
     }
 
     return columnNames;
