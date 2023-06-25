@@ -88,4 +88,17 @@ describe("Table Utils tests", () => {
         });
         expect(queryTableXmlSheet).toContain(queryTableMock);
     });
+
+    test("tests Get next column Name", async () => {
+        const columnNames = ['Column', 'Column (1)',  'Column (2)', 'Column (3)', 'Banana'];
+        expect(tableUtils.getNextAvaiableColumnName(columnNames, 'Column')).toEqual('Column (4)');
+        expect(tableUtils.getNextAvaiableColumnName(columnNames, 'Banana')).toEqual('Banana (1)');
+        expect(tableUtils.getNextAvaiableColumnName(columnNames, 'unexists')).toEqual('unexists');
+    });
+
+    test("tests Get column Name", async () => {
+        expect(await tableUtils.getColumnNames(['Column', 2,  false, 2, 'Banana'])).toEqual(['Column', '2',  'false', '2 (1)', 'Banana']);
+        expect(await tableUtils.getColumnNames(['Column', 2,  '', 2, 'Banana'])).toEqual(['Column', '2',  'Column (1)', '2 (1)', 'Banana']);
+        expect(await tableUtils.getColumnNames(['Column', 'Column', 'Column',  'Column (2)', 'Column (3)'])).toEqual(['Column', 'Column (1)',  'Column (2)', 'Column (3)']);
+    });
 });
