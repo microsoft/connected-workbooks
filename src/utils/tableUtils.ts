@@ -1,6 +1,7 @@
 import JSZip from "jszip";
 import { TableData } from "../types";
 import {
+    InvalidColumnNameErr,
     defaults,
     element,
     elementAttributes,
@@ -17,6 +18,7 @@ import {
 import documentUtils from "./documentUtils";
 import { v4 } from "uuid";
 import { string } from "yargs";
+import { error } from "console";
 
 const updateTableInitialDataIfNeeded = async (
     zip: JSZip,
@@ -199,7 +201,7 @@ const updateSheetsInitialData = async (sheetsXmlString: string, tableData: Table
     return serializer.serializeToString(sheetsDoc);
 };
 
-const getColumnNames = async (columnNames: (string | number | boolean)[]) : Promise<string[]> => {
+const getAdjustedColumnNames = async (columnNames: (string | number | boolean)[]) : Promise<string[]> => {
     const newColumnNames: string[] = [];
     columnNames.forEach((columnName) => newColumnNames.push(getNextAvaiableColumnName(newColumnNames, getColumnNameToString(columnName))));
     return newColumnNames;
@@ -225,6 +227,27 @@ const getNextAvaiableColumnName = (columnNames: string[], columnName: string) : 
     return nextAvaiableName;
 };
 
+const getRawColumnNames = (columnNames: (string | number | boolean)[]) : string[] => {
+    const newColumnNames: string[] = [];
+    columnNames.forEach((columnName) => newColumnNames.push(getColumnNameOrReiseError(newColumnNames, columnName)));
+
+    return newColumnNames;
+}
+
+const getColumnNameOrReiseError = (columnNames: string[], columnName: (string | number | boolean)) : string => {
+    // column name shouldn't be empty.
+    if ((columnName === null) || (typeof columnName === 'string' && columnName.length == 0)) {
+        throw new Error(InvalidColumnNameErr);
+    }
+
+    // Duplicate column name.
+    if (columnNames.includes(columnName.toString())) {
+        throw new Error(InvalidColumnNameErr);
+    }
+
+    return columnName.toString();
+}
+
 export default {
     updateTableInitialDataIfNeeded,
     updateSheetsInitialData,
@@ -232,5 +255,6 @@ export default {
     updateTablesInitialData,
     updateQueryTablesInitialData,
     getNextAvaiableColumnName,
-    getColumnNames,
+    getAdjustedColumnNames,
+    getRawColumnNames
 };
