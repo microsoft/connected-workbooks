@@ -15,7 +15,7 @@ import {
 import { DocProps, QueryInfo, TableData, Grid, FileConfigs } from "./types";
 import { generateSingleQueryMashup } from "./generators";
 import { extractTableValues } from "./utils/htmlUtils";
-import { parseToTableData } from "./GridParser";
+import { parseToTableData } from "./gridParser";
 
 export const generateSingleQueryWorkbook = async (
     query: QueryInfo,
