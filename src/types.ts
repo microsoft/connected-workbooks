@@ -30,10 +30,10 @@ export interface TableData {
 
 export interface Grid {
     data: (string | number | boolean)[][];
-    headerCofings?: HeaderConfigs
+    config?: GridConfig;
 }
 
-export interface HeaderConfigs {
+export interface GridConfig {
     promoteHeaders?: boolean;
     adjustColumnNames?: boolean;
 }

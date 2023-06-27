@@ -20,7 +20,7 @@ const parseGridRows = (grid: Grid): string[][] => {
     }
 
     const rows: string[][] = [];
-    if (!grid.headerCofings?.promoteHeaders) {
+    if (!grid.config?.promoteHeaders) {
         const row: string[] = [];
         for (const prop in gridData[0]) {
             const cellValue: string | number | boolean = gridData[0][prop];
@@ -46,7 +46,7 @@ const parseGridRows = (grid: Grid): string[][] => {
 
 const generateColumnNames = async (grid: Grid): Promise<string[]> => {
     const columnNames: string[] = [];
-    if (!grid.headerCofings?.promoteHeaders) {
+    if (!grid.config?.promoteHeaders) {
         for (let i = 0; i < grid.data[0].length; i++) {
             columnNames.push(`${defaults.columnName} ${i + 1}`);
         }
@@ -55,10 +55,10 @@ const generateColumnNames = async (grid: Grid): Promise<string[]> => {
     }
 
     // We are adjusting column names by default.
-    if ((!grid.headerCofings || grid.headerCofings.adjustColumnNames === undefined || grid.headerCofings.adjustColumnNames)) {
+    if (!grid.config || grid.config.adjustColumnNames === undefined || grid.config.adjustColumnNames) {
         return await tableUtils.getAdjustedColumnNames(grid.data[0]);
     }
 
     // Get column names and failed if it's not a legal name.
-    return tableUtils.getRawColumnNames(grid.data[0]);;
+    return tableUtils.getRawColumnNames(grid.data[0]);
 };

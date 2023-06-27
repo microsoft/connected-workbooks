@@ -17,8 +17,6 @@ import {
 } from "./constants";
 import documentUtils from "./documentUtils";
 import { v4 } from "uuid";
-import { string } from "yargs";
-import { error } from "console";
 
 const updateTableInitialDataIfNeeded = async (
     zip: JSZip,
@@ -213,7 +211,7 @@ const getColumnNameToString = (columnName: (string | number | boolean)) : string
     }
 
     return columnName.toString();
-}
+};
 
 const getNextAvaiableColumnName = (columnNames: string[], columnName: string) : string => {
     let index = 1;
@@ -232,7 +230,7 @@ const getRawColumnNames = (columnNames: (string | number | boolean)[]) : string[
     columnNames.forEach((columnName) => newColumnNames.push(getColumnNameOrReiseError(newColumnNames, columnName)));
 
     return newColumnNames;
-}
+};
 
 const getColumnNameOrReiseError = (columnNames: string[], columnName: (string | number | boolean)) : string => {
     // column name shouldn't be empty.
@@ -246,7 +244,7 @@ const getColumnNameOrReiseError = (columnNames: string[], columnName: (string | 
     }
 
     return columnName.toString();
-}
+};
 
 export default {
     updateTableInitialDataIfNeeded,
