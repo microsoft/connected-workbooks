@@ -2,13 +2,7 @@ import { pqUtils } from "../src/utils";
 import { section1mPath, textResultType, URLS } from "../src/utils/constants";
 import { getPackageComponents } from "../src/utils/mashupDocumentParser";
 import { SIMPLE_QUERY_WORKBOOK_TEMPLATE } from "../src/workbookTemplate";
-import {
-    section1mBlankQueryMock,
-    pqEmptySingleQueryBase64,
-    connectedWorkbookXmlMock,
-    item1Path,
-    item2Path,
-} from "./mocks";
+import { section1mBlankQueryMock, pqEmptySingleQueryBase64, connectedWorkbookXmlMock, item1Path, item2Path } from "./mocks";
 import JSZip from "jszip";
 
 const getZip = async (template: string) =>
@@ -41,11 +35,7 @@ describe("Single query template tests", () => {
     });
 
     test("ConnectedWorkbook XML exists as item1.xml", async () => {
-        const { found, path, xmlString } = await pqUtils.getCustomXmlFile(
-            defaultZipFile,
-            URLS.CONNECTED_WORKBOOK,
-            'utf-8'
-        );
+        const { found, path, xmlString } = await pqUtils.getCustomXmlFile(defaultZipFile, URLS.CONNECTED_WORKBOOK, "utf-8");
 
         expect(found).toBeTruthy();
         expect(xmlString).toEqual(connectedWorkbookXmlMock);

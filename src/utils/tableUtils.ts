@@ -18,11 +18,7 @@ import {
 import documentUtils from "./documentUtils";
 import { v4 } from "uuid";
 
-const updateTableInitialDataIfNeeded = async (
-    zip: JSZip,
-    tableData?: TableData,
-    updateQueryTable?: boolean
-): Promise<void> => {
+const updateTableInitialDataIfNeeded = async (zip: JSZip, tableData?: TableData, updateQueryTable?: boolean): Promise<void> => {
     if (!tableData) {
         return;
     }
@@ -63,21 +59,14 @@ const updateTableInitialDataIfNeeded = async (
     zip.file(tableXmlPath, newTable);
 };
 
-const updateTablesInitialData = async (
-    tableXmlString: string,
-    tableData: TableData,
-    updateQueryTable = false
-): Promise<string> => {
+const updateTablesInitialData = async (tableXmlString: string, tableData: TableData, updateQueryTable = false): Promise<string> => {
     const parser: DOMParser = new DOMParser();
     const serializer: XMLSerializer = new XMLSerializer();
     const tableDoc: Document = parser.parseFromString(tableXmlString, xmlTextResultType);
     const tableColumns: Element = tableDoc.getElementsByTagName(element.tableColumns)[0];
     tableColumns.textContent = "";
     tableData.columnNames.forEach((column: string, columnIndex: number) => {
-        const tableColumn: Element = tableDoc.createElementNS(
-            tableDoc.documentElement.namespaceURI,
-            element.tableColumn
-        );
+        const tableColumn: Element = tableDoc.createElementNS(tableDoc.documentElement.namespaceURI, element.tableColumn);
         tableColumn.setAttribute(elementAttributes.id, (columnIndex + 1).toString());
         tableColumn.setAttribute(elementAttributes.name, column);
         tableColumns.appendChild(tableColumn);
@@ -92,40 +81,21 @@ const updateTablesInitialData = async (
     tableColumns.setAttribute(elementAttributes.count, tableData.columnNames.length.toString());
     tableDoc
         .getElementsByTagName(element.table)[0]
-        .setAttribute(
-            elementAttributes.reference,
-            `A1:${documentUtils.getCellReferenceRelative(
-                tableData.columnNames.length - 1,
-                tableData.rows.length + 1
-            )}`
-        );
+        .setAttribute(elementAttributes.reference, `A1:${documentUtils.getCellReferenceRelative(tableData.columnNames.length - 1, tableData.rows.length + 1)}`);
     tableDoc
         .getElementsByTagName(element.autoFilter)[0]
-        .setAttribute(
-            elementAttributes.reference,
-            `A1:${documentUtils.getCellReferenceRelative(
-                tableData.columnNames.length - 1,
-                tableData.rows.length + 1
-            )}`
-        );
+        .setAttribute(elementAttributes.reference, `A1:${documentUtils.getCellReferenceRelative(tableData.columnNames.length - 1, tableData.rows.length + 1)}`);
 
     return serializer.serializeToString(tableDoc);
 };
 
-const updateWorkbookInitialData = async (
-    workbookXmlString: string,
-    tableData: TableData,
-): Promise<string> => {
+const updateWorkbookInitialData = async (workbookXmlString: string, tableData: TableData): Promise<string> => {
     const newParser: DOMParser = new DOMParser();
     const newSerializer: XMLSerializer = new XMLSerializer();
     const workbookDoc: Document = newParser.parseFromString(workbookXmlString, xmlTextResultType);
     const definedName: Element = workbookDoc.getElementsByTagName(element.definedName)[0];
     definedName.textContent =
-        defaults.sheetName +
-        `!$A$1:${documentUtils.getCellReferenceAbsolute(
-            tableData.columnNames.length - 1,
-            tableData.rows.length + 1
-        )}`;
+        defaults.sheetName + `!$A$1:${documentUtils.getCellReferenceAbsolute(tableData.columnNames.length - 1, tableData.rows.length + 1)}`;
 
     return newSerializer.serializeToString(workbookDoc);
 };
@@ -137,19 +107,14 @@ const updateQueryTablesInitialData = async (queryTableXmlString: string, tableDa
     const queryTableFields: Element = queryTableDoc.getElementsByTagName(element.queryTableFields)[0];
     queryTableFields.textContent = "";
     tableData.columnNames.forEach((column: string, columnIndex: number) => {
-        const queryTableField: Element = queryTableDoc.createElementNS(
-            queryTableDoc.documentElement.namespaceURI,
-            element.queryTableField
-        );
+        const queryTableField: Element = queryTableDoc.createElementNS(queryTableDoc.documentElement.namespaceURI, element.queryTableField);
         queryTableField.setAttribute(elementAttributes.id, (columnIndex + 1).toString());
         queryTableField.setAttribute(elementAttributes.name, column);
         queryTableField.setAttribute(elementAttributes.tableColumnId, (columnIndex + 1).toString());
         queryTableFields.appendChild(queryTableField);
     });
     queryTableFields.setAttribute(elementAttributes.count, tableData.columnNames.length.toString());
-    queryTableDoc
-        .getElementsByTagName(element.queryTableRefresh)[0]
-        .setAttribute(elementAttributes.nextId, (tableData.columnNames.length + 1).toString());
+    queryTableDoc.getElementsByTagName(element.queryTableRefresh)[0].setAttribute(elementAttributes.nextId, (tableData.columnNames.length + 1).toString());
 
     return serializer.serializeToString(queryTableDoc);
 };
@@ -176,14 +141,7 @@ const updateSheetsInitialData = async (sheetsXmlString: string, tableData: Table
         newRow.setAttribute(elementAttributes.spans, "1:" + row.length);
         newRow.setAttribute(elementAttributes.x14acDyDescent, "0.3");
         row.forEach((cellContent, colIndex) => {
-            newRow.appendChild(
-                documentUtils.createCell(
-                    sheetsDoc,
-                    colIndex,
-                    rowIndex,
-                    cellContent,
-                )
-            );
+            newRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, cellContent));
         });
         sheetData.appendChild(newRow);
         rowIndex++;
@@ -191,33 +149,29 @@ const updateSheetsInitialData = async (sheetsXmlString: string, tableData: Table
 
     sheetsDoc
         .getElementsByTagName(element.dimension)[0]
-        .setAttribute(
-            elementAttributes.reference,
-            documentUtils.getTableReference(tableData.rows[0].length - 1, tableData.rows.length)
-        );
+        .setAttribute(elementAttributes.reference, documentUtils.getTableReference(tableData.rows[0].length - 1, tableData.rows.length));
 
     return serializer.serializeToString(sheetsDoc);
 };
 
-const getAdjustedColumnNames = (columnNames: (string | number | boolean)[]) : string[] => {
+const getAdjustedColumnNames = (columnNames: (string | number | boolean)[]): string[] => {
     const newColumnNames: string[] = [];
     columnNames.forEach((columnName) => newColumnNames.push(getNextAvailableColumnName(newColumnNames, getColumnNameToString(columnName))));
     return newColumnNames;
 };
 
-const getColumnNameToString = (columnName: (string | number | boolean)) : string => {
-    if ((columnName === null) || (typeof columnName === 'string' && columnName.length == 0)) {
+const getColumnNameToString = (columnName: string | number | boolean): string => {
+    if (columnName === null || (typeof columnName === "string" && columnName.length == 0)) {
         return defaults.columnName;
     }
 
     return columnName.toString();
 };
 
-const getNextAvailableColumnName = (columnNames: string[], columnName: string) : string => {
+const getNextAvailableColumnName = (columnNames: string[], columnName: string): string => {
     let index = 1;
     let nextAvailableName = columnName;
-    while (columnNames.includes(nextAvailableName))
-    {
+    while (columnNames.includes(nextAvailableName)) {
         nextAvailableName = `${columnName} (${index})`;
         index++;
     }
@@ -225,16 +179,16 @@ const getNextAvailableColumnName = (columnNames: string[], columnName: string) :
     return nextAvailableName;
 };
 
-const getRawColumnNames = (columnNames: (string | number | boolean)[]) : string[] => {
+const getRawColumnNames = (columnNames: (string | number | boolean)[]): string[] => {
     const newColumnNames: string[] = [];
     columnNames.forEach((columnName) => newColumnNames.push(getColumnNameOrReiseError(newColumnNames, columnName)));
 
     return newColumnNames;
 };
 
-const getColumnNameOrReiseError = (columnNames: string[], columnName: (string | number | boolean)) : string => {
+const getColumnNameOrReiseError = (columnNames: string[], columnName: string | number | boolean): string => {
     // column name shouldn't be empty.
-    if ((columnName === null) || (typeof columnName === 'string' && columnName.length == 0)) {
+    if (columnName === null || (typeof columnName === "string" && columnName.length == 0)) {
         throw new Error(InvalidColumnNameErr);
     }
 
@@ -254,5 +208,5 @@ export default {
     updateQueryTablesInitialData,
     getNextAvailableColumnName,
     getAdjustedColumnNames,
-    getRawColumnNames
+    getRawColumnNames,
 };

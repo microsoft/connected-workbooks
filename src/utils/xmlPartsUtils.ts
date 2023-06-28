@@ -15,21 +15,12 @@ import pqUtils from "./pqUtils";
 import xmlInnerPartsUtils from "./xmlInnerPartsUtils";
 import tableUtils from "./tableUtils";
 
-const updateWorkbookInitialDataIfNeeded = async (
-    zip: JSZip,
-    docProps?: DocProps,
-    tableData?: TableData,
-    updateQueryTable = false
-): Promise<void> => {
+const updateWorkbookInitialDataIfNeeded = async (zip: JSZip, docProps?: DocProps, tableData?: TableData, updateQueryTable = false): Promise<void> => {
     await xmlInnerPartsUtils.updateDocProps(zip, docProps);
     await tableUtils.updateTableInitialDataIfNeeded(zip, tableData, updateQueryTable);
 };
 
-const updateWorkbookPowerQueryDocument = async (
-    zip: JSZip,
-    queryName: string,
-    queryMashupDoc: string
-): Promise<void> => {
+const updateWorkbookPowerQueryDocument = async (zip: JSZip, queryName: string, queryMashupDoc: string): Promise<void> => {
     const old_base64: string | undefined = await pqUtils.getBase64(zip);
 
     if (!old_base64) {
@@ -40,22 +31,14 @@ const updateWorkbookPowerQueryDocument = async (
     await pqUtils.setBase64(zip, new_base64);
 };
 
-const updateWorkbookSingleQueryAttributes = async (
-    zip: JSZip,
-    queryName: string,
-    refreshOnOpen: boolean
-): Promise<void> => {
+const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string, refreshOnOpen: boolean): Promise<void> => {
     // Update connections
     const connectionsXmlString: string | undefined = await zip.file(connectionsXmlPath)?.async(textResultType);
     if (connectionsXmlString === undefined) {
         throw new Error(connectionsNotFoundErr);
     }
 
-    const { connectionId, connectionXmlFileString } = await xmlInnerPartsUtils.updateConnections(
-        connectionsXmlString,
-        queryName,
-        refreshOnOpen
-    );
+    const { connectionId, connectionXmlFileString } = await xmlInnerPartsUtils.updateConnections(connectionsXmlString, queryName, refreshOnOpen);
     zip.file(connectionsXmlPath, connectionXmlFileString);
 
     // Update sharedStrings
@@ -64,10 +47,7 @@ const updateWorkbookSingleQueryAttributes = async (
         throw new Error(sharedStringsNotFoundErr);
     }
 
-    const { sharedStringIndex, newSharedStrings } = await xmlInnerPartsUtils.updateSharedStrings(
-        sharedStringsXmlString,
-        queryName
-    );
+    const { sharedStringIndex, newSharedStrings } = await xmlInnerPartsUtils.updateSharedStrings(sharedStringsXmlString, queryName);
     zip.file(sharedStringsXmlPath, newSharedStrings);
 
     // Update sheet
@@ -76,10 +56,7 @@ const updateWorkbookSingleQueryAttributes = async (
         throw new Error(sheetsNotFoundErr);
     }
 
-    const worksheetString: string = await xmlInnerPartsUtils.updateWorksheet(
-        sheetsXmlString,
-        sharedStringIndex.toString()
-    );
+    const worksheetString: string = await xmlInnerPartsUtils.updateWorksheet(sheetsXmlString, sharedStringIndex.toString());
     zip.file(sheetsXmlPath, worksheetString);
 
     // Update tables

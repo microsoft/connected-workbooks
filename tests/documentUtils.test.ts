@@ -1,7 +1,6 @@
 import { DataTypes } from "../src/types";
 import { documentUtils } from "../src/utils";
 
-
 describe("Document Utils tests", () => {
     test("ResolveType date not supported success", async () => {
         expect(documentUtils.resolveType("5-4-2023 00:00", false)).toEqual(DataTypes.string);
@@ -12,12 +11,12 @@ describe("Document Utils tests", () => {
         expect(documentUtils.resolveType("True", false)).toEqual(DataTypes.string);
         expect(documentUtils.resolveType("False", false)).toEqual(DataTypes.string);
     });
-    
+
     test("ResolveType boolean success", async () => {
         expect(documentUtils.resolveType("true", false)).toEqual(DataTypes.boolean);
-        expect(documentUtils.resolveType( "   true", false)).toEqual(DataTypes.boolean);
+        expect(documentUtils.resolveType("   true", false)).toEqual(DataTypes.boolean);
         expect(documentUtils.resolveType("false", false)).toEqual(DataTypes.boolean);
-        expect(documentUtils.resolveType("   false", false)).toEqual(DataTypes.boolean); 
+        expect(documentUtils.resolveType("   false", false)).toEqual(DataTypes.boolean);
     });
 
     test("ResolveType number success", async () => {

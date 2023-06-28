@@ -4,7 +4,7 @@ import { arrayUtils, pqUtils } from "../src/utils";
 import { section1mNewQueryNameSimpleMock, pqMetadataXmlMockPart1, pqMetadataXmlMockPart2 } from "./mocks";
 import base64 from "base64-js";
 import JSZip from "jszip";
-import {SIMPLE_QUERY_WORKBOOK_TEMPLATE} from "../src/workbookTemplate";
+import { SIMPLE_QUERY_WORKBOOK_TEMPLATE } from "../src/workbookTemplate";
 import { section1mPath } from "../src/utils/constants";
 
 import util from "util";
@@ -18,11 +18,7 @@ describe("Mashup Document Parser tests", () => {
         const originalBase64Str = await pqUtils.getBase64(defaultZipFile);
 
         if (originalBase64Str) {
-            const replacedQueryBase64Str = await replaceSingleQuery(
-                originalBase64Str,
-                "newQueryName",
-                section1mNewQueryNameSimpleMock
-            );
+            const replacedQueryBase64Str = await replaceSingleQuery(originalBase64Str, "newQueryName", section1mNewQueryNameSimpleMock);
             const buffer = base64.toByteArray(replacedQueryBase64Str).buffer;
             const mashupArray = new arrayUtils.ArrayReader(buffer);
             const startArray = mashupArray.getBytes(4);
