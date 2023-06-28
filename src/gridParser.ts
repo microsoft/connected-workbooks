@@ -2,12 +2,12 @@ import { defaults, gridNotFoundErr } from "./utils/constants";
 import { Grid, TableData } from "./types";
 import { tableUtils } from "./utils";
 
-export const parseToTableData = async (grid: Grid): Promise<TableData | undefined> => {
+export const parseToTableData = (grid: Grid): TableData | undefined => {
     if (!grid) {
         return undefined;
     }
 
-    const columnNames: string[] = await generateColumnNames(grid);
+    const columnNames: string[] = generateColumnNames(grid);
     const rows: string[][] = parseGridRows(grid);
 
     return { columnNames: columnNames, rows: rows };
@@ -44,7 +44,7 @@ const parseGridRows = (grid: Grid): string[][] => {
     return rows;
 };
 
-const generateColumnNames = async (grid: Grid): Promise<string[]> => {
+const generateColumnNames = (grid: Grid): string[] => {
     const columnNames: string[] = [];
     if (!grid.config?.promoteHeaders) {
         for (let i = 0; i < grid.data[0].length; i++) {
@@ -56,7 +56,7 @@ const generateColumnNames = async (grid: Grid): Promise<string[]> => {
 
     // We are adjusting column names by default.
     if (!grid.config || grid.config.adjustColumnNames === undefined || grid.config.adjustColumnNames) {
-        return await tableUtils.getAdjustedColumnNames(grid.data[0]);
+        return tableUtils.getAdjustedColumnNames(grid.data[0]);
     }
 
     // Get column names and failed if it's not a legal name.

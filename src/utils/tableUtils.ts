@@ -199,7 +199,7 @@ const updateSheetsInitialData = async (sheetsXmlString: string, tableData: Table
     return serializer.serializeToString(sheetsDoc);
 };
 
-const getAdjustedColumnNames = async (columnNames: (string | number | boolean)[]) : Promise<string[]> => {
+const getAdjustedColumnNames = (columnNames: (string | number | boolean)[]) : string[] => {
     const newColumnNames: string[] = [];
     columnNames.forEach((columnName) => newColumnNames.push(getNextAvaiableColumnName(newColumnNames, getColumnNameToString(columnName))));
     return newColumnNames;

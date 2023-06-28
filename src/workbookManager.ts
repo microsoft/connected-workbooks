@@ -75,7 +75,7 @@ const parseInitialDataGrid = async (grid?: Grid): Promise<TableData | undefined>
         return undefined;
     }
 
-    const tableData: TableData | undefined = await parseToTableData(grid);
+    const tableData: TableData | undefined = parseToTableData(grid);
 
     return tableData;
 };
