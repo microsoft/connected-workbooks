@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { pqUtils } from "../src/utils";
 import { section1mPath, textResultType, URLS } from "../src/utils/constants";
 import { getPackageComponents } from "../src/utils/mashupDocumentParser";

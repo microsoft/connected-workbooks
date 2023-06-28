@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { sharedStringsXmlMock, existingSharedStringsXmlMock } from "./mocks";
 import { xmlInnerPartsUtils } from "../src/utils";
 

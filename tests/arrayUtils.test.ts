@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { arrayUtils } from "../src/utils/";
 import * as base64 from "base64-js";
 

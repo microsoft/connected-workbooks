@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { tableUtils } from "../src/utils";
 import { queryTableMock, sheetsXmlMock, workbookXmlMock } from "./mocks";
 
