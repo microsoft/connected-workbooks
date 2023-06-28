@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { defaults, gridNotFoundErr } from "./utils/constants";
 import { Grid, TableData } from "./types";
 import { tableUtils } from "./utils";
