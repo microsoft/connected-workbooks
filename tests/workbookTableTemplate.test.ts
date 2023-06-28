@@ -18,7 +18,7 @@ describe("Single blank table template tests", () => {
         defaultZipFile = await getZip(simpleTableDefaultTemplate);
     });
 
-    test("Default template is a valid zip file", async () => {
+    test("Default template is a valid zip file", () => {
         expect(defaultZipFile).toBeTruthy();
     });
 
