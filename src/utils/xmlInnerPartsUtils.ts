@@ -19,7 +19,7 @@ import {
 } from "./constants";
 import documentUtils from "./documentUtils";
 
-const updateDocProps = async (zip: JSZip, docProps: DocProps = {}) => {
+const updateDocProps = async (zip: JSZip, docProps: DocProps = {}): Promise<void> => {
     const { doc, properties } = await documentUtils.getDocPropsProperties(zip);
 
     //set auto updated elements
@@ -50,7 +50,11 @@ const updateDocProps = async (zip: JSZip, docProps: DocProps = {}) => {
     zip.file(docPropsCoreXmlPath, newDoc);
 };
 
-const updateConnections = async (connectionsXmlString: string, queryName: string, refreshOnOpen: boolean) => {
+const updateConnections = (
+    connectionsXmlString: string,
+    queryName: string,
+    refreshOnOpen: boolean
+): { connectionId: string | undefined; connectionXmlFileString: string } => {
     const parser: DOMParser = new DOMParser();
     const serializer: XMLSerializer = new XMLSerializer();
     const refreshOnLoadValue: string = refreshOnOpen ? trueValue : falseValue;
@@ -74,7 +78,7 @@ const updateConnections = async (connectionsXmlString: string, queryName: string
     return { connectionId, connectionXmlFileString };
 };
 
-const updateSharedStrings = async (sharedStringsXmlString: string, queryName: string) => {
+const updateSharedStrings = (sharedStringsXmlString: string, queryName: string): { sharedStringIndex: number; newSharedStrings: string } => {
     const parser: DOMParser = new DOMParser();
     const serializer: XMLSerializer = new XMLSerializer();
     const sharedStringsDoc: Document = parser.parseFromString(sharedStringsXmlString, xmlTextResultType);
@@ -120,7 +124,7 @@ const updateSharedStrings = async (sharedStringsXmlString: string, queryName: st
     return { sharedStringIndex, newSharedStrings };
 };
 
-const updateWorksheet = async (sheetsXmlString: string, sharedStringIndex: string) => {
+const updateWorksheet = (sheetsXmlString: string, sharedStringIndex: string): string => {
     const parser: DOMParser = new DOMParser();
     const serializer: XMLSerializer = new XMLSerializer();
     const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, xmlTextResultType);
@@ -130,7 +134,7 @@ const updateWorksheet = async (sheetsXmlString: string, sharedStringIndex: strin
     return newSheet;
 };
 
-const updatePivotTablesandQueryTables = async (zip: JSZip, queryName: string, refreshOnOpen: boolean, connectionId: string) => {
+const updatePivotTablesandQueryTables = async (zip: JSZip, queryName: string, refreshOnOpen: boolean, connectionId: string): Promise<void> => {
     // Find Query Table
     let found = false;
     const queryTablePromises: Promise<{
@@ -193,7 +197,7 @@ const updatePivotTablesandQueryTables = async (zip: JSZip, queryName: string, re
     }
 };
 
-const updateQueryTable = (tableXmlString: string, connectionId: string, refreshOnOpen: boolean) => {
+const updateQueryTable = (tableXmlString: string, connectionId: string, refreshOnOpen: boolean): { isQueryTableUpdated: boolean; newQueryTable: string } => {
     const refreshOnLoadValue: string = refreshOnOpen ? trueValue : falseValue;
     let isQueryTableUpdated = false;
     const parser: DOMParser = new DOMParser();
@@ -210,7 +214,7 @@ const updateQueryTable = (tableXmlString: string, connectionId: string, refreshO
     return { isQueryTableUpdated, newQueryTable };
 };
 
-const updatePivotTable = (tableXmlString: string, connectionId: string, refreshOnOpen: boolean) => {
+const updatePivotTable = (tableXmlString: string, connectionId: string, refreshOnOpen: boolean): { isPivotTableUpdated: boolean; newPivotTable: string } => {
     const refreshOnLoadValue: string = refreshOnOpen ? trueValue : falseValue;
     let isPivotTableUpdated = false;
     const parser: DOMParser = new DOMParser();

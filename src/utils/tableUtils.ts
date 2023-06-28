@@ -28,7 +28,7 @@ const updateTableInitialDataIfNeeded = async (zip: JSZip, tableData?: TableData,
         throw new Error(sheetsNotFoundErr);
     }
 
-    const newSheet: string = await updateSheetsInitialData(sheetsXmlString, tableData);
+    const newSheet: string = updateSheetsInitialData(sheetsXmlString, tableData);
     zip.file(sheetsXmlPath, newSheet);
 
     if (updateQueryTable) {
@@ -46,7 +46,7 @@ const updateTableInitialDataIfNeeded = async (zip: JSZip, tableData?: TableData,
             throw new Error(sheetsNotFoundErr);
         }
 
-        const newWorkbook: string = await updateWorkbookInitialData(workbookXmlString, tableData);
+        const newWorkbook: string = updateWorkbookInitialData(workbookXmlString, tableData);
         zip.file(workbookXmlPath, newWorkbook);
     }
 
@@ -55,11 +55,11 @@ const updateTableInitialDataIfNeeded = async (zip: JSZip, tableData?: TableData,
         throw new Error(tableNotFoundErr);
     }
 
-    const newTable: string = await updateTablesInitialData(tableXmlString, tableData, updateQueryTable);
+    const newTable: string = updateTablesInitialData(tableXmlString, tableData, updateQueryTable);
     zip.file(tableXmlPath, newTable);
 };
 
-const updateTablesInitialData = async (tableXmlString: string, tableData: TableData, updateQueryTable = false): Promise<string> => {
+const updateTablesInitialData = (tableXmlString: string, tableData: TableData, updateQueryTable = false): string => {
     const parser: DOMParser = new DOMParser();
     const serializer: XMLSerializer = new XMLSerializer();
     const tableDoc: Document = parser.parseFromString(tableXmlString, xmlTextResultType);
@@ -89,7 +89,7 @@ const updateTablesInitialData = async (tableXmlString: string, tableData: TableD
     return serializer.serializeToString(tableDoc);
 };
 
-const updateWorkbookInitialData = async (workbookXmlString: string, tableData: TableData): Promise<string> => {
+const updateWorkbookInitialData = (workbookXmlString: string, tableData: TableData): string => {
     const newParser: DOMParser = new DOMParser();
     const newSerializer: XMLSerializer = new XMLSerializer();
     const workbookDoc: Document = newParser.parseFromString(workbookXmlString, xmlTextResultType);
@@ -100,7 +100,7 @@ const updateWorkbookInitialData = async (workbookXmlString: string, tableData: T
     return newSerializer.serializeToString(workbookDoc);
 };
 
-const updateQueryTablesInitialData = async (queryTableXmlString: string, tableData: TableData): Promise<string> => {
+const updateQueryTablesInitialData = (queryTableXmlString: string, tableData: TableData): string => {
     const parser: DOMParser = new DOMParser();
     const serializer: XMLSerializer = new XMLSerializer();
     const queryTableDoc: Document = parser.parseFromString(queryTableXmlString, xmlTextResultType);
@@ -119,7 +119,7 @@ const updateQueryTablesInitialData = async (queryTableXmlString: string, tableDa
     return serializer.serializeToString(queryTableDoc);
 };
 
-const updateSheetsInitialData = async (sheetsXmlString: string, tableData: TableData): Promise<string> => {
+const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData): string => {
     const parser: DOMParser = new DOMParser();
     const serializer: XMLSerializer = new XMLSerializer();
     const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, xmlTextResultType);

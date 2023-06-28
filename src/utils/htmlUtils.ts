@@ -1,5 +1,4 @@
 export const extractTableValues = (table: HTMLTableElement): string[][] => {
-    const headers: string[] = [];
     const rows: string[][] = [];
 
     // Extract values from each row

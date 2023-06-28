@@ -60,11 +60,11 @@ const getCellReferenceRelative = (col: number, row: number): string => {
     return String.fromCharCode(col + 65) + row.toString();
 };
 
-const getTableReference = (numberOfCols: number, numberOfRows: number) => {
+const getTableReference = (numberOfCols: number, numberOfRows: number): string => {
     return `A1:${getCellReferenceRelative(numberOfCols, numberOfRows)}`;
 };
 
-const createCellElement = (doc: Document, colIndex: number, rowIndex: number, data: string) => {
+const createCellElement = (doc: Document, colIndex: number, rowIndex: number, data: string): Element => {
     const cell: Element = doc.createElementNS(doc.documentElement.namespaceURI, element.kindCell);
     cell.setAttribute(elementAttributes.row, getCellReferenceRelative(colIndex, rowIndex + 1));
     const cellData: Element = doc.createElementNS(doc.documentElement.namespaceURI, element.cellValue);

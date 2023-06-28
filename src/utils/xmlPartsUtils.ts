@@ -38,7 +38,7 @@ const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string
         throw new Error(connectionsNotFoundErr);
     }
 
-    const { connectionId, connectionXmlFileString } = await xmlInnerPartsUtils.updateConnections(connectionsXmlString, queryName, refreshOnOpen);
+    const { connectionId, connectionXmlFileString } = xmlInnerPartsUtils.updateConnections(connectionsXmlString, queryName, refreshOnOpen);
     zip.file(connectionsXmlPath, connectionXmlFileString);
 
     // Update sharedStrings
@@ -47,7 +47,7 @@ const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string
         throw new Error(sharedStringsNotFoundErr);
     }
 
-    const { sharedStringIndex, newSharedStrings } = await xmlInnerPartsUtils.updateSharedStrings(sharedStringsXmlString, queryName);
+    const { sharedStringIndex, newSharedStrings } = xmlInnerPartsUtils.updateSharedStrings(sharedStringsXmlString, queryName);
     zip.file(sharedStringsXmlPath, newSharedStrings);
 
     // Update sheet
@@ -56,7 +56,7 @@ const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string
         throw new Error(sheetsNotFoundErr);
     }
 
-    const worksheetString: string = await xmlInnerPartsUtils.updateWorksheet(sheetsXmlString, sharedStringIndex.toString());
+    const worksheetString: string = xmlInnerPartsUtils.updateWorksheet(sheetsXmlString, sharedStringIndex.toString());
     zip.file(sheetsXmlPath, worksheetString);
 
     // Update tables
