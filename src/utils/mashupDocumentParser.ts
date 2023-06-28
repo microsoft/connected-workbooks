@@ -42,7 +42,16 @@ export const replaceSingleQuery = async (base64Str: string, queryName: string, q
     return base64.fromByteArray(newMashup);
 };
 
-export const getPackageComponents = (base64Str: string) => {
+type PackageComponents = {
+    version: Uint8Array;
+    packageOPC: Uint8Array;
+    permissionsSize: number;
+    permissions: Uint8Array;
+    metadata: Uint8Array;
+    endBuffer: Uint8Array;
+};
+
+export const getPackageComponents = (base64Str: string): PackageComponents => {
     const buffer: ArrayBufferLike = base64.toByteArray(base64Str).buffer;
     const mashupArray: ArrayReader = new arrayUtils.ArrayReader(buffer);
     const version: Uint8Array = mashupArray.getBytes(4);
@@ -64,7 +73,7 @@ export const getPackageComponents = (base64Str: string) => {
     };
 };
 
-const editSingleQueryPackage = async (packageOPC: ArrayBuffer, queryMashupDoc: string) => {
+const editSingleQueryPackage = async (packageOPC: ArrayBuffer, queryMashupDoc: string): Promise<Uint8Array> => {
     const packageZip: JSZip = await JSZip.loadAsync(packageOPC);
     setSection1m(queryMashupDoc, packageZip);
 
@@ -82,7 +91,7 @@ const setSection1m = (queryMashupDoc: string, zip: JSZip): void => {
     });
 };
 
-export const editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Metadata) => {
+export const editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Metadata): Uint8Array => {
     //extract metadataXml
     const mashupArray: ArrayReader = new arrayUtils.ArrayReader(metadataArray.buffer);
     const metadataVersion: Uint8Array = mashupArray.getBytes(4);
