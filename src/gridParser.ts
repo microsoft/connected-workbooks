@@ -1,5 +1,6 @@
-import { gridNotFoundErr } from "./utils/constants";
+import { defaults, gridNotFoundErr } from "./utils/constants";
 import { Grid, TableData } from "./types";
+import { tableUtils } from "./utils";
 
 export const parseToTableData = (grid: Grid): TableData | undefined => {
     if (!grid) {
@@ -19,7 +20,7 @@ const parseGridRows = (grid: Grid): string[][] => {
     }
 
     const rows: string[][] = [];
-    if (!grid.promoteHeaders) {
+    if (!grid.config?.promoteHeaders) {
         const row: string[] = [];
         for (const prop in gridData[0]) {
             const cellValue: string | number | boolean = gridData[0][prop];
@@ -44,14 +45,20 @@ const parseGridRows = (grid: Grid): string[][] => {
 };
 
 const generateColumnNames = (grid: Grid): string[] => {
-    if (grid.promoteHeaders) {
-        return grid.data[0].map((columnName) => columnName.toString());
-    }
-
     const columnNames: string[] = [];
-    for (let i = 0; i < grid.data[0].length; i++) {
-        columnNames.push(`Column ${i + 1}`);
+    if (!grid.config?.promoteHeaders) {
+        for (let i = 0; i < grid.data[0].length; i++) {
+            columnNames.push(`${defaults.columnName} ${i + 1}`);
+        }
+
+        return columnNames;
     }
 
-    return columnNames;
+    // We are adjusting column names by default.
+    if (!grid.config || grid.config.adjustColumnNames === undefined || grid.config.adjustColumnNames) {
+        return tableUtils.getAdjustedColumnNames(grid.data[0]);
+    }
+
+    // Get column names and failed if it's not a legal name.
+    return tableUtils.getRawColumnNames(grid.data[0]);
 };

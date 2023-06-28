@@ -1,4 +1,5 @@
 import { tableUtils } from "../src/utils";
+import { InvalidColumnNameErr } from "../src/utils/constants";
 import { queryTableMock, sheetsXmlMock, workbookXmlMock } from "./mocks";
 
 describe("Table Utils tests", () => {
@@ -87,5 +88,38 @@ describe("Table Utils tests", () => {
             rows: [["1", "2"]],
         });
         expect(queryTableXmlSheet).toContain(queryTableMock);
+    });
+
+    test("tests Get next column Name", async () => {
+        const columnNames = ['Column', 'Column (1)',  'Column (2)', 'Column (3)', 'Banana'];
+        expect(tableUtils.getNextAvailableColumnName(columnNames, 'Column')).toEqual('Column (4)');
+        expect(tableUtils.getNextAvailableColumnName(columnNames, 'Banana')).toEqual('Banana (1)');
+        expect(tableUtils.getNextAvailableColumnName(columnNames, 'unexists')).toEqual('unexists');
+    });
+
+    test("tests Get adjusted column Name", async () => {
+        expect(await tableUtils.getAdjustedColumnNames(['Column', 2,  false, 2, 'Banana'])).toEqual(['Column', '2',  'false', '2 (1)', 'Banana']);
+        expect(await tableUtils.getAdjustedColumnNames(['Column', 2,  '', 2, 'Banana'])).toEqual(['Column', '2',  'Column (1)', '2 (1)', 'Banana']);
+        expect(await tableUtils.getAdjustedColumnNames(['Column', 'Column',  'Column (2)', 'Column (3)'])).toEqual(['Column', 'Column (1)',  'Column (2)', 'Column (3)']);
+    });
+
+    test("tests Get raw column Name success", async () => {
+        expect(tableUtils.getRawColumnNames(['Column', 'Column1',  'Column2', 2])).toEqual(['Column', 'Column1',  'Column2', '2']);
+    });
+
+    test("tests Get raw column Name empty name", async () => {
+        try {
+            tableUtils.getRawColumnNames(['Column', 2,  false, 2, 'Banana']);
+        } catch (error) {
+            expect(error).toBeTruthy();
+        }
+    });
+
+    test("tests Get raw column Name conflict name", async () => {
+        try {
+            tableUtils.getRawColumnNames(['Column', 2,  '', 2, 'Banana']);
+        } catch (error) {
+            expect(error).toBeTruthy();
+        }
     });
 });

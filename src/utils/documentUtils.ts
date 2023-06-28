@@ -68,14 +68,14 @@ const createCellElement = (doc: Document, colIndex: number, rowIndex: number, da
     const cell: Element = doc.createElementNS(doc.documentElement.namespaceURI, element.kindCell);
     cell.setAttribute(elementAttributes.row, getCellReferenceRelative(colIndex, rowIndex + 1));
     const cellData: Element = doc.createElementNS(doc.documentElement.namespaceURI, element.cellValue);
-    updateCellData(data, cell, cellData);
+    updateCellData(data, cell, cellData, rowIndex === 0);
     cell.appendChild(cellData);
 
     return cell;
 };
 
-const updateCellData = (data: string, cell: Element, cellData: Element) => {
-    switch (resolveType(data)) {
+const updateCellData = (data: string, cell: Element, cellData: Element, rowHeader: boolean) => {
+    switch (resolveType(data, rowHeader)) {
         case DataTypes.string:
             cell.setAttribute(element.text, dataTypeKind.string);
             break;
@@ -89,8 +89,12 @@ const updateCellData = (data: string, cell: Element, cellData: Element) => {
     cellData.textContent = data;
 };
 
-const resolveType = (originalData: string | number | boolean): DataTypes => {
+const resolveType = (originalData: string | number | boolean, rowHeader: boolean): DataTypes => {
     const data: string = originalData as string;
+    if (rowHeader) {
+        // Headers should be string by default.
+        return DataTypes.string;
+    }
     let dataType: DataTypes = isNaN(Number(data)) ? DataTypes.string : DataTypes.number;
     if (dataType == DataTypes.string) {
         if (data.trim() == trueStr || data.trim() == falseStr) {

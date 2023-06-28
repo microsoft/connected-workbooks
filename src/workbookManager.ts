@@ -15,7 +15,7 @@ import {
 import { DocProps, QueryInfo, TableData, Grid, FileConfigs } from "./types";
 import { generateSingleQueryMashup } from "./generators";
 import { extractTableValues } from "./utils/htmlUtils";
-import { parseToTableData } from "./GridParser";
+import { parseToTableData } from "./gridParser";
 
 export const generateSingleQueryWorkbook = async (
     query: QueryInfo,
@@ -52,7 +52,7 @@ export const generateTableWorkbookFromHtml = async (
     docProps?: DocProps
 ): Promise<Blob> => {
     const gridData = extractTableValues(htmlTable);
-    return await generateTableWorkbookFromGrid({ data: gridData, promoteHeaders: true }, docProps);
+    return await generateTableWorkbookFromGrid({ data: gridData, config: { promoteHeaders: true } }, docProps);
 };
 
 export const generateTableWorkbookFromGrid = async (grid: Grid, docProps?: DocProps): Promise<Blob> => {

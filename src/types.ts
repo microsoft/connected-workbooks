@@ -30,7 +30,12 @@ export interface TableData {
 
 export interface Grid {
     data: (string | number | boolean)[][];
+    config?: GridConfig;
+}
+
+export interface GridConfig {
     promoteHeaders?: boolean;
+    adjustColumnNames?: boolean;
 }
 
 export interface FileConfigs {
