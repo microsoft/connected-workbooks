@@ -201,7 +201,7 @@ const updateSheetsInitialData = async (sheetsXmlString: string, tableData: Table
 
 const getAdjustedColumnNames = (columnNames: (string | number | boolean)[]) : string[] => {
     const newColumnNames: string[] = [];
-    columnNames.forEach((columnName) => newColumnNames.push(getNextAvaiableColumnName(newColumnNames, getColumnNameToString(columnName))));
+    columnNames.forEach((columnName) => newColumnNames.push(getNextAvailableColumnName(newColumnNames, getColumnNameToString(columnName))));
     return newColumnNames;
 };
 
@@ -213,16 +213,16 @@ const getColumnNameToString = (columnName: (string | number | boolean)) : string
     return columnName.toString();
 };
 
-const getNextAvaiableColumnName = (columnNames: string[], columnName: string) : string => {
+const getNextAvailableColumnName = (columnNames: string[], columnName: string) : string => {
     let index = 1;
-    let nextAvaiableName = columnName;
-    while (columnNames.includes(nextAvaiableName))
+    let nextAvailableName = columnName;
+    while (columnNames.includes(nextAvailableName))
     {
-        nextAvaiableName = `${columnName} (${index})`;
+        nextAvailableName = `${columnName} (${index})`;
         index++;
     }
 
-    return nextAvaiableName;
+    return nextAvailableName;
 };
 
 const getRawColumnNames = (columnNames: (string | number | boolean)[]) : string[] => {
@@ -252,7 +252,7 @@ export default {
     updateWorkbookInitialData,
     updateTablesInitialData,
     updateQueryTablesInitialData,
-    getNextAvaiableColumnName,
+    getNextAvailableColumnName,
     getAdjustedColumnNames,
     getRawColumnNames
 };

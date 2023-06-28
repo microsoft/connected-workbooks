@@ -92,9 +92,9 @@ describe("Table Utils tests", () => {
 
     test("tests Get next column Name", async () => {
         const columnNames = ['Column', 'Column (1)',  'Column (2)', 'Column (3)', 'Banana'];
-        expect(tableUtils.getNextAvaiableColumnName(columnNames, 'Column')).toEqual('Column (4)');
-        expect(tableUtils.getNextAvaiableColumnName(columnNames, 'Banana')).toEqual('Banana (1)');
-        expect(tableUtils.getNextAvaiableColumnName(columnNames, 'unexists')).toEqual('unexists');
+        expect(tableUtils.getNextAvailableColumnName(columnNames, 'Column')).toEqual('Column (4)');
+        expect(tableUtils.getNextAvailableColumnName(columnNames, 'Banana')).toEqual('Banana (1)');
+        expect(tableUtils.getNextAvailableColumnName(columnNames, 'unexists')).toEqual('unexists');
     });
 
     test("tests Get adjusted column Name", async () => {
