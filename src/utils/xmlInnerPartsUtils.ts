@@ -23,9 +23,9 @@ const updateDocProps = async (zip: JSZip, docProps: DocProps = {}) => {
     const { doc, properties } = await documentUtils.getDocPropsProperties(zip);
 
     //set auto updated elements
-    const docPropsAutoUpdatedElementsArr: ("created" | "modified")[] = Object.keys(
-        DocPropsAutoUpdatedElements
-    ) as Array<keyof typeof DocPropsAutoUpdatedElements>;
+    const docPropsAutoUpdatedElementsArr: ("created" | "modified")[] = Object.keys(DocPropsAutoUpdatedElements) as Array<
+        keyof typeof DocPropsAutoUpdatedElements
+    >;
 
     const nowTime: string = new Date().toISOString();
 
@@ -34,9 +34,7 @@ const updateDocProps = async (zip: JSZip, docProps: DocProps = {}) => {
     });
 
     //set modifiable elements
-    const docPropsModifiableElementsArr = Object.keys(DocPropsModifiableElements) as Array<
-        keyof typeof DocPropsModifiableElements
-    >;
+    const docPropsModifiableElementsArr = Object.keys(DocPropsModifiableElements) as Array<keyof typeof DocPropsModifiableElements>;
 
     docPropsModifiableElementsArr
         .map((key) => ({
@@ -57,18 +55,13 @@ const updateConnections = async (connectionsXmlString: string, queryName: string
     const serializer: XMLSerializer = new XMLSerializer();
     const refreshOnLoadValue: string = refreshOnOpen ? trueValue : falseValue;
     const connectionsDoc: Document = parser.parseFromString(connectionsXmlString, xmlTextResultType);
-    const connectionsProperties: HTMLCollectionOf<Element> = connectionsDoc.getElementsByTagName(
-        element.databaseProperties
-    );
+    const connectionsProperties: HTMLCollectionOf<Element> = connectionsDoc.getElementsByTagName(element.databaseProperties);
     const dbPr: Element = connectionsProperties[0];
     dbPr.setAttribute(elementAttributes.refreshOnLoad, refreshOnLoadValue);
 
     // Update query details to match queryName
     dbPr.parentElement?.setAttribute(elementAttributes.name, elementAttributesValues.connectionName(queryName));
-    dbPr.parentElement?.setAttribute(
-        elementAttributes.description,
-        elementAttributesValues.connectionDescription(queryName)
-    );
+    dbPr.parentElement?.setAttribute(elementAttributes.description, elementAttributesValues.connectionDescription(queryName));
     dbPr.setAttribute(elementAttributes.connection, elementAttributesValues.connection(queryName));
     dbPr.setAttribute(elementAttributes.command, elementAttributesValues.connectionCommand(queryName));
     const connectionId: string | null | undefined = dbPr.parentElement?.getAttribute(elementAttributes.id);
@@ -107,10 +100,7 @@ const updateSharedStrings = async (sharedStringsXmlString: string, queryName: st
         if (sharedStringsDoc.documentElement.namespaceURI) {
             textElement = sharedStringsDoc.createElementNS(sharedStringsDoc.documentElement.namespaceURI, element.text);
             textElement.textContent = queryName;
-            const siElement: Element = sharedStringsDoc.createElementNS(
-                sharedStringsDoc.documentElement.namespaceURI,
-                element.sharedStringItem
-            );
+            const siElement: Element = sharedStringsDoc.createElementNS(sharedStringsDoc.documentElement.namespaceURI, element.sharedStringItem);
             siElement.appendChild(textElement);
             sharedStringsDoc.getElementsByTagName(element.sharedStringTable)[0].appendChild(siElement);
         }
@@ -140,12 +130,7 @@ const updateWorksheet = async (sheetsXmlString: string, sharedStringIndex: strin
     return newSheet;
 };
 
-const updatePivotTablesandQueryTables = async (
-    zip: JSZip,
-    queryName: string,
-    refreshOnOpen: boolean,
-    connectionId: string
-) => {
+const updatePivotTablesandQueryTables = async (zip: JSZip, queryName: string, refreshOnOpen: boolean, connectionId: string) => {
     // Find Query Table
     let found = false;
     const queryTablePromises: Promise<{
@@ -166,11 +151,7 @@ const updatePivotTablesandQueryTables = async (
     });
 
     (await Promise.all(queryTablePromises)).forEach(({ path, queryTableXmlString }) => {
-        const { isQueryTableUpdated, newQueryTable } = updateQueryTable(
-            queryTableXmlString,
-            connectionId,
-            refreshOnOpen
-        );
+        const { isQueryTableUpdated, newQueryTable } = updateQueryTable(queryTableXmlString, connectionId, refreshOnOpen);
         zip.file(queryTablesPath + path, newQueryTable);
         if (isQueryTableUpdated) {
             found = true;
@@ -201,11 +182,7 @@ const updatePivotTablesandQueryTables = async (
         }
     });
     (await Promise.all(pivotCachePromises)).forEach(({ path, pivotCacheXmlString }) => {
-        const { isPivotTableUpdated, newPivotTable } = updatePivotTable(
-            pivotCacheXmlString,
-            connectionId,
-            refreshOnOpen
-        );
+        const { isPivotTableUpdated, newPivotTable } = updatePivotTable(pivotCacheXmlString, connectionId, refreshOnOpen);
         zip.file(pivotCachesPath + path, newPivotTable);
         if (isPivotTableUpdated) {
             found = true;

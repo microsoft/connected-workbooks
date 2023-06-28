@@ -7,26 +7,14 @@ describe("Workbook Manager tests", () => {
         <dbPr connection="Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=Query1;" command="SELECT * FROM [Query1]"/></connection></connections>`;
 
     test("Connection XML attributes contain new query name", async () => {
-        const { connectionXmlFileString } = await xmlInnerPartsUtils.updateConnections(
-            mockConnectionString,
-            "newQueryName",
-            true
-        );
-        expect(connectionXmlFileString.replace(/ /g, "")).toContain(
-            'command="SELECT * FROM [newQueryName]'.replace(/ /g, "")
-        );
+        const { connectionXmlFileString } = await xmlInnerPartsUtils.updateConnections(mockConnectionString, "newQueryName", true);
+        expect(connectionXmlFileString.replace(/ /g, "")).toContain('command="SELECT * FROM [newQueryName]'.replace(/ /g, ""));
         expect(connectionXmlFileString.replace(/ /g, "")).toContain('name="Query - newQueryName"'.replace(/ /g, ""));
-        expect(connectionXmlFileString.replace(/ /g, "")).toContain(
-            `description="Connection to the 'newQueryName' query in the workbook."`.replace(/ /g, "")
-        );
+        expect(connectionXmlFileString.replace(/ /g, "")).toContain(`description="Connection to the 'newQueryName' query in the workbook."`.replace(/ /g, ""));
     });
 
     test("Connection XML attributes contain refreshOnLoad value", async () => {
-        const { connectionXmlFileString } = await xmlInnerPartsUtils.updateConnections(
-            mockConnectionString,
-            "newQueryName",
-            true
-        );
+        const { connectionXmlFileString } = await xmlInnerPartsUtils.updateConnections(mockConnectionString, "newQueryName", true);
         expect(connectionXmlFileString.replace(/ /g, "")).toContain('refreshOnLoad="1"');
     });
 

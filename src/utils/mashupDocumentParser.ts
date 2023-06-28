@@ -21,11 +21,7 @@ import { arrayUtils } from ".";
 import { Metadata } from "../types";
 import { ArrayReader } from "./arrayUtils";
 
-export const replaceSingleQuery = async (
-    base64Str: string,
-    queryName: string,
-    queryMashupDoc: string
-): Promise<string> => {
+export const replaceSingleQuery = async (base64Str: string, queryName: string, queryMashupDoc: string): Promise<string> => {
     const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } = getPackageComponents(base64Str);
     const newPackageBuffer: Uint8Array = await editSingleQueryPackage(packageOPC, queryMashupDoc);
     const packageSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(newPackageBuffer.byteLength);
@@ -126,9 +122,7 @@ export const editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Met
                 return prop?.name === elementAttributes.type;
             });
             if (entryProp?.nodeValue == elementAttributes.relationshipInfo) {
-                const newValue: string | undefined = entry
-                    .getAttribute(elementAttributes.value)
-                    ?.replace(/Query1/g, metadata.queryName);
+                const newValue: string | undefined = entry.getAttribute(elementAttributes.value)?.replace(/Query1/g, metadata.queryName);
                 if (newValue) {
                     entry.setAttribute(elementAttributes.value, newValue);
                 }
@@ -140,20 +134,14 @@ export const editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Met
             if (entryProp?.nodeValue == elementAttributes.fillColumnNames) {
                 const oldValue: string | null = entry.getAttribute(elementAttributes.value);
                 if (oldValue) {
-                    entry.setAttribute(
-                        elementAttributes.value,
-                        oldValue.replace(defaults.queryName, metadata.queryName)
-                    );
+                    entry.setAttribute(elementAttributes.value, oldValue.replace(defaults.queryName, metadata.queryName));
                 }
             }
 
             if (entryProp?.nodeValue == elementAttributes.fillTarget) {
                 const oldValue: string | null = entry.getAttribute(elementAttributes.value);
                 if (oldValue) {
-                    entry.setAttribute(
-                        elementAttributes.value,
-                        oldValue.replace(defaults.queryName, metadata.queryName)
-                    );
+                    entry.setAttribute(elementAttributes.value, oldValue.replace(defaults.queryName, metadata.queryName));
                 }
             }
 
@@ -169,12 +157,7 @@ export const editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Met
     const encoder: TextEncoder = new TextEncoder();
     const newMetadataXml: Uint8Array = encoder.encode(newMetadataString);
     const newMetadataXmlSize: Uint8Array = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
-    const newMetadataArray: Uint8Array = arrayUtils.concatArrays(
-        metadataVersion,
-        newMetadataXmlSize,
-        newMetadataXml,
-        endBuffer
-    );
+    const newMetadataArray: Uint8Array = arrayUtils.concatArrays(metadataVersion, newMetadataXmlSize, newMetadataXml, endBuffer);
 
     return newMetadataArray;
 };

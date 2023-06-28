@@ -4,24 +4,13 @@
 import JSZip from "jszip";
 import { pqUtils, xmlPartsUtils } from "./utils";
 import { SIMPLE_BLANK_TABLE_TEMPLATE, SIMPLE_QUERY_WORKBOOK_TEMPLATE } from "./workbookTemplate";
-import {
-    defaults,
-    emptyQueryMashupErr,
-    blobFileType,
-    application,
-    templateWithInitialDataErr,
-    tableNotFoundErr,
-} from "./utils/constants";
+import { defaults, emptyQueryMashupErr, blobFileType, application, templateWithInitialDataErr, tableNotFoundErr } from "./utils/constants";
 import { DocProps, QueryInfo, TableData, Grid, FileConfigs } from "./types";
 import { generateSingleQueryMashup } from "./generators";
 import { extractTableValues } from "./utils/htmlUtils";
 import { parseToTableData } from "./gridParser";
 
-export const generateSingleQueryWorkbook = async (
-    query: QueryInfo,
-    initialDataGrid?: Grid,
-    fileConfigs?: FileConfigs
-): Promise<Blob> => {
+export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataGrid?: Grid, fileConfigs?: FileConfigs): Promise<Blob> => {
     if (!query.queryMashup) {
         throw new Error(emptyQueryMashupErr);
     }
@@ -38,19 +27,14 @@ export const generateSingleQueryWorkbook = async (
     pqUtils.validateQueryName(query.queryName);
 
     const zip: JSZip =
-        templateFile === undefined
-            ? await JSZip.loadAsync(SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true })
-            : await JSZip.loadAsync(templateFile);
+        templateFile === undefined ? await JSZip.loadAsync(SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true }) : await JSZip.loadAsync(templateFile);
 
     const tableData: TableData | undefined = await parseInitialDataGrid(initialDataGrid);
 
     return await generateSingleQueryWorkbookFromZip(zip, query, fileConfigs?.docProps, tableData);
 };
 
-export const generateTableWorkbookFromHtml = async (
-    htmlTable: HTMLTableElement,
-    docProps?: DocProps
-): Promise<Blob> => {
+export const generateTableWorkbookFromHtml = async (htmlTable: HTMLTableElement, docProps?: DocProps): Promise<Blob> => {
     const gridData = extractTableValues(htmlTable);
     return await generateTableWorkbookFromGrid({ data: gridData, config: { promoteHeaders: true } }, docProps);
 };
@@ -80,21 +64,12 @@ const parseInitialDataGrid = async (grid?: Grid): Promise<TableData | undefined>
     return tableData;
 };
 
-const generateSingleQueryWorkbookFromZip = async (
-    zip: JSZip,
-    query: QueryInfo,
-    docProps?: DocProps,
-    tableData?: TableData
-): Promise<Blob> => {
+const generateSingleQueryWorkbookFromZip = async (zip: JSZip, query: QueryInfo, docProps?: DocProps, tableData?: TableData): Promise<Blob> => {
     if (!query.queryName) {
         query.queryName = defaults.queryName;
     }
 
-    await xmlPartsUtils.updateWorkbookPowerQueryDocument(
-        zip,
-        query.queryName,
-        generateSingleQueryMashup(query.queryName, query.queryMashup)
-    );
+    await xmlPartsUtils.updateWorkbookPowerQueryDocument(zip, query.queryName, generateSingleQueryMashup(query.queryName, query.queryMashup));
     await xmlPartsUtils.updateWorkbookSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
     await xmlPartsUtils.updateWorkbookInitialDataIfNeeded(zip, docProps, tableData, true /*updateQueryTable*/);
 

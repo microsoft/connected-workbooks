@@ -3,7 +3,7 @@
 
 export const connectionsXmlPath = "xl/connections.xml";
 export const sharedStringsXmlPath = "xl/sharedStrings.xml";
-export const sheetsXmlPath = "xl/worksheets/sheet1.xml"
+export const sheetsXmlPath = "xl/worksheets/sheet1.xml";
 export const tableXmlPath = "xl/tables/table1.xml";
 export const queryTableXmlPath = "xl/queryTables/queryTable1.xml";
 export const workbookXmlPath = "xl/workbook.xml";
@@ -12,7 +12,6 @@ export const pivotCachesPath = "xl/pivotCache/";
 export const section1mPath = "Formulas/Section1.m";
 export const docPropsCoreXmlPath = "docProps/core.xml";
 export const docPropsRootElement = "cp:coreProperties";
-
 
 export const sharedStringsNotFoundErr = "SharedStrings were not found in template";
 export const connectionsNotFoundErr = "Connections were not found in template";
@@ -49,7 +48,7 @@ export const divider = "/";
 export const maxQueryLength = 80;
 export const trueStr = "true";
 export const falseStr = "false";
-export const BOM = '\ufeff';
+export const BOM = "\ufeff";
 
 export const element = {
     sharedStringTable: "sst",
@@ -77,13 +76,13 @@ export const element = {
     sheetData: "sheetData",
     row: "row",
     dimension: "dimension",
-    kindCell: "c"
-}
+    kindCell: "c",
+};
 
 export const elementAttributes = {
     connection: "connection",
     command: "command",
-    refreshOnLoad: "refreshOnLoad", 
+    refreshOnLoad: "refreshOnLoad",
     count: "count",
     uniqueCount: "uniqueCount",
     queryTable: "queryTable",
@@ -122,14 +121,13 @@ export const elementAttributesValues = {
     connectionDescription: (queryName: string) => `Connection to the '${queryName}' query in the workbook.`,
     connection: (queryName: string) => `Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=${queryName};`,
     connectionCommand: (queryName: string) => `SELECT * FROM [${queryName}]`,
-    tableResultType: () => "sTable"
-
-}
+    tableResultType: () => "sTable",
+};
 
 export const defaults = {
     queryName: "Query1",
     sheetName: "Sheet1",
-    columnName: "Column"
+    columnName: "Column",
 };
 
 export const URLS = {

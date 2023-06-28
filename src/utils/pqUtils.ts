@@ -19,7 +19,7 @@ const getBase64 = async (zip: JSZip): Promise<string | undefined> => {
 
 const setBase64 = async (zip: JSZip, base64: string): Promise<void> => {
     const newXml = generateMashupXMLTemplate(base64);
-    const encoded = Buffer.from(BOM + newXml, 'ucs2');
+    const encoded = Buffer.from(BOM + newXml, "ucs2");
     const mashup = await getDataMashupFile(zip);
     zip.file(mashup?.path, encoded);
 };
@@ -42,7 +42,7 @@ const getDataMashupFile = async (zip: JSZip): Promise<CustomXmlFile> => {
     return mashup;
 };
 
-const getCustomXmlFile = async (zip: JSZip, url: string, encoding: BufferEncoding = 'utf16le'): Promise<CustomXmlFile> => {
+const getCustomXmlFile = async (zip: JSZip, url: string, encoding: BufferEncoding = "utf16le"): Promise<CustomXmlFile> => {
     const parser: DOMParser = new DOMParser();
     const itemsArray = await zip.file(/customXml\/item\d.xml/);
 
@@ -63,7 +63,9 @@ const getCustomXmlFile = async (zip: JSZip, url: string, encoding: BufferEncodin
             break;
         }
 
-        xmlString = Buffer.from(xmlValue).toString(encoding).replace(/^\ufeff/, '');
+        xmlString = Buffer.from(xmlValue)
+            .toString(encoding)
+            .replace(/^\ufeff/, "");
         const doc: Document = parser.parseFromString(xmlString, "text/xml");
 
         found = doc?.documentElement?.namespaceURI === url;

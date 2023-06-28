@@ -1,4 +1,4 @@
-import {SIMPLE_BLANK_TABLE_TEMPLATE} from "../src/workbookTemplate";
+import { SIMPLE_BLANK_TABLE_TEMPLATE } from "../src/workbookTemplate";
 import { pqUtils } from "../src/utils";
 import { queryTableXmlPath, tableXmlPath, textResultType } from "../src/utils/constants";
 import JSZip from "jszip";
