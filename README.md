@@ -31,12 +31,12 @@ workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
 ```
 
 ### 2. Export a table from raw data:
-```
+```typescript
 import workbookManager from '@microsoft/connected-workbooks';
 
 const grid = {
-  "promoteHeaders": true,
-  "data": [
+  config: { promoteHeaders:true, adjustColumnNames:true }
+  data: [
       ["Product", "Price", "InStock", "Category", "Date"],
       ["Widget A", 19.99, true, "Electronics", "10/26/2024"],
       ["Gizmo B", 9.99, true, "Accessories", "10/26/2024"],
@@ -153,8 +153,13 @@ async function `generateTableWorkbookFromGrid`: `Promise<Blob>`
 |Parameter   | Type   | Required   | Description   |
 |---|---|---|---|
 | data | (string | number | boolean)[][] | __required__ | Grid data
-| promoteHeaders | boolean | optional | Should first row of gridData be used as the header, defaults to false - generating "Column1", "Column2"...
+| config | GridConfig | optional | customizations to Grid handling (see GridConfig)
 
+### GridConfig
+|Parameter   | Type   | Required   | Description   |
+|---|---|---|---|
+| promoteHeaders | boolean | optional | Should first row of gridData be used as the header, defaults to false - generating "Column1", "Column2"...
+| adjustColumnNames | boolean | optional | Should column names be adjusted to be valid Excel names (Fix duplicates for example)
 
 #### FileConfigs
 |Parameter   | Type   | Required   | Description   |
