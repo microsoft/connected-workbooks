@@ -4,6 +4,7 @@
 import JSZip from "jszip";
 import { EmptyQueryNameErr, QueryNameMaxLengthErr, maxQueryLength, URLS, BOM } from "./constants";
 import { generateMashupXMLTemplate, generateCustomXmlFilePath } from "../generators";
+import { Buffer } from "buffer";
 
 type CustomXmlFile = {
     found: boolean;
