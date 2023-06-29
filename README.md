@@ -159,7 +159,7 @@ async function `generateTableWorkbookFromGrid`: `Promise<Blob>`
 |Parameter   | Type   | Required   | Description   |
 |---|---|---|---|
 | promoteHeaders | boolean | optional | Should first row of gridData be used as the header, defaults to false - generating "Column1", "Column2"...
-| adjustColumnNames | boolean | optional | Should column names be adjusted to be valid Excel names (Fix duplicates for example)
+| adjustColumnNames | boolean | optional | Should column names be adjusted to be valid Excel names (Fix duplicates for example), defaults to true
 
 #### FileConfigs
 |Parameter   | Type   | Required   | Description   |
