@@ -155,7 +155,7 @@ async function `generateTableWorkbookFromGrid`: `Promise<Blob>`
 | data | (string | number | boolean)[][] | __required__ | Grid data
 | config | GridConfig | optional | customizations to Grid handling (see GridConfig)
 
-### GridConfig
+#### GridConfig
 |Parameter   | Type   | Required   | Description   |
 |---|---|---|---|
 | promoteHeaders | boolean | optional | Should first row of gridData be used as the header, defaults to false - generating "Column1", "Column2"...
