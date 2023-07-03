@@ -3,7 +3,7 @@
 
 import { defaults, gridNotFoundErr } from "../utils/constants";
 import { Grid, TableData } from "../types";
-import { tableUtils } from "../utils";
+import columnNameUtils from "./columnNameUtils";
 
 const parseToTableData = (grid: Grid): TableData | undefined => {
     if (!grid) {
@@ -59,11 +59,11 @@ const generateColumnNames = (grid: Grid): string[] => {
 
     // We are adjusting column names by default.
     if (!grid.config || grid.config.adjustColumnNames === undefined || grid.config.adjustColumnNames) {
-        return tableUtils.getAdjustedColumnNames(grid.data[0]);
+        return columnNameUtils.getAdjustedColumnNames(grid.data[0]);
     }
 
     // Get column names and failed if it's not a legal name.
-    return tableUtils.getRawColumnNames(grid.data[0]);
+    return columnNameUtils.getRawColumnNames(grid.data[0]);
 };
 
 export default { parseToTableData };
