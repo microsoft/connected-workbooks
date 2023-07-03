@@ -30,12 +30,12 @@ const getNextAvailableColumnName = (columnNames: string[], columnName: string): 
 
 const getRawColumnNames = (columnNames: (string | number | boolean)[]): string[] => {
     const newColumnNames: string[] = [];
-    columnNames.forEach((columnName) => newColumnNames.push(getColumnNameOrReiseError(newColumnNames, columnName)));
+    columnNames.forEach((columnName) => newColumnNames.push(getColumnNameOrRaiseError(newColumnNames, columnName)));
 
     return newColumnNames;
 };
 
-const getColumnNameOrReiseError = (columnNames: string[], columnName: string | number | boolean): string => {
+const getColumnNameOrRaiseError = (columnNames: string[], columnName: string | number | boolean): string => {
     // column name shouldn't be empty.
     if (columnName === null || (typeof columnName === "string" && columnName.length == 0)) {
         throw new Error(InvalidColumnNameErr);

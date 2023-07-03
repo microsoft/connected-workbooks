@@ -25,7 +25,6 @@ export interface Metadata {
 export interface TableData {
     columnNames: string[];
     rows: string[][];
-    columnwidth?: number;
 }
 
 export interface Grid {

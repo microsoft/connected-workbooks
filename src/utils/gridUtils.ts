@@ -5,11 +5,7 @@ import { defaults, gridNotFoundErr } from "../utils/constants";
 import { Grid, TableData } from "../types";
 import columnNameUtils from "./columnNameUtils";
 
-const parseToTableData = (grid: Grid): TableData | undefined => {
-    if (!grid) {
-        return undefined;
-    }
-
+const parseToTableData = (grid: Grid): TableData => {
     const columnNames: string[] = generateColumnNames(grid);
     const rows: string[][] = parseGridRows(grid);
 
@@ -62,7 +58,7 @@ const generateColumnNames = (grid: Grid): string[] => {
         return columnNameUtils.getAdjustedColumnNames(grid.data[0]);
     }
 
-    // Get column names and failed if it's not a legal name.
+    // Get column names and fails if it's not a legal name.
     return columnNameUtils.getRawColumnNames(grid.data[0]);
 };
 

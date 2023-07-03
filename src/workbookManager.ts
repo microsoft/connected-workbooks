@@ -27,7 +27,7 @@ export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataG
     const zip: JSZip =
         templateFile === undefined ? await JSZip.loadAsync(SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true }) : await JSZip.loadAsync(templateFile);
 
-    const tableData: TableData | undefined = await parseInitialDataGrid(initialDataGrid);
+    const tableData = initialDataGrid ? gridUtils.parseToTableData(initialDataGrid) : undefined;
 
     return await generateSingleQueryWorkbookFromZip(zip, query, fileConfigs?.docProps, tableData);
 };
@@ -39,7 +39,7 @@ export const generateTableWorkbookFromHtml = async (htmlTable: HTMLTableElement,
 
 export const generateTableWorkbookFromGrid = async (grid: Grid, docProps?: DocProps): Promise<Blob> => {
     const zip: JSZip = await JSZip.loadAsync(SIMPLE_BLANK_TABLE_TEMPLATE, { base64: true });
-    const tableData: TableData | undefined = parseInitialDataGrid(grid);
+    const tableData = gridUtils.parseToTableData(grid);
     if (tableData === undefined) {
         throw new Error(tableNotFoundErr);
     }
@@ -50,14 +50,6 @@ export const generateTableWorkbookFromGrid = async (grid: Grid, docProps?: DocPr
         type: blobFileType,
         mimeType: application,
     });
-};
-
-const parseInitialDataGrid = (grid?: Grid): TableData | undefined => {
-    if (!grid) {
-        return undefined;
-    }
-
-    return gridUtils.parseToTableData(grid);
 };
 
 const generateSingleQueryWorkbookFromZip = async (zip: JSZip, query: QueryInfo, docProps?: DocProps, tableData?: TableData): Promise<Blob> => {
