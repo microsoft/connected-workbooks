@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export const extractTableValues = (table: HTMLTableElement): string[][] => {
+const extractTableValues = (table: HTMLTableElement): string[][] => {
     const rows: string[][] = [];
 
     // Extract values from each row
@@ -19,3 +19,5 @@ export const extractTableValues = (table: HTMLTableElement): string[][] => {
 
     return rows;
 };
+
+export default { extractTableValues };
