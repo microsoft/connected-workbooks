@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { defaults, gridNotFoundErr } from "./utils/constants";
-import { Grid, TableData } from "./types";
-import { tableUtils } from "./utils";
+import { defaults, gridNotFoundErr } from "../utils/constants";
+import { Grid, TableData } from "../types";
+import { tableUtils } from "../utils";
 
-export const parseToTableData = (grid: Grid): TableData | undefined => {
+const parseToTableData = (grid: Grid): TableData | undefined => {
     if (!grid) {
         return undefined;
     }
@@ -65,3 +65,5 @@ const generateColumnNames = (grid: Grid): string[] => {
     // Get column names and failed if it's not a legal name.
     return tableUtils.getRawColumnNames(grid.data[0]);
 };
+
+export default { parseToTableData };
