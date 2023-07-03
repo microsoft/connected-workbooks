@@ -2,12 +2,11 @@
 // Licensed under the MIT license.
 
 import JSZip from "jszip";
-import { pqUtils, xmlPartsUtils } from "./utils";
+import { pqUtils, xmlPartsUtils, htmlUtils } from "./utils";
 import { SIMPLE_BLANK_TABLE_TEMPLATE, SIMPLE_QUERY_WORKBOOK_TEMPLATE } from "./workbookTemplate";
 import { defaults, emptyQueryMashupErr, blobFileType, application, templateWithInitialDataErr, tableNotFoundErr } from "./utils/constants";
 import { DocProps, QueryInfo, TableData, Grid, FileConfigs } from "./types";
 import { generateSingleQueryMashup } from "./generators";
-import { extractTableValues } from "./utils/htmlUtils";
 import { parseToTableData } from "./gridParser";
 
 export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataGrid?: Grid, fileConfigs?: FileConfigs): Promise<Blob> => {
@@ -35,7 +34,7 @@ export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataG
 };
 
 export const generateTableWorkbookFromHtml = async (htmlTable: HTMLTableElement, docProps?: DocProps): Promise<Blob> => {
-    const gridData = extractTableValues(htmlTable);
+    const gridData = htmlUtils.extractTableValues(htmlTable);
     return await generateTableWorkbookFromGrid({ data: gridData, config: { promoteHeaders: true } }, docProps);
 };
 
