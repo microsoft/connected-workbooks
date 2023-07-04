@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { defaults, gridNotFoundErr, InvalidColumnNameErr } from "../utils/constants";
+import { defaults, InvalidColumnNameErr } from "../utils/constants";
 import { Grid, TableData } from "../types";
 
 interface MergedGridConfig {
@@ -9,7 +9,7 @@ interface MergedGridConfig {
     adjustColumnNames: boolean;
 }
 interface MergedGrid {
-    data: (string | number | boolean)[][];
+    data: string[][];
     config: MergedGridConfig;
 }
 
@@ -19,14 +19,16 @@ const parseToTableData = (grid: Grid): TableData => {
             promoteHeaders: grid.config?.promoteHeaders ?? false,
             adjustColumnNames: grid.config?.adjustColumnNames ?? true,
         },
-        data: grid.data,
+        data: grid.data.map((row) => row.map((value) => value.toString())),
     };
 
     validateGrid(mergedGrid);
     const columnNames: string[] = generateColumnNames(mergedGrid);
-    const rows: string[][] = parseGridRows(mergedGrid);
 
-    return { columnNames: columnNames, rows: rows };
+    if (mergedGrid.config.promoteHeaders) {
+        mergedGrid.data.shift();
+    }
+    return { columnNames: columnNames, rows: mergedGrid.data };
 };
 
 /*
@@ -62,44 +64,13 @@ const validateDataArrayDimensions = (arr: unknown[][]): boolean => {
     return arr.every((innerArr) => innerArr.length === innerLength);
 };
 
-const validateUniqueAndValidDataArray = (arr: (string | number | boolean)[]): boolean => {
+const validateUniqueAndValidDataArray = (arr: string[]): boolean => {
     if (arr.some((element) => element === "")) {
         return false; // Array contains empty elements
     }
 
     const uniqueSet = new Set(arr);
     return uniqueSet.size === arr.length;
-};
-
-const parseGridRows = (grid: MergedGrid): string[][] => {
-    const gridData: (string | number | boolean)[][] = grid.data;
-    if (!gridData) {
-        throw new Error(gridNotFoundErr);
-    }
-
-    const rows: string[][] = [];
-    if (!grid.config?.promoteHeaders) {
-        const row: string[] = [];
-        for (const prop in gridData[0]) {
-            const cellValue: string | number | boolean = gridData[0][prop];
-            row.push(cellValue.toString());
-        }
-
-        rows.push(row);
-    }
-
-    for (let i = 1; i < gridData.length; i++) {
-        const rowData: (string | number | boolean)[] = gridData[i];
-        const row: string[] = [];
-        for (const prop in rowData) {
-            const cellValue: string | number | boolean = rowData[prop];
-            row.push(cellValue?.toString() ?? "");
-        }
-
-        rows.push(row);
-    }
-
-    return rows;
 };
 
 const generateColumnNames = (grid: MergedGrid): string[] => {
