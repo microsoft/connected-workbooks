@@ -4,14 +4,30 @@
 import { defaults, gridNotFoundErr, InvalidColumnNameErr } from "../utils/constants";
 import { Grid, TableData } from "../types";
 
+interface MergedGridConfig {
+    promoteHeaders: boolean;
+    adjustColumnNames: boolean;
+}
+interface MergedGrid {
+    data: (string | number | boolean)[][];
+    config: MergedGridConfig;
+}
+
 const parseToTableData = (grid: Grid): TableData => {
-    const columnNames: string[] = generateColumnNames(grid);
-    const rows: string[][] = parseGridRows(grid);
+    const mergedGrid: MergedGrid = {
+        config: {
+            promoteHeaders: grid.config?.promoteHeaders ?? false,
+            adjustColumnNames: grid.config?.adjustColumnNames ?? true,
+        },
+        data: grid.data,
+    };
+    const columnNames: string[] = generateColumnNames(mergedGrid);
+    const rows: string[][] = parseGridRows(mergedGrid);
 
     return { columnNames: columnNames, rows: rows };
 };
 
-const parseGridRows = (grid: Grid): string[][] => {
+const parseGridRows = (grid: MergedGrid): string[][] => {
     const gridData: (string | number | boolean)[][] = grid.data;
     if (!gridData) {
         throw new Error(gridNotFoundErr);
@@ -42,9 +58,9 @@ const parseGridRows = (grid: Grid): string[][] => {
     return rows;
 };
 
-const generateColumnNames = (grid: Grid): string[] => {
+const generateColumnNames = (grid: MergedGrid): string[] => {
     const columnNames: string[] = [];
-    if (!grid.config?.promoteHeaders) {
+    if (!grid.config.promoteHeaders) {
         for (let i = 0; i < grid.data[0].length; i++) {
             columnNames.push(`${defaults.columnName} ${i + 1}`);
         }
@@ -52,8 +68,7 @@ const generateColumnNames = (grid: Grid): string[] => {
         return columnNames;
     }
 
-    // We are adjusting column names by default.
-    if (!grid.config || grid.config.adjustColumnNames === undefined || grid.config.adjustColumnNames) {
+    if (grid.config.adjustColumnNames) {
         return getAdjustedColumnNames(grid.data[0]);
     }
 
