@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { defaults, InvalidColumnNameErr } from "../utils/constants";
+import { defaults } from "../utils/constants";
 import { Grid, TableData } from "../types";
 
 interface MergedGridConfig {
@@ -23,10 +23,14 @@ const parseToTableData = (grid: Grid): TableData => {
     };
 
     validateGrid(mergedGrid);
-    const columnNames: string[] = generateColumnNames(mergedGrid);
-
-    if (mergedGrid.config.promoteHeaders) {
-        mergedGrid.data.shift();
+    let columnNames: string[] = [];
+    if (mergedGrid.config.promoteHeaders && mergedGrid.config.adjustColumnNames) {
+        columnNames = getAdjustedColumnNames(mergedGrid.data.shift());
+    } else if (mergedGrid.config.promoteHeaders && !mergedGrid.config.adjustColumnNames) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        columnNames = mergedGrid.data.shift()!;
+    } else {
+        columnNames = Array.from({ length: grid.data[0].length }, (_, index) => `${defaults.columnName} ${index + 1}`);
     }
     return { columnNames: columnNames, rows: mergedGrid.data };
 };
@@ -73,68 +77,21 @@ const validateUniqueAndValidDataArray = (arr: string[]): boolean => {
     return uniqueSet.size === arr.length;
 };
 
-const generateColumnNames = (grid: MergedGrid): string[] => {
-    const columnNames: string[] = [];
-    if (!grid.config.promoteHeaders) {
-        for (let i = 0; i < grid.data[0].length; i++) {
-            columnNames.push(`${defaults.columnName} ${i + 1}`);
+const getAdjustedColumnNames = (columnNames: string[] | undefined): string[] => {
+    if (columnNames === undefined) {
+        throw new Error("Unexpected");
+    }
+    columnNames = columnNames.map((columnName) => columnName || defaults.columnName);
+    const uniqueNames = new Set<string>();
+    return columnNames.map((name) => {
+        let uniqueName = name;
+        let index = 1;
+        while (uniqueNames.has(uniqueName)) {
+            uniqueName = `${name} (${index++})`;
         }
-
-        return columnNames;
-    }
-
-    if (grid.config.adjustColumnNames) {
-        return getAdjustedColumnNames(grid.data[0]);
-    }
-
-    // Get column names and fails if it's not a legal name.
-    return getRawColumnNames(grid.data[0]);
-};
-
-const getAdjustedColumnNames = (columnNames: (string | number | boolean)[]): string[] => {
-    const newColumnNames: string[] = [];
-    columnNames.forEach((columnName) => newColumnNames.push(getNextAvailableColumnName(newColumnNames, getColumnNameToString(columnName))));
-    return newColumnNames;
-};
-
-const getColumnNameToString = (columnName: string | number | boolean): string => {
-    if (columnName === null || (typeof columnName === "string" && columnName.length == 0)) {
-        return defaults.columnName;
-    }
-
-    return columnName.toString();
-};
-
-const getNextAvailableColumnName = (columnNames: string[], columnName: string): string => {
-    let index = 1;
-    let nextAvailableName = columnName;
-    while (columnNames.includes(nextAvailableName)) {
-        nextAvailableName = `${columnName} (${index})`;
-        index++;
-    }
-
-    return nextAvailableName;
-};
-
-const getRawColumnNames = (columnNames: (string | number | boolean)[]): string[] => {
-    const newColumnNames: string[] = [];
-    columnNames.forEach((columnName) => newColumnNames.push(getColumnNameOrRaiseError(newColumnNames, columnName)));
-
-    return newColumnNames;
-};
-
-const getColumnNameOrRaiseError = (columnNames: string[], columnName: string | number | boolean): string => {
-    // column name shouldn't be empty.
-    if (columnName === null || (typeof columnName === "string" && columnName.length == 0)) {
-        throw new Error(InvalidColumnNameErr);
-    }
-
-    // Duplicate column name.
-    if (columnNames.includes(columnName.toString())) {
-        throw new Error(InvalidColumnNameErr);
-    }
-
-    return columnName.toString();
+        uniqueNames.add(uniqueName);
+        return uniqueName;
+    });
 };
 
 export default { parseToTableData };
