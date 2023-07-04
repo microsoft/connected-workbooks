@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { defaults, gridNotFoundErr } from "../utils/constants";
+import { defaults, gridNotFoundErr, InvalidColumnNameErr } from "../utils/constants";
 import { Grid, TableData } from "../types";
-import columnNameUtils from "./columnNameUtils";
 
 const parseToTableData = (grid: Grid): TableData => {
     const columnNames: string[] = generateColumnNames(grid);
@@ -55,11 +54,57 @@ const generateColumnNames = (grid: Grid): string[] => {
 
     // We are adjusting column names by default.
     if (!grid.config || grid.config.adjustColumnNames === undefined || grid.config.adjustColumnNames) {
-        return columnNameUtils.getAdjustedColumnNames(grid.data[0]);
+        return getAdjustedColumnNames(grid.data[0]);
     }
 
     // Get column names and fails if it's not a legal name.
-    return columnNameUtils.getRawColumnNames(grid.data[0]);
+    return getRawColumnNames(grid.data[0]);
+};
+
+const getAdjustedColumnNames = (columnNames: (string | number | boolean)[]): string[] => {
+    const newColumnNames: string[] = [];
+    columnNames.forEach((columnName) => newColumnNames.push(getNextAvailableColumnName(newColumnNames, getColumnNameToString(columnName))));
+    return newColumnNames;
+};
+
+const getColumnNameToString = (columnName: string | number | boolean): string => {
+    if (columnName === null || (typeof columnName === "string" && columnName.length == 0)) {
+        return defaults.columnName;
+    }
+
+    return columnName.toString();
+};
+
+const getNextAvailableColumnName = (columnNames: string[], columnName: string): string => {
+    let index = 1;
+    let nextAvailableName = columnName;
+    while (columnNames.includes(nextAvailableName)) {
+        nextAvailableName = `${columnName} (${index})`;
+        index++;
+    }
+
+    return nextAvailableName;
+};
+
+const getRawColumnNames = (columnNames: (string | number | boolean)[]): string[] => {
+    const newColumnNames: string[] = [];
+    columnNames.forEach((columnName) => newColumnNames.push(getColumnNameOrRaiseError(newColumnNames, columnName)));
+
+    return newColumnNames;
+};
+
+const getColumnNameOrRaiseError = (columnNames: string[], columnName: string | number | boolean): string => {
+    // column name shouldn't be empty.
+    if (columnName === null || (typeof columnName === "string" && columnName.length == 0)) {
+        throw new Error(InvalidColumnNameErr);
+    }
+
+    // Duplicate column name.
+    if (columnNames.includes(columnName.toString())) {
+        throw new Error(InvalidColumnNameErr);
+    }
+
+    return columnName.toString();
 };
 
 export default { parseToTableData };
