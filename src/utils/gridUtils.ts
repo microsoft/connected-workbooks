@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { defaults } from "../utils/constants";
+import { arrayIsntMxNErr, defaults, promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr, unexpectedErr } from "../utils/constants";
 import { Grid, TableData } from "../types";
 
 interface MergedGridConfig {
@@ -22,7 +22,9 @@ const parseToTableData = (grid: Grid): TableData => {
         data: grid.data.map((row) => row.map((value) => value.toString())),
     };
 
+    correctGrid(mergedGrid);
     validateGrid(mergedGrid);
+
     let columnNames: string[] = [];
     if (mergedGrid.config.promoteHeaders && mergedGrid.config.adjustColumnNames) {
         columnNames = getAdjustedColumnNames(mergedGrid.data.shift());
@@ -30,9 +32,34 @@ const parseToTableData = (grid: Grid): TableData => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         columnNames = mergedGrid.data.shift()!;
     } else {
-        columnNames = Array.from({ length: grid.data[0].length }, (_, index) => `${defaults.columnName} ${index + 1}`);
+        columnNames = Array.from({ length: mergedGrid.data[0].length }, (_, index) => `${defaults.columnName} ${index + 1}`);
     }
     return { columnNames: columnNames, rows: mergedGrid.data };
+};
+
+const correctGrid = (grid: MergedGrid): void => {
+    if (grid.data.length === 0) {
+        // empty grid fix
+        grid.config.promoteHeaders = false;
+        grid.data.push([""]);
+        return;
+    }
+
+    const getEmptyArray = (n: number) => Array.from({ length: n }, () => "");
+    if (grid.data[0].length === 0) {
+        grid.data[0] = [""];
+    }
+    // replace empty rows
+    grid.data.forEach((row, index) => {
+        if (row.length === 0) {
+            grid.data[index] = getEmptyArray(grid.data[0].length);
+        }
+    });
+
+    if (grid.config.promoteHeaders && grid.data.length === 1) {
+        // table in Excel should have at least 2 rows
+        grid.data.push(getEmptyArray(grid.data[0].length));
+    }
 };
 
 /*
@@ -42,30 +69,21 @@ const parseToTableData = (grid: Grid): TableData => {
  * - If promoteHeaders is true - has at least 1 row, and in case adjustColumnNames is false, first row is unique and non empty.
  */
 const validateGrid = (grid: MergedGrid): void => {
-    if (!validateDataArrayDimensions(grid.data)) {
-        throw new Error("Invalid grid dimensions");
-    }
-
-    if (grid.config.promoteHeaders && grid.data.length === 0) {
-        throw new Error("Promote headers is not supported for an empty grid");
-    }
+    validateDataArrayDimensions(grid.data);
 
     if (grid.config.promoteHeaders && grid.config.adjustColumnNames === false && !validateUniqueAndValidDataArray(grid.data[0])) {
-        throw new Error("Headers cannot be promoted without adjusting column names");
+        throw new Error(promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr);
     }
 };
 
-const validateDataArrayDimensions = (arr: unknown[][]): boolean => {
-    if (arr.length === 0) {
-        return true; // Empty array is considered valid
-    }
-    const innerLength = arr[0].length;
-
-    if (innerLength === 0) {
-        return false; // [[]] and any [] innerArr is invalid
+const validateDataArrayDimensions = (arr: unknown[][]): void => {
+    if (arr.length === 0 || arr[0].length === 0) {
+        throw new Error(unexpectedErr);
     }
 
-    return arr.every((innerArr) => innerArr.length === innerLength);
+    if (!arr.every((innerArr) => innerArr.length === arr[0].length)) {
+        throw new Error(arrayIsntMxNErr);
+    }
 };
 
 const validateUniqueAndValidDataArray = (arr: string[]): boolean => {
@@ -79,15 +97,17 @@ const validateUniqueAndValidDataArray = (arr: string[]): boolean => {
 
 const getAdjustedColumnNames = (columnNames: string[] | undefined): string[] => {
     if (columnNames === undefined) {
-        throw new Error("Unexpected");
+        throw new Error(unexpectedErr);
     }
-    columnNames = columnNames.map((columnName) => columnName || defaults.columnName);
+    let i = 1;
+    // replace empty column names with default names, can still conflict if columns exist, but we handle that later
+    columnNames = columnNames.map((columnName) => columnName || `${defaults.columnName} ${i++}`);
     const uniqueNames = new Set<string>();
     return columnNames.map((name) => {
         let uniqueName = name;
-        let index = 1;
+        i = 1;
         while (uniqueNames.has(uniqueName)) {
-            uniqueName = `${name} (${index++})`;
+            uniqueName = `${name} (${i++})`;
         }
         uniqueNames.add(uniqueName);
         return uniqueName;

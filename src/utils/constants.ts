@@ -32,6 +32,9 @@ export const QueryNameMaxLengthErr = "Query names are limited to 80 characters";
 export const EmptyQueryNameErr = "Query name cannot be empty";
 export const stylesNotFoundErr = "Styles were not found in template";
 export const InvalidColumnNameErr = "Invalid column name";
+export const promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr = "Headers cannot be promoted without adjusting column names";
+export const unexpectedErr = "Unexpected error";
+export const arrayIsntMxNErr = "Array isn't MxN";
 
 export const blobFileType = "blob";
 export const uint8ArrayType = "uint8array";
