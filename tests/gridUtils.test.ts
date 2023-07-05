@@ -1,21 +1,14 @@
-import exp from "constants";
-import { TableData } from "../src/types";
 import { arrayIsntMxNErr, defaults, promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr } from "../src/utils/constants";
 import gridUtils from "../src/utils/gridUtils";
-
-const basicTable = (length: number): TableData => ({ columnNames: [`${defaults.columnName} 1`], rows: Array.from({ length }, () => [""]) });
 
 const columnName = (i: number) => `${defaults.columnName} ${i}`;
 describe("Grid Utils tests", () => {
     test.concurrent.each([
-        // empty grid
-        [{ data: [] }, { columnNames: [columnName(1)], rows: [[""]] }],
-        // empty grid
-        [{ data: [[]] }, { columnNames: [columnName(1)], rows: [[""]] }],
-        // empty grid with empty rows
-        [{ data: [[], []] }, { columnNames: [columnName(1)], rows: [[""], [""]] }],
-        // happy path, no headers
+        ["empty grid 1", { data: [] }, { columnNames: [columnName(1)], rows: [[""]] }],
+        ["empty grid 2", { data: [[]] }, { columnNames: [columnName(1)], rows: [[""]] }],
+        ["empty grid with empty rows", { data: [[], []] }, { columnNames: [columnName(1)], rows: [[""], [""]] }],
         [
+            "happy path, no headers",
             {
                 data: [
                     ["1", "2"],
@@ -30,8 +23,8 @@ describe("Grid Utils tests", () => {
                 ],
             },
         ],
-        // type conversions, no headers
         [
+            "type conversions, no headers",
             {
                 data: [
                     [true, 3],
@@ -46,8 +39,8 @@ describe("Grid Utils tests", () => {
                 ],
             },
         ],
-        // fill in empty rows
         [
+            "fill in empty rows",
             { data: [["1", "2"], [], ["3", "4"]] },
             {
                 columnNames: [columnName(1), columnName(2)],
@@ -58,24 +51,24 @@ describe("Grid Utils tests", () => {
                 ],
             },
         ],
-        // promote headers with empty array
         [
+            "promote headers with empty array",
             { data: [], config: { promoteHeaders: true } },
             {
                 columnNames: [columnName(1)],
                 rows: [[""]],
             },
         ],
-        // promote headers with empty row
         [
+            "promote headers with empty row",
             { data: [[]], config: { promoteHeaders: true } },
             {
                 columnNames: [columnName(1)],
                 rows: [[""]],
             },
         ],
-        // promote headers, basic
         [
+            "promote headers, basic",
             {
                 data: [
                     ["1", "2"],
@@ -88,16 +81,16 @@ describe("Grid Utils tests", () => {
                 rows: [["3", "4"]],
             },
         ],
-        // promote headers with empty array, without adjust column names
         [
+            "promote headers with empty array, without adjust column names",
             { data: [], config: { promoteHeaders: true, adjustColumnNames: false } },
             {
                 columnNames: [columnName(1)],
                 rows: [[""]],
             },
         ],
-        // promote headers, adjust column names, basic
         [
+            "promote headers, adjust column names, basic",
             {
                 data: [
                     ["A", "A", "B"],
@@ -110,8 +103,8 @@ describe("Grid Utils tests", () => {
                 rows: [["1", "2", "3"]],
             },
         ],
-        // promote headers, adjust column names, multiple
         [
+            "promote headers, adjust column names, multiple",
             {
                 data: [
                     ["A", "A", "B", "C", "B", "A"],
@@ -128,15 +121,15 @@ describe("Grid Utils tests", () => {
                 ],
             },
         ],
-        // promote headers, adjust column names, types
         [
+            "promote headers, adjust column names, types",
             { data: [[true, true]], config: { promoteHeaders: true } },
             {
                 columnNames: ["true", "true (1)"],
                 rows: [["", ""]],
             },
         ],
-    ])("%j should be parsed to %j", (input, expected) => {
+    ])("%s:\n\t%j should be parsed to %j", (scenario, input, expected) => {
         expect(gridUtils.parseToTableData(input)).toEqual(expected);
     });
 
