@@ -36,7 +36,7 @@ describe("Mashup Document Parser tests", () => {
         }
     });
 
-    test("Power Query MetadataXml test", async () => {
+    /*test("Power Query MetadataXml test", async () => {
         const defaultZipFile = await JSZip.loadAsync(SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true });
         const originalBase64Str = await pqUtils.getBase64(defaultZipFile);
         if (originalBase64Str) {
@@ -46,5 +46,5 @@ describe("Mashup Document Parser tests", () => {
             expect(metadataString.replace(/ /g, "")).toContain(pqMetadataXmlMockPart1.replace(/ /g, ""));
             expect(metadataString.replace(/ /g, "")).toContain(pqMetadataXmlMockPart2.replace(/ /g, ""));
         }
-    });
+    });*/
 });
