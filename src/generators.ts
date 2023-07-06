@@ -7,7 +7,7 @@ export const generateMashupXMLTemplate = (base64: string): string =>
 export const generateSingleQueryMashup = (queryName: string, query: string): string =>
     `section Section1;
     
-    shared ${queryName} = 
+    shared #"${queryName}" = 
     ${query};`;
 
 export const generateCustomXmlFilePath = (i: number): string => `customXml/item${i}.xml`;

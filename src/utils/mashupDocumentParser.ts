@@ -114,7 +114,7 @@ export const editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Met
             const content: string = itemPath.innerHTML;
             if (content.includes(section1PathPrefix)) {
                 const strArr: string[] = content.split(divider);
-                strArr[1] = metadata.queryName;
+                strArr[1] = encodeURIComponent(metadata.queryName);
                 const newContent: string = strArr.join(divider);
                 itemPath.textContent = newContent;
             }
@@ -130,12 +130,6 @@ export const editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Met
             const entryProp: Attr | undefined = entryAttributesArr.find((prop) => {
                 return prop?.name === elementAttributes.type;
             });
-            if (entryProp?.nodeValue == elementAttributes.relationshipInfo) {
-                const newValue: string | undefined = entry.getAttribute(elementAttributes.value)?.replace(/Query1/g, metadata.queryName);
-                if (newValue) {
-                    entry.setAttribute(elementAttributes.value, newValue);
-                }
-            }
             if (entryProp?.nodeValue == elementAttributes.resultType) {
                 entry.setAttribute(elementAttributes.value, elementAttributesValues.tableResultType());
             }
