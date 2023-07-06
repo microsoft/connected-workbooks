@@ -25,7 +25,6 @@ export const formulaSectionNotFoundErr = "Formula section wasn't found in templa
 export const templateWithInitialDataErr = "Cannot receive template file with initial data";
 export const queryTableNotFoundErr = "Query table wasn't found in template";
 export const tableNotFoundErr = "Table wasn't found in template";
-export const gridNotFoundErr = "Invalid JSON file, grid data is missing";
 export const invalidValueInColumnErr = "Invalid cell value in column";
 export const headerNotFoundErr = "Invalid JSON file, header is missing";
 export const invalidDataTypeErr = "Invalid JSON file, invalid data type";
@@ -33,6 +32,9 @@ export const QueryNameMaxLengthErr = "Query names are limited to 80 characters";
 export const EmptyQueryNameErr = "Query name cannot be empty";
 export const stylesNotFoundErr = "Styles were not found in template";
 export const InvalidColumnNameErr = "Invalid column name";
+export const promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr = "Headers cannot be promoted without adjusting column names";
+export const unexpectedErr = "Unexpected error";
+export const arrayIsntMxNErr = "Array isn't MxN";
 
 export const blobFileType = "blob";
 export const uint8ArrayType = "uint8array";

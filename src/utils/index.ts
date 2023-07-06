@@ -8,3 +8,4 @@ export { default as xmlPartsUtils } from "./xmlPartsUtils";
 export { default as xmlInnerPartsUtils } from "./xmlInnerPartsUtils";
 export { default as tableUtils } from "./tableUtils";
 export { default as htmlUtils } from "./htmlUtils";
+export { default as gridUtils } from "./gridUtils";
