@@ -14,12 +14,18 @@ interface MergedGrid {
 }
 
 const parseToTableData = (grid: Grid): TableData => {
+    if (grid === null || grid === undefined) {
+        grid = { data: [] };
+    }
+    if (grid.data === null || grid.data === undefined) {
+        grid.data = [];
+    }
     const mergedGrid: MergedGrid = {
         config: {
             promoteHeaders: grid.config?.promoteHeaders ?? false,
             adjustColumnNames: grid.config?.adjustColumnNames ?? true,
         },
-        data: grid.data.map((row) => row.map((value) => value.toString())),
+        data: grid.data.map((row) => row.map((value) => value?.toString() ?? "")),
     };
 
     correctGrid(mergedGrid);

@@ -2,8 +2,11 @@ import { arrayIsntMxNErr, defaults, promotedHeadersCannotBeUsedWithoutAdjustingC
 import gridUtils from "../src/utils/gridUtils";
 
 const columnName = (i: number) => `${defaults.columnName} ${i}`;
+
 describe("Grid Utils tests", () => {
     test.concurrent.each([
+        ["null grid", null, { columnNames: [columnName(1)], rows: [[""]] }],
+        ["null grid data", { data: null }, { columnNames: [columnName(1)], rows: [[""]] }],
         ["empty grid 1", { data: [] }, { columnNames: [columnName(1)], rows: [[""]] }],
         ["empty grid 2", { data: [[]] }, { columnNames: [columnName(1)], rows: [[""]] }],
         ["empty grid with empty rows", { data: [[], []] }, { columnNames: [columnName(1)], rows: [[""], [""]] }],
