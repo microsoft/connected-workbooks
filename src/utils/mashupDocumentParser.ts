@@ -134,13 +134,6 @@ export const editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Met
                 entry.setAttribute(elementAttributes.value, elementAttributesValues.tableResultType());
             }
 
-            if (entryProp?.nodeValue == elementAttributes.fillColumnNames) {
-                const oldValue: string | null = entry.getAttribute(elementAttributes.value);
-                if (oldValue) {
-                    entry.setAttribute(elementAttributes.value, oldValue.replace(defaults.queryName, metadata.queryName));
-                }
-            }
-
             if (entryProp?.nodeValue == elementAttributes.fillTarget) {
                 const oldValue: string | null = entry.getAttribute(elementAttributes.value);
                 if (oldValue) {
