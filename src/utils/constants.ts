@@ -29,6 +29,7 @@ export const invalidValueInColumnErr = "Invalid cell value in column";
 export const headerNotFoundErr = "Invalid JSON file, header is missing";
 export const invalidDataTypeErr = "Invalid JSON file, invalid data type";
 export const QueryNameMaxLengthErr = "Query names are limited to 80 characters";
+export const QueryNameInvalidCharsErr = 'Query names cannot contain periods or quotation marks. (. ")';
 export const EmptyQueryNameErr = "Query name cannot be empty";
 export const stylesNotFoundErr = "Styles were not found in template";
 export const InvalidColumnNameErr = "Invalid column name";
