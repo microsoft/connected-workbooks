@@ -79,6 +79,7 @@ export const element = {
     sheetData: "sheetData",
     row: "row",
     dimension: "dimension",
+    selection: "selection",
     kindCell: "c",
 };
 
@@ -105,6 +106,7 @@ export const elementAttributes = {
     uniqueName: "uniqueName",
     queryTableFieldId: "queryTableFieldId",
     reference: "ref",
+    sqref: "sqref",
     tableColumnId: "tableColumnId",
     nextId: "nextId",
     row: "r",

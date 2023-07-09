@@ -148,11 +148,10 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData):
         sheetData.appendChild(newRow);
         rowIndex++;
     });
+    const reference = documentUtils.getTableReference(tableData.rows[0].length - 1, tableData.rows.length + 1);
 
-    sheetsDoc
-        .getElementsByTagName(element.dimension)[0]
-        .setAttribute(elementAttributes.reference, documentUtils.getTableReference(tableData.rows[0].length - 1, tableData.rows.length));
-
+    sheetsDoc.getElementsByTagName(element.dimension)[0].setAttribute(elementAttributes.reference, reference);
+    sheetsDoc.getElementsByTagName(element.selection)[0].setAttribute(elementAttributes.sqref, reference);
     return serializer.serializeToString(sheetsDoc);
 };
 
