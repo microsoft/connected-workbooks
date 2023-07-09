@@ -151,7 +151,7 @@ async function `generateTableWorkbookFromGrid`: `Promise<Blob>`
 #### Grid
 |Parameter   | Type   | Required   | Description   |
 |---|---|---|---|
-| data | (string | number | boolean)[][] | __required__ | Grid data
+| data | (string \| number \| boolean)[][] | __required__ | Grid data
 | config | GridConfig | optional | customizations to Grid handling (see GridConfig)
 
 #### GridConfig
