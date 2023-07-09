@@ -1,7 +1,6 @@
 # Connected Workbooks
 [![Build Status](https://obilshield.visualstudio.com/ConnectedWorkbooks/_apis/build/status/microsoft.connected-workbooks?branchName=main)](https://obilshield.visualstudio.com/ConnectedWorkbooks/_build/latest?definitionId=14&branchName=main)
 [![License](https://img.shields.io/github/license/microsoft/connected-workbooks)](https://github.com/microsoft/connected-workbooks/blob/master/LICENSE)
-[![Snyk Vulnerabilities](https://img.shields.io/snyk/vulnerabilities/github/microsoft/connected-workbooks)](https://snyk.io/test/github/microsoft/connected-workbooks)
 
 A pure JS library, Microsoft backed, that provides xlsx workbook generation capabilities, allowing for:
 1. Fundemental **"Export to Excel"** capabilities for tabular data (landing in a table in Excel).
@@ -152,7 +151,7 @@ async function `generateTableWorkbookFromGrid`: `Promise<Blob>`
 #### Grid
 |Parameter   | Type   | Required   | Description   |
 |---|---|---|---|
-| data | (string | number | boolean)[][] | __required__ | Grid data
+| data | (string \| number \| boolean)[][] | __required__ | Grid data
 | config | GridConfig | optional | customizations to Grid handling (see GridConfig)
 
 #### GridConfig
