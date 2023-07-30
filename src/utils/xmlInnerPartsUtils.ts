@@ -19,6 +19,11 @@ import {
     pivotCachesPathPrefix,
     queryAndPivotTableNotFoundErr,
     emptyValue,
+    //labelInfoXmlPath,
+    //labelElement,
+    docMetadataXmlPath,
+    relsXmlPath,
+    unexpectedErr,
 } from "./constants";
 import documentUtils from "./documentUtils";
 
@@ -51,6 +56,35 @@ const updateDocProps = async (zip: JSZip, docProps: DocProps = {}): Promise<void
     const serializer: XMLSerializer = new XMLSerializer();
     const newDoc: string = serializer.serializeToString(doc);
     zip.file(docPropsCoreXmlPath, newDoc);
+};
+
+const clearLabelInfo = async (zip: JSZip): Promise<void> => {
+    // remove docMetadata folder that contains only LabelInfo.xml in template file.
+    zip.remove(docMetadataXmlPath);
+
+    // fix rels
+    const relsString = await zip.file(relsXmlPath)?.async(textResultType);
+    if (relsString === undefined) {
+        throw new Error("rels.xml was not found in template");
+    }
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(relsString, xmlTextResultType);
+    const relationships = doc.querySelector("Relationships");
+    if (relationships === null) {
+        throw new Error(unexpectedErr);
+    }
+    const element = relationships.querySelector('Relationship[Target="docMetadata/LabelInfo.xml"]');
+    if (element) {
+        relationships.removeChild(element);
+    }
+    relationships.querySelector('Relationship[Target="xl/workbook.xml"]')?.setAttribute("Id", "rId1");
+    relationships.querySelector('Relationship[Target="docProps/core.xml"]')?.setAttribute("Id", "rId2");
+    relationships.querySelector('Relationship[Target="docProps/app.xml"]')?.setAttribute("Id", "rId3");
+
+    const serializer: XMLSerializer = new XMLSerializer();
+    const newDoc: string = serializer.serializeToString(doc);
+    zip.file(relsXmlPath, newDoc);
 };
 
 const updateConnections = (
@@ -237,6 +271,7 @@ const updatePivotTable = (tableXmlString: string, connectionId: string, refreshO
 
 export default {
     updateDocProps,
+    clearLabelInfo,
     updateConnections,
     updateSharedStrings,
     updateWorksheet,

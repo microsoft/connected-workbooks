@@ -13,13 +13,16 @@ import {
     sheetsNotFoundErr,
 } from "./constants";
 import { replaceSingleQuery } from "./mashupDocumentParser";
-import { DocProps, TableData } from "../types";
+import { FileConfigs, TableData } from "../types";
 import pqUtils from "./pqUtils";
 import xmlInnerPartsUtils from "./xmlInnerPartsUtils";
 import tableUtils from "./tableUtils";
 
-const updateWorkbookInitialDataIfNeeded = async (zip: JSZip, docProps?: DocProps, tableData?: TableData, updateQueryTable = false): Promise<void> => {
-    await xmlInnerPartsUtils.updateDocProps(zip, docProps);
+const updateWorkbookInitialDataIfNeeded = async (zip: JSZip, fileConfigs?: FileConfigs, tableData?: TableData, updateQueryTable = false): Promise<void> => {
+    await xmlInnerPartsUtils.updateDocProps(zip, fileConfigs?.docProps);
+    if (fileConfigs?.clearLabelInfo) {
+        await xmlInnerPartsUtils.clearLabelInfo(zip);
+    }
     await tableUtils.updateTableInitialDataIfNeeded(zip, tableData, updateQueryTable);
 };
 

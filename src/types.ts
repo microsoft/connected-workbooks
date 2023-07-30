@@ -40,6 +40,7 @@ export interface GridConfig {
 export interface FileConfigs {
     templateFile?: File;
     docProps?: DocProps;
+    clearLabelInfo?: boolean;
 }
 
 export enum DataTypes {
