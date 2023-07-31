@@ -20,7 +20,8 @@ import tableUtils from "./tableUtils";
 
 const updateWorkbookInitialDataIfNeeded = async (zip: JSZip, fileConfigs?: FileConfigs, tableData?: TableData, updateQueryTable = false): Promise<void> => {
     await xmlInnerPartsUtils.updateDocProps(zip, fileConfigs?.docProps);
-    if (fileConfigs?.clearLabelInfo) {
+    if (fileConfigs?.templateFile === undefined) {
+        // If we are using our base template, we need to clear label info
         await xmlInnerPartsUtils.clearLabelInfo(zip);
     }
     await tableUtils.updateTableInitialDataIfNeeded(zip, tableData, updateQueryTable);

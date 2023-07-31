@@ -25,7 +25,6 @@ export const queryAndPivotTableNotFoundErr = "No such query found in Query Table
 export const queryConnectionNotFoundErr = "No connection found for query";
 export const formulaSectionNotFoundErr = "Formula section wasn't found in template";
 export const templateWithInitialDataErr = "Cannot use a template file with initial data";
-export const templateWithClearLabelInfoErr = "Cannot use a template file with clear label info";
 export const queryTableNotFoundErr = "Query table wasn't found in template";
 export const tableNotFoundErr = "Table wasn't found in template";
 export const invalidValueInColumnErr = "Invalid cell value in column";
@@ -39,6 +38,7 @@ export const InvalidColumnNameErr = "Invalid column name";
 export const promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr = "Headers cannot be promoted without adjusting column names";
 export const unexpectedErr = "Unexpected error";
 export const arrayIsntMxNErr = "Array isn't MxN";
+export const templateFileNotSupportedErr = "Template file is not supported for this API call";
 
 export const blobFileType = "blob";
 export const uint8ArrayType = "uint8array";

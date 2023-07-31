@@ -11,7 +11,7 @@ import {
     application,
     templateWithInitialDataErr,
     tableNotFoundErr,
-    templateWithClearLabelInfoErr,
+    templateFileNotSupportedErr,
 } from "./utils/constants";
 import { QueryInfo, TableData, Grid, FileConfigs } from "./types";
 import { generateSingleQueryMashup } from "./generators";
@@ -29,9 +29,6 @@ export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataG
     if (templateFile !== undefined && initialDataGrid !== undefined) {
         throw new Error(templateWithInitialDataErr);
     }
-    if (templateFile !== undefined && fileConfigs?.clearLabelInfo) {
-        throw new Error(templateWithClearLabelInfoErr);
-    }
 
     pqUtils.validateQueryName(query.queryName);
 
@@ -44,11 +41,17 @@ export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataG
 };
 
 export const generateTableWorkbookFromHtml = async (htmlTable: HTMLTableElement, fileConfigs?: FileConfigs): Promise<Blob> => {
+    if (fileConfigs?.templateFile !== undefined) {
+        throw new Error(templateFileNotSupportedErr);
+    }
     const gridData = htmlUtils.extractTableValues(htmlTable);
     return await generateTableWorkbookFromGrid({ data: gridData, config: { promoteHeaders: true } }, fileConfigs);
 };
 
 export const generateTableWorkbookFromGrid = async (grid: Grid, fileConfigs?: FileConfigs): Promise<Blob> => {
+    if (fileConfigs?.templateFile !== undefined) {
+        throw new Error(templateFileNotSupportedErr);
+    }
     const zip: JSZip = await JSZip.loadAsync(SIMPLE_BLANK_TABLE_TEMPLATE, { base64: true });
     const tableData = gridUtils.parseToTableData(grid);
     if (tableData === undefined) {
