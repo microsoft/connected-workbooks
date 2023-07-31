@@ -18,7 +18,7 @@ import pqUtils from "./pqUtils";
 import xmlInnerPartsUtils from "./xmlInnerPartsUtils";
 import tableUtils from "./tableUtils";
 
-const updateWorkbookInitialDataIfNeeded = async (zip: JSZip, fileConfigs?: FileConfigs, tableData?: TableData, updateQueryTable = false): Promise<void> => {
+const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: FileConfigs, tableData?: TableData, updateQueryTable = false): Promise<void> => {
     await xmlInnerPartsUtils.updateDocProps(zip, fileConfigs?.docProps);
     if (fileConfigs?.templateFile === undefined) {
         // If we are using our base template, we need to clear label info
@@ -71,7 +71,7 @@ const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string
 };
 
 export default {
-    updateWorkbookInitialDataIfNeeded,
+    updateWorkbookDataAndConfigurations,
     updateWorkbookPowerQueryDocument,
     updateWorkbookSingleQueryAttributes,
 };
