@@ -11,6 +11,9 @@ import {
     sharedStringsNotFoundErr,
     sheetsXmlPath,
     sheetsNotFoundErr,
+    tableXmlPath,
+    queryTableXmlPath,
+    queryTableNotFoundErr,
 } from "./constants";
 import { replaceSingleQuery } from "./mashupDocumentParser";
 import { DocProps, TableData } from "../types";
@@ -66,8 +69,45 @@ const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string
     await xmlInnerPartsUtils.updatePivotTablesandQueryTables(zip, queryName, refreshOnOpen, connectionId!);
 };
 
+const updateWorkbookGeneratedUUIDs = async (zip: JSZip, updateQueryTable: boolean = false): Promise<void> => {
+    const connectionsXmlString: string | undefined = await zip.file(connectionsXmlPath)?.async(textResultType);
+    if (connectionsXmlString === undefined) {
+        throw new Error(connectionsNotFoundErr);
+    }
+
+    const connectionXmlFileString = xmlInnerPartsUtils.randomizeConnectionsUUID(connectionsXmlString);
+    zip.file(connectionsXmlPath, connectionXmlFileString);
+
+    const sheetsXmlString: string | undefined = await zip.file(sheetsXmlPath)?.async(textResultType);
+    if (sheetsXmlString === undefined) {
+        throw new Error(sheetsNotFoundErr);
+    }
+
+    const worksheetString: string = xmlInnerPartsUtils.randomizeWorksheetUUID(sheetsXmlString);
+    zip.file(sheetsXmlPath, worksheetString);
+
+    const tableXmlString: string | undefined = await zip.file(tableXmlPath)?.async(textResultType);
+    if (tableXmlString === undefined) {
+        throw new Error(sheetsNotFoundErr);
+    }
+
+    const tableString: string = xmlInnerPartsUtils.randomizeTableUUID(tableXmlString);
+    zip.file(tableXmlPath, tableString);
+
+    if (updateQueryTable) {
+        const queryTableXmlString: string | undefined = await zip.file(queryTableXmlPath)?.async(textResultType);
+        if (queryTableXmlString === undefined) {
+            throw new Error(queryTableNotFoundErr);
+        }
+
+        const queryTableString: string = xmlInnerPartsUtils.randomizeQueryTableUUID(queryTableXmlString);
+        zip.file(queryTableXmlPath, queryTableString);
+    }    
+};
+
 export default {
     updateWorkbookInitialDataIfNeeded,
     updateWorkbookPowerQueryDocument,
     updateWorkbookSingleQueryAttributes,
+    updateWorkbookGeneratedUUIDs,
 };

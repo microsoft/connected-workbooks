@@ -81,6 +81,8 @@ export const element = {
     dimension: "dimension",
     selection: "selection",
     kindCell: "c",
+    connection: "connection",
+    worksheet: "worksheet",
 };
 
 export const elementAttributes = {
@@ -113,6 +115,8 @@ export const elementAttributes = {
     spans: "spans",
     x14acDyDescent: "x14ac:dyDescent",
     xr3uid: "xr3:uid",
+    xr16uid: "xr16:uid",
+    xruid: "xr:uid",
 };
 
 export const dataTypeKind = {
