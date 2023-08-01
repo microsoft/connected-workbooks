@@ -19,11 +19,10 @@ import {
     pivotCachesPathPrefix,
     queryAndPivotTableNotFoundErr,
     emptyValue,
-    //labelInfoXmlPath,
-    //labelElement,
     docMetadataXmlPath,
     relsXmlPath,
     unexpectedErr,
+    relsNotFoundErr,
 } from "./constants";
 import documentUtils from "./documentUtils";
 
@@ -65,7 +64,7 @@ const clearLabelInfo = async (zip: JSZip): Promise<void> => {
     // fix rels
     const relsString = await zip.file(relsXmlPath)?.async(textResultType);
     if (relsString === undefined) {
-        throw new Error("rels.xml was not found in template");
+        throw new Error(relsNotFoundErr);
     }
 
     const parser = new DOMParser();
