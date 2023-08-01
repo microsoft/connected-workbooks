@@ -70,14 +70,6 @@ const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string
 };
 
 const updateWorkbookGeneratedUUIDs = async (zip: JSZip, updateQueryTable: boolean = false): Promise<void> => {
-    const connectionsXmlString: string | undefined = await zip.file(connectionsXmlPath)?.async(textResultType);
-    if (connectionsXmlString === undefined) {
-        throw new Error(connectionsNotFoundErr);
-    }
-
-    const connectionXmlFileString = xmlInnerPartsUtils.randomizeConnectionsUUID(connectionsXmlString);
-    zip.file(connectionsXmlPath, connectionXmlFileString);
-
     const sheetsXmlString: string | undefined = await zip.file(sheetsXmlPath)?.async(textResultType);
     if (sheetsXmlString === undefined) {
         throw new Error(sheetsNotFoundErr);
@@ -95,6 +87,14 @@ const updateWorkbookGeneratedUUIDs = async (zip: JSZip, updateQueryTable: boolea
     zip.file(tableXmlPath, tableString);
 
     if (updateQueryTable) {
+        const connectionsXmlString: string | undefined = await zip.file(connectionsXmlPath)?.async(textResultType);
+        if (connectionsXmlString === undefined) {
+            throw new Error(connectionsNotFoundErr);
+        }
+
+        const connectionXmlFileString = xmlInnerPartsUtils.randomizeConnectionsUUID(connectionsXmlString);
+        zip.file(connectionsXmlPath, connectionXmlFileString);
+        
         const queryTableXmlString: string | undefined = await zip.file(queryTableXmlPath)?.async(textResultType);
         if (queryTableXmlString === undefined) {
             throw new Error(queryTableNotFoundErr);
