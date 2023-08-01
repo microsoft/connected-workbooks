@@ -286,6 +286,17 @@ const randomizeQueryTableUUID = (queryTableXmlString: string): string => {
     return newQueryTable;
 };
 
+const randomizeWorkbookUUID = (workbookXmlString: string): string => {
+    const parser: DOMParser = new DOMParser();
+    const serializer: XMLSerializer = new XMLSerializer();
+    const workbookDoc: Document = parser.parseFromString(workbookXmlString, xmlTextResultType);
+    const workbookView: Element = workbookDoc.getElementsByTagName(element.workbookView)[0];
+    workbookView.setAttribute(elementAttributes.xr2uid, "{" + v4().toUpperCase() + "}");
+    const newWorkbook: string = serializer.serializeToString(workbookDoc);
+
+    return newWorkbook;
+};
+
 export default {
     updateDocProps,
     updateConnections,
@@ -297,5 +308,6 @@ export default {
     randomizeConnectionsUUID,
     randomizeWorksheetUUID,
     randomizeTableUUID,
-    randomizeQueryTableUUID
+    randomizeQueryTableUUID,
+    randomizeWorkbookUUID
 };

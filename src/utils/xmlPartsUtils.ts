@@ -14,6 +14,9 @@ import {
     tableXmlPath,
     queryTableXmlPath,
     queryTableNotFoundErr,
+    workbookXmlPath,
+    workbookNotFoundErr,
+    tableNotFoundErr,
 } from "./constants";
 import { replaceSingleQuery } from "./mashupDocumentParser";
 import { DocProps, TableData } from "../types";
@@ -75,12 +78,20 @@ const updateWorkbookGeneratedUUIDs = async (zip: JSZip, updateQueryTable: boolea
         throw new Error(sheetsNotFoundErr);
     }
 
-    const worksheetString: string = xmlInnerPartsUtils.randomizeWorksheetUUID(sheetsXmlString);
-    zip.file(sheetsXmlPath, worksheetString);
+    const sheetString: string = xmlInnerPartsUtils.randomizeWorksheetUUID(sheetsXmlString);
+    zip.file(sheetsXmlPath, sheetString);
+
+    const workbookXmlString: string | undefined = await zip.file(workbookXmlPath)?.async(textResultType);
+    if (workbookXmlString === undefined) {
+        throw new Error(workbookNotFoundErr);
+    }
+
+    const workbookString: string = xmlInnerPartsUtils.randomizeWorkbookUUID(workbookXmlString);
+    zip.file(workbookXmlPath, workbookString);
 
     const tableXmlString: string | undefined = await zip.file(tableXmlPath)?.async(textResultType);
     if (tableXmlString === undefined) {
-        throw new Error(sheetsNotFoundErr);
+        throw new Error(tableNotFoundErr);
     }
 
     const tableString: string = xmlInnerPartsUtils.randomizeTableUUID(tableXmlString);
