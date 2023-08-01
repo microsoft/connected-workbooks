@@ -25,6 +25,7 @@ export const formulaSectionNotFoundErr = "Formula section wasn't found in templa
 export const templateWithInitialDataErr = "Cannot receive template file with initial data";
 export const queryTableNotFoundErr = "Query table wasn't found in template";
 export const tableNotFoundErr = "Table wasn't found in template";
+export const workbookNotFoundErr = "Workbook wasn't found in template";
 export const invalidValueInColumnErr = "Invalid cell value in column";
 export const headerNotFoundErr = "Invalid JSON file, header is missing";
 export const invalidDataTypeErr = "Invalid JSON file, invalid data type";
@@ -81,6 +82,9 @@ export const element = {
     dimension: "dimension",
     selection: "selection",
     kindCell: "c",
+    connection: "connection",
+    worksheet: "worksheet",
+    workbookView: "workbookView"
 };
 
 export const elementAttributes = {
@@ -113,6 +117,9 @@ export const elementAttributes = {
     spans: "spans",
     x14acDyDescent: "x14ac:dyDescent",
     xr3uid: "xr3:uid",
+    xr2uid: "xr2:uid",
+    xr16uid: "xr16:uid",
+    xruid: "xr:uid",
 };
 
 export const dataTypeKind = {

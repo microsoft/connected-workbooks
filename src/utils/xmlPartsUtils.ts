@@ -11,6 +11,12 @@ import {
     sharedStringsNotFoundErr,
     sheetsXmlPath,
     sheetsNotFoundErr,
+    tableXmlPath,
+    queryTableXmlPath,
+    queryTableNotFoundErr,
+    workbookXmlPath,
+    workbookNotFoundErr,
+    tableNotFoundErr,
 } from "./constants";
 import { replaceSingleQuery } from "./mashupDocumentParser";
 import { DocProps, TableData } from "../types";
@@ -66,8 +72,53 @@ const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string
     await xmlInnerPartsUtils.updatePivotTablesandQueryTables(zip, queryName, refreshOnOpen, connectionId!);
 };
 
+const updateWorkbookGeneratedUUIDs = async (zip: JSZip, updateQueryTable: boolean = false): Promise<void> => {
+    const sheetsXmlString: string | undefined = await zip.file(sheetsXmlPath)?.async(textResultType);
+    if (sheetsXmlString === undefined) {
+        throw new Error(sheetsNotFoundErr);
+    }
+
+    const sheetString: string = xmlInnerPartsUtils.randomizeWorksheetUUID(sheetsXmlString);
+    zip.file(sheetsXmlPath, sheetString);
+
+    const workbookXmlString: string | undefined = await zip.file(workbookXmlPath)?.async(textResultType);
+    if (workbookXmlString === undefined) {
+        throw new Error(workbookNotFoundErr);
+    }
+
+    const workbookString: string = xmlInnerPartsUtils.randomizeWorkbookUUID(workbookXmlString);
+    zip.file(workbookXmlPath, workbookString);
+
+    const tableXmlString: string | undefined = await zip.file(tableXmlPath)?.async(textResultType);
+    if (tableXmlString === undefined) {
+        throw new Error(tableNotFoundErr);
+    }
+
+    const tableString: string = xmlInnerPartsUtils.randomizeTableUUID(tableXmlString);
+    zip.file(tableXmlPath, tableString);
+
+    if (updateQueryTable) {
+        const connectionsXmlString: string | undefined = await zip.file(connectionsXmlPath)?.async(textResultType);
+        if (connectionsXmlString === undefined) {
+            throw new Error(connectionsNotFoundErr);
+        }
+
+        const connectionXmlFileString = xmlInnerPartsUtils.randomizeConnectionsUUID(connectionsXmlString);
+        zip.file(connectionsXmlPath, connectionXmlFileString);
+        
+        const queryTableXmlString: string | undefined = await zip.file(queryTableXmlPath)?.async(textResultType);
+        if (queryTableXmlString === undefined) {
+            throw new Error(queryTableNotFoundErr);
+        }
+
+        const queryTableString: string = xmlInnerPartsUtils.randomizeQueryTableUUID(queryTableXmlString);
+        zip.file(queryTableXmlPath, queryTableString);
+    }    
+};
+
 export default {
     updateWorkbookInitialDataIfNeeded,
     updateWorkbookPowerQueryDocument,
     updateWorkbookSingleQueryAttributes,
+    updateWorkbookGeneratedUUIDs,
 };

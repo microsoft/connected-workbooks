@@ -21,6 +21,7 @@ import {
     emptyValue,
 } from "./constants";
 import documentUtils from "./documentUtils";
+import { v4 } from "uuid";
 
 const updateDocProps = async (zip: JSZip, docProps: DocProps = {}): Promise<void> => {
     const { doc, properties } = await documentUtils.getDocPropsProperties(zip);
@@ -131,7 +132,8 @@ const updateWorksheet = (sheetsXmlString: string, sharedStringIndex: string): st
     const parser: DOMParser = new DOMParser();
     const serializer: XMLSerializer = new XMLSerializer();
     const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, xmlTextResultType);
-    sheetsDoc.getElementsByTagName(element.cellValue)[0].innerHTML = sharedStringIndex.toString();
+    const cellValue: Element = sheetsDoc.getElementsByTagName(element.cellValue)[0];
+    cellValue.innerHTML = sharedStringIndex;
     const newSheet: string = serializer.serializeToString(sheetsDoc);
 
     return newSheet;
@@ -235,6 +237,66 @@ const updatePivotTable = (tableXmlString: string, connectionId: string, refreshO
     return { isPivotTableUpdated, newPivotTable };
 };
 
+const randomizeConnectionsUUID = (connectionsXmlString: string): string => {
+    const parser: DOMParser = new DOMParser();
+    const serializer: XMLSerializer = new XMLSerializer();
+    const connectionsDoc: Document = parser.parseFromString(connectionsXmlString, xmlTextResultType);
+    const connection: Element = connectionsDoc.getElementsByTagName(element.connection)[0];
+    connection.setAttribute(elementAttributes.xr16uid, "{" + v4().toUpperCase() + "}");
+    const newConnections: string = serializer.serializeToString(connectionsDoc);
+
+    return newConnections;
+};
+
+const randomizeWorksheetUUID = (worksheetXmlString: string): string => {
+    const parser: DOMParser = new DOMParser();
+    const serializer: XMLSerializer = new XMLSerializer();
+    const worksheetDoc: Document = parser.parseFromString(worksheetXmlString, xmlTextResultType);
+    const worksheet: Element = worksheetDoc.getElementsByTagName(element.worksheet)[0];
+    worksheet.setAttribute(elementAttributes.xruid, "{" + v4().toUpperCase() + "}");
+    const newSheet: string = serializer.serializeToString(worksheetDoc);
+
+    return newSheet;
+};
+
+const randomizeTableUUID = (tableXmlString: string): string => {
+    const parser: DOMParser = new DOMParser();
+    const serializer: XMLSerializer = new XMLSerializer();
+    const tableDoc: Document = parser.parseFromString(tableXmlString, xmlTextResultType);
+    const table: Element = tableDoc.getElementsByTagName(element.table)[0];
+    const tableUUID: string = "{" + v4().toUpperCase() + "}";
+    table.setAttribute(elementAttributes.xruid, tableUUID);
+    const autoFilter: Element = tableDoc.getElementsByTagName(element.autoFilter)[0];
+    autoFilter.setAttribute(elementAttributes.xruid, tableUUID);
+    const tableColumn: Element = tableDoc.getElementsByTagName(element.tableColumn)[0];
+    tableColumn.setAttribute(elementAttributes.xr3uid, "{" + v4().toUpperCase() + "}");
+    const newTable: string = serializer.serializeToString(tableDoc);
+
+    return newTable;
+};
+
+const randomizeQueryTableUUID = (queryTableXmlString: string): string => {
+    const parser: DOMParser = new DOMParser();
+    const serializer: XMLSerializer = new XMLSerializer();
+    const queryTableDoc: Document = parser.parseFromString(queryTableXmlString, xmlTextResultType);
+    const queryTable: Element = queryTableDoc.getElementsByTagName(element.queryTable)[0];
+    queryTable.setAttribute(elementAttributes.xr16uid, "{" + v4().toUpperCase() + "}");
+    const newQueryTable: string = serializer.serializeToString(queryTableDoc);
+
+    return newQueryTable;
+};
+
+const randomizeWorkbookUUID = (workbookXmlString: string): string => {
+    const parser: DOMParser = new DOMParser();
+    const serializer: XMLSerializer = new XMLSerializer();
+    const workbookDoc: Document = parser.parseFromString(workbookXmlString, xmlTextResultType);
+    const workbookView: Element = workbookDoc.getElementsByTagName(element.workbookView)[0];
+    workbookView.setAttribute(elementAttributes.xr2uid, "{" + v4().toUpperCase() + "}");
+    const newWorkbook: string = serializer.serializeToString(workbookDoc);
+
+    return newWorkbook;
+};
+
 export default {
     updateDocProps,
     updateConnections,
@@ -243,4 +305,9 @@ export default {
     updatePivotTablesandQueryTables,
     updateQueryTable,
     updatePivotTable,
+    randomizeConnectionsUUID,
+    randomizeWorksheetUUID,
+    randomizeTableUUID,
+    randomizeQueryTableUUID,
+    randomizeWorkbookUUID
 };

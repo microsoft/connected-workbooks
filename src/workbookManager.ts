@@ -44,6 +44,7 @@ export const generateTableWorkbookFromGrid = async (grid: Grid, docProps?: DocPr
         throw new Error(tableNotFoundErr);
     }
 
+    await xmlPartsUtils.updateWorkbookGeneratedUUIDs(zip);
     await xmlPartsUtils.updateWorkbookInitialDataIfNeeded(zip, docProps, tableData);
 
     return await zip.generateAsync({
@@ -57,6 +58,7 @@ const generateSingleQueryWorkbookFromZip = async (zip: JSZip, query: QueryInfo, 
         query.queryName = defaults.queryName;
     }
 
+    await xmlPartsUtils.updateWorkbookGeneratedUUIDs(zip, true /*updateQueryTable*/);
     await xmlPartsUtils.updateWorkbookPowerQueryDocument(zip, query.queryName, generateSingleQueryMashup(query.queryName, query.queryMashup));
     await xmlPartsUtils.updateWorkbookSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
     await xmlPartsUtils.updateWorkbookInitialDataIfNeeded(zip, docProps, tableData, true /*updateQueryTable*/);
