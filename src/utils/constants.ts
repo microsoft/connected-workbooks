@@ -11,6 +11,8 @@ export const queryTablesPath = "xl/queryTables/";
 export const pivotCachesPath = "xl/pivotCache/";
 export const section1mPath = "Formulas/Section1.m";
 export const docPropsCoreXmlPath = "docProps/core.xml";
+export const relsXmlPath = "_rels/.rels";
+export const docMetadataXmlPath = "docMetadata";
 export const docPropsRootElement = "cp:coreProperties";
 
 export const sharedStringsNotFoundErr = "SharedStrings were not found in template";
@@ -22,7 +24,7 @@ export const queryNameNotFoundErr = "Query name was not found";
 export const queryAndPivotTableNotFoundErr = "No such query found in Query Table or Pivot Table found in given template";
 export const queryConnectionNotFoundErr = "No connection found for query";
 export const formulaSectionNotFoundErr = "Formula section wasn't found in template";
-export const templateWithInitialDataErr = "Cannot receive template file with initial data";
+export const templateWithInitialDataErr = "Cannot use a template file with initial data";
 export const queryTableNotFoundErr = "Query table wasn't found in template";
 export const tableNotFoundErr = "Table wasn't found in template";
 export const invalidValueInColumnErr = "Invalid cell value in column";
@@ -36,6 +38,8 @@ export const InvalidColumnNameErr = "Invalid column name";
 export const promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr = "Headers cannot be promoted without adjusting column names";
 export const unexpectedErr = "Unexpected error";
 export const arrayIsntMxNErr = "Array isn't MxN";
+export const templateFileNotSupportedErr = "Template file is not supported for this API call";
+export const relsNotFoundErr = ".rels were not found in template";
 
 export const blobFileType = "blob";
 export const uint8ArrayType = "uint8array";

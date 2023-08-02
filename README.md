@@ -51,11 +51,17 @@ workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
 
 ### 3. Control Document Properties:
 ```typescript
-    const blob = await workbookManager.generateTableWorkbookFromHtml(
-      document.querySelector('table') as HTMLTableElement, 
-      {createdBy: 'John Doe', lastModifiedBy: 'Jane Doe', description: 'This is a sample table'});
+const blob = await workbookManager.generateTableWorkbookFromHtml(
+  document.querySelector('table') as HTMLTableElement, {
+    docProps: { 
+      createdBy: 'John Doe',
+      lastModifiedBy: 'Jane Doe',
+      description: 'This is a sample table'
+    }
+  }
+);
     
-    workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
+workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
 ```
 ![image](https://github.com/microsoft/connected-workbooks/assets/7674478/c267c9eb-6367-419d-832d-5a835c7683f9)
 
@@ -68,7 +74,9 @@ const blob = await workbookManager.generateSingleQueryWorkbook({
                     Source = {1..10} \
                 in \
                     Source',
-  refreshOnOpen: true});
+  refreshOnOpen: true
+});
+
 workbookManager.downloadWorkbook(blob, "MyConnectedWorkbook.xlsx");
 ```
 ![image](https://github.com/microsoft/connected-workbooks/assets/7674478/57bd986c-6309-4963-8d86-911ccf496c3f)
@@ -126,7 +134,7 @@ async function `generateTableWorkbookFromHtml`: `Promise<Blob>`
 |Parameter   | Type   | Required   | Description   |
 |---      |---    |---          |---            |
 | htmlTable  | HTMLTableElement   | __required__   | Initial data loaded to workbook  | 
-| docProps  | [DocProps](#docprops)   | optional  | Custom workbook properties |
+| fileConfigs  | [FileConfigs](#fileconfigs)   | optional  | Custom file configurations |
 
 #### 3. Generate a table workbook with raw data
 ```typescript
@@ -136,7 +144,7 @@ async function `generateTableWorkbookFromGrid`: `Promise<Blob>`
 |Parameter   | Type   | Required   | Description   |
 |---      |---    |---          |---            |
 | grid  | [Grid](#grid)   | __required__   | Initial data loaded to workbook  | 
-| docProps  | [DocProps](#docprops)   | optional  | Custom workbook properties |
+| fileConfigs  | [FileConfigs](#fileconfigs)   | optional  | Custom file configurations |
 </br>
 
 ### Types
