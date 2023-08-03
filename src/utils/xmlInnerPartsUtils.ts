@@ -268,6 +268,28 @@ const updatePivotTable = (tableXmlString: string, connectionId: string, refreshO
     return { isPivotTableUpdated, newPivotTable };
 };
 
+const addNewConnection = async (connectionsXmlString: string, queryName: string): Promise<string> => {
+    const parser: DOMParser = new DOMParser();
+    const serializer: XMLSerializer = new XMLSerializer();
+    const connectionsDoc: Document = parser.parseFromString(connectionsXmlString, xmlTextResultType);
+    const connections = connectionsDoc.getElementsByTagName(element.connections)[0];
+    const newConnection = connectionsDoc.createElementNS(connectionsDoc.documentElement.namespaceURI, element.connection);
+    connections.append(newConnection);
+    newConnection.setAttribute(elementAttributes.id, [...connectionsDoc.getElementsByTagName(element.connection)].length.toString());
+    newConnection.setAttribute(elementAttributes.xr16uid, elementAttributesValues.randomizedUid());
+    newConnection.setAttribute(elementAttributes.keepAlive, trueValue);
+    newConnection.setAttribute(elementAttributes.name, elementAttributesValues.connectionName(queryName));
+    newConnection.setAttribute(elementAttributes.description, elementAttributesValues.connectionDescription(queryName));
+    newConnection.setAttribute(elementAttributes.type, "5");
+    newConnection.setAttribute(elementAttributes.refreshedVersion, falseValue);
+    newConnection.setAttribute(elementAttributes.background, trueValue);
+    const newDbPr = connectionsDoc.createElementNS(connectionsDoc.documentElement.namespaceURI, element.dbpr);
+    newDbPr.setAttribute(elementAttributes.connection, elementAttributesValues.connection(queryName));
+    newDbPr.setAttribute(elementAttributes.command, elementAttributesValues.connectionCommand(queryName));
+    newConnection.appendChild(newDbPr);
+    return serializer.serializeToString(connectionsDoc);
+    };
+
 export default {
     updateDocProps,
     clearLabelInfo,
@@ -277,4 +299,5 @@ export default {
     updatePivotTablesandQueryTables,
     updateQueryTable,
     updatePivotTable,
+    addNewConnection,
 };

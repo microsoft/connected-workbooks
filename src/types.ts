@@ -7,6 +7,13 @@ export interface QueryInfo {
     queryName?: string;
 }
 
+export interface MultipleQueriesInfo {
+    loadedQueryName: string;
+    refreshOnOpen: boolean;
+    connectionOnlyQueryNames: string[];
+    mashupDocument: string;
+}
+
 export interface DocProps {
     title?: string | null;
     subject?: string | null;

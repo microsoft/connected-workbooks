@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { v4 } from "uuid";
+
 export const connectionsXmlPath = "xl/connections.xml";
 export const sharedStringsXmlPath = "xl/sharedStrings.xml";
 export const sheetsXmlPath = "xl/worksheets/sheet1.xml";
@@ -85,6 +87,9 @@ export const element = {
     dimension: "dimension",
     selection: "selection",
     kindCell: "c",
+    connection: "connection",
+    connections: "connections",
+    dbpr: "dbPr",
 };
 
 export const elementAttributes = {
@@ -117,6 +122,10 @@ export const elementAttributes = {
     spans: "spans",
     x14acDyDescent: "x14ac:dyDescent",
     xr3uid: "xr3:uid",
+    xr16uid: "xr16:uid",
+    keepAlive: "keepAlive",
+    refreshedVersion: "refreshedVersion",
+    background: "background"
 };
 
 export const dataTypeKind = {
@@ -131,6 +140,7 @@ export const elementAttributesValues = {
     connection: (queryName: string) => `Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location="${queryName}";`,
     connectionCommand: (queryName: string) => `SELECT * FROM [${queryName}]`,
     tableResultType: () => "sTable",
+    randomizedUid: () => "{" + v4().toUpperCase() + "}",
 };
 
 export const defaults = {

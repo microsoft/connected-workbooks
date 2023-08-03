@@ -70,8 +70,22 @@ const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string
     await xmlInnerPartsUtils.updatePivotTablesandQueryTables(zip, queryName, refreshOnOpen, connectionId!);
 };
 
+const addConnectionOnlyQueriesToWorkbook = async (zip: JSZip, connectionOnlyQueryNames: string[]): Promise<void> => {
+    // Update connections
+    let connectionsXmlString: string | undefined = await zip.file(connectionsXmlPath)?.async(textResultType);
+    if (connectionsXmlString === undefined) {
+        throw new Error(connectionsNotFoundErr);
+    }
+
+    connectionOnlyQueryNames.forEach(async (queryName: string) => { 
+        connectionsXmlString = await xmlInnerPartsUtils.addNewConnection(connectionsXmlString!, queryName);
+    });
+    
+};
+
 export default {
     updateWorkbookDataAndConfigurations,
     updateWorkbookPowerQueryDocument,
     updateWorkbookSingleQueryAttributes,
+    addConnectionOnlyQueriesToWorkbook,
 };
