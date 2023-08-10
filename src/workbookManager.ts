@@ -13,7 +13,7 @@ import {
     tableNotFoundErr,
     templateFileNotSupportedErr,
 } from "./utils/constants";
-import { QueryInfo, TableData, Grid, FileConfigs } from "./types";
+import { QueryInfo, TableData, Grid, FileConfigs, MultipleQueriesInfo } from "./types";
 import { generateSingleQueryMashup } from "./generators";
 
 export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataGrid?: Grid, fileConfigs?: FileConfigs): Promise<Blob> => {
@@ -38,6 +38,22 @@ export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataG
     const tableData = initialDataGrid ? gridUtils.parseToTableData(initialDataGrid) : undefined;
 
     return await generateSingleQueryWorkbookFromZip(zip, query, fileConfigs, tableData);
+};
+
+export const generateMultipleQueryWorkbook = async (queries: MultipleQueriesInfo, initialDataGrid?: Grid, fileConfigs?: FileConfigs): Promise<Blob> => {
+    const templateFile: File | undefined = fileConfigs?.templateFile;
+    if (templateFile !== undefined && initialDataGrid !== undefined) {
+        throw new Error(templateWithInitialDataErr);
+    }
+
+    pqUtils.validateQueryName(queries.loadedQueryName);
+
+    const zip: JSZip =
+        templateFile === undefined ? await JSZip.loadAsync(SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true }) : await JSZip.loadAsync(templateFile);
+
+    const tableData = initialDataGrid ? gridUtils.parseToTableData(initialDataGrid) : undefined;
+
+    return await generateMultipleQueryWorkbookFromZip(zip, queries, fileConfigs, tableData);
 };
 
 export const generateTableWorkbookFromHtml = async (htmlTable: HTMLTableElement, fileConfigs?: FileConfigs): Promise<Blob> => {
@@ -74,6 +90,18 @@ const generateSingleQueryWorkbookFromZip = async (zip: JSZip, query: QueryInfo, 
     await xmlPartsUtils.updateWorkbookPowerQueryDocument(zip, query.queryName, generateSingleQueryMashup(query.queryName, query.queryMashup));
     await xmlPartsUtils.updateWorkbookSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
     await xmlPartsUtils.updateWorkbookDataAndConfigurations(zip, fileConfigs, tableData, true /*updateQueryTable*/);
+
+    return await zip.generateAsync({
+        type: blobFileType,
+        mimeType: application,
+    });
+};
+
+const generateMultipleQueryWorkbookFromZip = async (zip: JSZip, queries: MultipleQueriesInfo, fileConfigs?: FileConfigs, tableData?: TableData): Promise<Blob> => {
+    await xmlPartsUtils.updateWorkbookPowerQueryDocument(zip, queries.loadedQueryName, queries.mashupDocument, queries.connectionOnlyQueryNames);
+    await xmlPartsUtils.updateWorkbookSingleQueryAttributes(zip, queries.loadedQueryName, queries.refreshOnOpen);
+    await xmlPartsUtils.updateWorkbookDataAndConfigurations(zip, fileConfigs, tableData, true /*updateQueryTable*/);    
+    await xmlPartsUtils.addConnectionOnlyQueriesToWorkbook(zip, queries.connectionOnlyQueryNames);
 
     return await zip.generateAsync({
         type: blobFileType,

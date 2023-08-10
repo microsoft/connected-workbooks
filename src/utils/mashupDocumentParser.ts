@@ -42,6 +42,17 @@ export const replaceSingleQuery = async (base64Str: string, queryName: string, q
     return base64.fromByteArray(newMashup);
 };
 
+export const addConnectionOnlyQuery = async (base64Str: string, connectionOnlyQueryNames: string[]): Promise<string> => {
+        var { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } = getPackageComponents(base64Str);
+        const packageSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(packageOPC.byteLength);
+        const permissionsSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(permissionsSize);
+        const newMetadataBuffer: Uint8Array = addConnectionOnlyQueryMetadata(metadata, connectionOnlyQueryNames);
+        const metadataSizeBuffer: Uint8Array = arrayUtils.getInt32Buffer(newMetadataBuffer.byteLength);
+        const newMashup: Uint8Array = arrayUtils.concatArrays(version, packageSizeBuffer, packageOPC, permissionsSizeBuffer, permissions, metadataSizeBuffer, newMetadataBuffer, endBuffer);
+        
+        return base64.fromByteArray(newMashup);
+    }
+
 type PackageComponents = {
     version: Uint8Array;
     packageOPC: Uint8Array;
@@ -150,3 +161,131 @@ export const editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Met
 
     return newMetadataArray;
 };
+
+const addConnectionOnlyQueryMetadata = (metadataArray: Uint8Array, connectionOnlyQueryNames: string[]) => {
+        // extract metadataXml
+        const mashupArray: ArrayReader = new arrayUtils.ArrayReader(metadataArray.buffer);
+        const metadataVersion: Uint8Array = mashupArray.getBytes(4);
+        const metadataXmlSize: number = mashupArray.getInt32();
+        const metadataXml: Uint8Array = mashupArray.getBytes(metadataXmlSize);
+        const endBuffer: Uint8Array = mashupArray.getBytes();
+
+        // parse metadataXml
+        const metadataString: string = new TextDecoder("utf-8").decode(metadataXml);
+        const newMetadataString: string = updateConnectionOnlyMetadataStr(metadataString, connectionOnlyQueryNames);
+        const encoder: TextEncoder = new TextEncoder();
+        const newMetadataXml: Uint8Array = encoder.encode(newMetadataString);
+        const newMetadataXmlSize: Uint8Array = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
+        const newMetadataArray: Uint8Array = arrayUtils.concatArrays(
+            metadataVersion,
+            newMetadataXmlSize,
+            newMetadataXml,
+            endBuffer
+        );
+        
+        return newMetadataArray;
+    };
+
+    const updateConnectionOnlyMetadataStr = (metadataString: string, connectionOnlyQueryNames: string[]) => {
+        const parser: DOMParser = new DOMParser();
+        let updatedMetdataString: string = metadataString;         
+        connectionOnlyQueryNames.forEach((queryName: string) => {
+            const metadataDoc: Document = parser.parseFromString(updatedMetdataString, xmlTextResultType);
+            const items: Element = metadataDoc.getElementsByTagName(element.items)[0];
+            const stableEntriesItem: Element = createStableEntriesItem(metadataDoc, queryName);
+            items.appendChild(stableEntriesItem);
+            const sourceItem: Element = createSourceItem(metadataDoc, queryName);
+            items.appendChild(sourceItem);
+            const serializer: XMLSerializer = new XMLSerializer();
+            updatedMetdataString = serializer.serializeToString(metadataDoc);
+        });    
+
+        return updatedMetdataString;
+    };
+
+    const createSourceItem = (metadataDoc: Document, queryName: string) => {
+        const newItemSource: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.item);
+        const newItemLocation: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.itemLocation);
+        const newItemType: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.itemType);
+        newItemType.textContent = "Formula";
+        const newItemPath: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.itemPath);
+        newItemPath.textContent = `Section1/${queryName}/Source`;
+        newItemLocation.appendChild(newItemType);
+        newItemLocation.appendChild(newItemPath);
+        newItemSource.appendChild(newItemLocation);
+        
+        return newItemSource;
+    };
+
+    const createStableEntriesItem = (metadataDoc: Document, queryName: string) => {
+        const newItem: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.item);
+        const newItemLocation: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.itemLocation);
+        const newItemType: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.itemType);
+        newItemType.textContent = "Formula";
+        const newItemPath: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.itemPath);
+        newItemPath.textContent = `Section1/${queryName}`;
+        newItemLocation.appendChild(newItemType);
+        newItemLocation.appendChild(newItemPath); 
+        newItem.appendChild(newItemLocation);
+        const stableEntries: Element = createConnectionOnlyEntries(metadataDoc);
+        newItem.appendChild(stableEntries);
+        
+        return newItem;
+    };
+
+    const createConnectionOnlyEntries = (metadataDoc: Document) => {
+        const stableEntries: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.stableEntries);
+        
+        const IsPrivate: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
+        IsPrivate.setAttribute(elementAttributes.type, elementAttributes.isPrivate);
+        IsPrivate.setAttribute(elementAttributes.value, "l0");
+        
+        stableEntries.appendChild(IsPrivate);
+        const FillEnabled: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
+        FillEnabled.setAttribute(elementAttributes.type, elementAttributes.fillEnabled);
+        FillEnabled.setAttribute(elementAttributes.value, "l0");
+        stableEntries.appendChild(FillEnabled);
+        
+        const FillObjectType: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
+        FillObjectType.setAttribute(elementAttributes.type, elementAttributes.fillObjectType);
+        FillObjectType.setAttribute(elementAttributes.value, elementAttributesValues.connectionOnlyResultType());
+        stableEntries.appendChild(FillObjectType);
+        
+        const FillToDataModelEnabled: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
+        FillToDataModelEnabled.setAttribute(elementAttributes.type, elementAttributes.fillToDataModelEnabled);
+        FillToDataModelEnabled.setAttribute(elementAttributes.value, "l0");
+        stableEntries.appendChild(FillToDataModelEnabled);
+        
+        const FillLastUpdated: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
+        FillLastUpdated.setAttribute(elementAttributes.type, elementAttributes.fillLastUpdated);
+        const nowTime: string = new Date().toISOString();
+        FillLastUpdated.setAttribute(elementAttributes.value, (elementAttributes.day + nowTime).replace(/Z/, "0000Z"));
+        stableEntries.appendChild(FillLastUpdated);
+        
+        const ResultType: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
+        ResultType.setAttribute(elementAttributes.type, elementAttributes.resultType);
+        ResultType.setAttribute(elementAttributes.value, elementAttributesValues.tableResultType());
+        stableEntries.appendChild(ResultType);
+        
+        const FilledCompleteResultToWorksheet: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
+        FilledCompleteResultToWorksheet.setAttribute(elementAttributes.type, elementAttributes.filledCompleteResultToWorksheet);
+        FilledCompleteResultToWorksheet.setAttribute(elementAttributes.value, "l0");
+        stableEntries.appendChild(FilledCompleteResultToWorksheet);
+        
+        const AddedToDataModel: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
+        AddedToDataModel.setAttribute(elementAttributes.type, elementAttributes.addedToDataModel);
+        AddedToDataModel.setAttribute(elementAttributes.value, "l0");
+        stableEntries.appendChild(AddedToDataModel);
+        
+        const FillErrorCode: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
+        FillErrorCode.setAttribute(elementAttributes.type, elementAttributes.fillErrorCode);
+        FillErrorCode.setAttribute(elementAttributes.value, elementAttributesValues.fillErrorCodeUnknown());
+        stableEntries.appendChild(FillErrorCode);
+        
+        const FillStatus: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
+        FillStatus.setAttribute(elementAttributes.type, elementAttributes.fillStatus);
+        FillStatus.setAttribute(elementAttributes.value, elementAttributesValues.fillStatusComplete());
+        stableEntries.appendChild(FillStatus);
+        
+        return stableEntries;
+    };
