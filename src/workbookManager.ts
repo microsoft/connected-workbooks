@@ -98,7 +98,7 @@ const generateSingleQueryWorkbookFromZip = async (zip: JSZip, query: QueryInfo, 
 };
 
 const generateMultipleQueryWorkbookFromZip = async (zip: JSZip, queries: MultipleQueriesInfo, fileConfigs?: FileConfigs, tableData?: TableData): Promise<Blob> => {
-    await xmlPartsUtils.updateWorkbookPowerQueryDocument(zip, queries.loadedQueryName, queries.mashupDocument);
+    await xmlPartsUtils.updateWorkbookPowerQueryDocument(zip, queries.loadedQueryName, queries.mashupDocument, queries.connectionOnlyQueryNames);
     await xmlPartsUtils.updateWorkbookSingleQueryAttributes(zip, queries.loadedQueryName, queries.refreshOnOpen);
     await xmlPartsUtils.updateWorkbookDataAndConfigurations(zip, fileConfigs, tableData, true /*updateQueryTable*/);    
     await xmlPartsUtils.addConnectionOnlyQueriesToWorkbook(zip, queries.connectionOnlyQueryNames);

@@ -125,7 +125,16 @@ export const elementAttributes = {
     xr16uid: "xr16:uid",
     keepAlive: "keepAlive",
     refreshedVersion: "refreshedVersion",
-    background: "background"
+    background: "background",
+    isPrivate: "IsPrivate",
+    fillEnabled: "FillEnabled",
+    fillObjectType: "FillObjectType",
+    fillToDataModelEnabled: "FillToDataModelEnabled",
+    filLastUpdated: "FillLastUpdated",
+    filledCompleteResultToWorksheet: "FilledCompleteResultToWorksheet",
+    addedToDataModel: "AddedToDataModel",
+    fillErrorCode: "FillErrorCode",
+    fillStatus: "FillStatus",
 };
 
 export const dataTypeKind = {
@@ -140,6 +149,9 @@ export const elementAttributesValues = {
     connection: (queryName: string) => `Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location="${queryName}";`,
     connectionCommand: (queryName: string) => `SELECT * FROM [${queryName}]`,
     tableResultType: () => "sTable",
+    connectionOnlyResultType: () => "sConnectionOnly",
+    fillStatusComplete: () => "sComplete",
+    fillErrorCodeUnknown: () => "sUnknown",
     randomizedUid: () => "{" + v4().toUpperCase() + "}",
 };
 

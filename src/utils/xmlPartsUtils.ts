@@ -12,7 +12,7 @@ import {
     sheetsXmlPath,
     sheetsNotFoundErr,
 } from "./constants";
-import { replaceSingleQuery } from "./mashupDocumentParser";
+import { addConnectionOnlyQuery, replaceSingleQuery } from "./mashupDocumentParser";
 import { FileConfigs, TableData } from "../types";
 import pqUtils from "./pqUtils";
 import xmlInnerPartsUtils from "./xmlInnerPartsUtils";
@@ -27,7 +27,7 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
     await tableUtils.updateTableInitialDataIfNeeded(zip, tableData, updateQueryTable);
 };
 
-const updateWorkbookPowerQueryDocument = async (zip: JSZip, queryName: string, queryMashupDoc: string): Promise<void> => {
+const updateWorkbookPowerQueryDocument = async (zip: JSZip, queryName: string, queryMashupDoc: string, connectionOnlyQueryNames?: string[]): Promise<void> => {
     const old_base64: string | undefined = await pqUtils.getBase64(zip);
 
     if (!old_base64) {
@@ -35,7 +35,11 @@ const updateWorkbookPowerQueryDocument = async (zip: JSZip, queryName: string, q
     }
 
     const new_base64: string = await replaceSingleQuery(old_base64, queryName, queryMashupDoc);
-    await pqUtils.setBase64(zip, new_base64);
+    let updated_base64: string = new_base64;
+    if (connectionOnlyQueryNames) {
+        updated_base64 = await addConnectionOnlyQuery(new_base64, connectionOnlyQueryNames);
+    }    
+    await pqUtils.setBase64(zip, updated_base64);
 };
 
 const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string, refreshOnOpen: boolean): Promise<void> => {
