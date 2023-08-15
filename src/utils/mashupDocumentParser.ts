@@ -162,7 +162,7 @@ export const editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Met
     return newMetadataArray;
 };
 
-const addConnectionOnlyQueryMetadata = (metadataArray: Uint8Array, connectionOnlyQueryNames: string[]) => {
+export const addConnectionOnlyQueryMetadata = (metadataArray: Uint8Array, connectionOnlyQueryNames: string[]) => {
         // extract metadataXml
         const mashupArray: ArrayReader = new arrayUtils.ArrayReader(metadataArray.buffer);
         const metadataVersion: Uint8Array = mashupArray.getBytes(4);
@@ -256,31 +256,36 @@ const addConnectionOnlyQueryMetadata = (metadataArray: Uint8Array, connectionOnl
         FillToDataModelEnabled.setAttribute(elementAttributes.value, "l0");
         stableEntries.appendChild(FillToDataModelEnabled);
         
-        const FillLastUpdated: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
-        FillLastUpdated.setAttribute(elementAttributes.type, elementAttributes.fillLastUpdated);
-        const nowTime: string = new Date().toISOString();
-        FillLastUpdated.setAttribute(elementAttributes.value, (elementAttributes.day + nowTime).replace(/Z/, "0000Z"));
-        stableEntries.appendChild(FillLastUpdated);
-        
         const ResultType: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
         ResultType.setAttribute(elementAttributes.type, elementAttributes.resultType);
         ResultType.setAttribute(elementAttributes.value, elementAttributesValues.tableResultType());
         stableEntries.appendChild(ResultType);
         
+        const BufferNextRefresh: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
+        BufferNextRefresh.setAttribute(elementAttributes.type, elementAttributes.bufferNextRefresh);
+        BufferNextRefresh.setAttribute(elementAttributes.value, "l1");
+        stableEntries.appendChild(BufferNextRefresh);
+        
         const FilledCompleteResultToWorksheet: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
         FilledCompleteResultToWorksheet.setAttribute(elementAttributes.type, elementAttributes.filledCompleteResultToWorksheet);
         FilledCompleteResultToWorksheet.setAttribute(elementAttributes.value, "l0");
         stableEntries.appendChild(FilledCompleteResultToWorksheet);
-        
+             
         const AddedToDataModel: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
         AddedToDataModel.setAttribute(elementAttributes.type, elementAttributes.addedToDataModel);
         AddedToDataModel.setAttribute(elementAttributes.value, "l0");
         stableEntries.appendChild(AddedToDataModel);
-        
+
         const FillErrorCode: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
         FillErrorCode.setAttribute(elementAttributes.type, elementAttributes.fillErrorCode);
         FillErrorCode.setAttribute(elementAttributes.value, elementAttributesValues.fillErrorCodeUnknown());
         stableEntries.appendChild(FillErrorCode);
+
+        const FillLastUpdated: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
+        FillLastUpdated.setAttribute(elementAttributes.type, elementAttributes.fillLastUpdated);
+        const nowTime: string = new Date().toISOString();
+        FillLastUpdated.setAttribute(elementAttributes.value, (elementAttributes.day + nowTime).replace(/Z/, "0000Z"));
+        stableEntries.appendChild(FillLastUpdated);
         
         const FillStatus: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.entry);
         FillStatus.setAttribute(elementAttributes.type, elementAttributes.fillStatus);

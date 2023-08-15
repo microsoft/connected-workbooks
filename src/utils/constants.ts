@@ -135,6 +135,7 @@ export const elementAttributes = {
     addedToDataModel: "AddedToDataModel",
     fillErrorCode: "FillErrorCode",
     fillStatus: "FillStatus",
+    bufferNextRefresh: "BufferNextRefresh"
 };
 
 export const dataTypeKind = {
