@@ -116,5 +116,6 @@ export default {
     getCellReferenceAbsolute,
     createCell: createCellElement,
     getTableReference,
+    updateCellData,
     resolveType,
 };
