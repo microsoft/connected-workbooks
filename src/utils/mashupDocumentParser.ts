@@ -162,7 +162,7 @@ export const editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Met
     return newMetadataArray;
 };
 
-export const addConnectionOnlyQueryMetadata = (metadataArray: Uint8Array, connectionOnlyQueryNames: string[]) => {
+const addConnectionOnlyQueryMetadata = (metadataArray: Uint8Array, connectionOnlyQueryNames: string[]) => {
         // extract metadataXml
         const mashupArray: ArrayReader = new arrayUtils.ArrayReader(metadataArray.buffer);
         const metadataVersion: Uint8Array = mashupArray.getBytes(4);
@@ -186,7 +186,7 @@ export const addConnectionOnlyQueryMetadata = (metadataArray: Uint8Array, connec
         return newMetadataArray;
     };
 
-    const updateConnectionOnlyMetadataStr = (metadataString: string, connectionOnlyQueryNames: string[]) => {
+    export const updateConnectionOnlyMetadataStr = (metadataString: string, connectionOnlyQueryNames: string[]) => {
         const parser: DOMParser = new DOMParser();
         let updatedMetdataString: string = metadataString;         
         connectionOnlyQueryNames.forEach((queryName: string) => {
@@ -213,7 +213,9 @@ export const addConnectionOnlyQueryMetadata = (metadataArray: Uint8Array, connec
         newItemLocation.appendChild(newItemType);
         newItemLocation.appendChild(newItemPath);
         newItemSource.appendChild(newItemLocation);
-        
+        const stableEntries: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.stableEntries);
+        newItemSource.appendChild(stableEntries);
+
         return newItemSource;
     };
 
