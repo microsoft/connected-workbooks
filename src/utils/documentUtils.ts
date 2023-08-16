@@ -86,6 +86,10 @@ const updateCellData = (data: string, cell: Element, cellData: Element, rowHeade
             cell.setAttribute(element.text, dataTypeKind.boolean);
             break;
     }
+    if (data.startsWith(" ") || data.endsWith(" ")) {
+        cellData.setAttribute(elementAttributes.space, "preserve");        
+    }
+    
     cellData.textContent = data;
 };
 
