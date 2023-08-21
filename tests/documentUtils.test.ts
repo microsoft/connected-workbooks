@@ -3,6 +3,7 @@
 
 import { DataTypes } from "../src/types";
 import { documentUtils } from "../src/utils";
+import { element } from "../src/utils/constants";
 
 describe("Document Utils tests", () => {
     test("ResolveType date not supported success", () => {
@@ -13,6 +14,7 @@ describe("Document Utils tests", () => {
         expect(documentUtils.resolveType("sTrIng", false)).toEqual(DataTypes.string);
         expect(documentUtils.resolveType("True", false)).toEqual(DataTypes.string);
         expect(documentUtils.resolveType("False", false)).toEqual(DataTypes.string);
+        expect(documentUtils.resolveType("    ", false)).toEqual(DataTypes.string);
     });
 
     test("ResolveType boolean success", () => {
@@ -35,5 +37,22 @@ describe("Document Utils tests", () => {
         expect(documentUtils.resolveType("100000", true)).toEqual(DataTypes.string);
         expect(documentUtils.resolveType("true", true)).toEqual(DataTypes.string);
         expect(documentUtils.resolveType("string", true)).toEqual(DataTypes.string);
+    });
+
+    test("Cell Data Element preserves spaces", () => {
+        const doc = document.implementation.createDocument("", "", null);
+        const cell: Element = doc.createElementNS("", element.kindCell);
+        const cellData: Element = doc.createElementNS("", element.cellValue);
+        documentUtils.updateCellData("     ", cell, cellData, false);
+        expect(cellData.getAttribute("xml:space")).toEqual("preserve");
+        cellData.removeAttribute("xml:space");
+        documentUtils.updateCellData("a     ", cell, cellData, false);
+        expect(cellData.getAttribute("xml:space")).toEqual("preserve");
+        cellData.removeAttribute("xml:space");
+        documentUtils.updateCellData("     a", cell, cellData, false);
+        expect(cellData.getAttribute("xml:space")).toEqual("preserve");
+        cellData.removeAttribute("xml:space");
+        documentUtils.updateCellData("a     a", cell, cellData, false);
+        expect(cellData.getAttribute("xml:space")).toBeNull();
     });
 });

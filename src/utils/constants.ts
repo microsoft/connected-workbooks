@@ -117,6 +117,7 @@ export const elementAttributes = {
     spans: "spans",
     x14acDyDescent: "x14ac:dyDescent",
     xr3uid: "xr3:uid",
+    space: "xml:space",
 };
 
 export const dataTypeKind = {

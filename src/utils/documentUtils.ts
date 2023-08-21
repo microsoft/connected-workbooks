@@ -86,13 +86,17 @@ const updateCellData = (data: string, cell: Element, cellData: Element, rowHeade
             cell.setAttribute(element.text, dataTypeKind.boolean);
             break;
     }
+    if (data.startsWith(" ") || data.endsWith(" ")) {
+        cellData.setAttribute(elementAttributes.space, "preserve");        
+    }
+
     cellData.textContent = data;
 };
 
 const resolveType = (originalData: string | number | boolean, rowHeader: boolean): DataTypes => {
     const data: string = originalData as string;
-    if (rowHeader) {
-        // Headers should be string by default.
+    if ((rowHeader) || (data.trim() === "")) {
+        // Headers and whitespace should be string by default.
         return DataTypes.string;
     }
     let dataType: DataTypes = isNaN(Number(data)) ? DataTypes.string : DataTypes.number;
@@ -112,5 +116,6 @@ export default {
     getCellReferenceAbsolute,
     createCell: createCellElement,
     getTableReference,
+    updateCellData,
     resolveType,
 };
