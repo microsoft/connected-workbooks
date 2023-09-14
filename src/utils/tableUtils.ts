@@ -2,23 +2,30 @@
 // Licensed under the MIT license.
 
 import JSZip from "jszip";
-import { TableData } from "../types";
+import { DataTypes, TableData } from "../types";
 import {
+    customNumberFormatId,
     defaults,
     element,
     elementAttributes,
+    falseValue,
     queryTableNotFoundErr,
     queryTableXmlPath,
     sheetsNotFoundErr,
     sheetsXmlPath,
+    shortDateId,
+    stylesNotFoundErr,
+    stylesXmlPath,
     tableNotFoundErr,
     tableXmlPath,
     textResultType,
+    trueValue,
     workbookXmlPath,
     xmlTextResultType,
 } from "./constants";
 import documentUtils from "./documentUtils";
 import { v4 } from "uuid";
+import dateTimeUtils from "./dateTimeUtils";
 
 const updateTableInitialDataIfNeeded = async (zip: JSZip, tableData?: TableData, updateQueryTable?: boolean): Promise<void> => {
     if (!tableData) {
@@ -30,8 +37,18 @@ const updateTableInitialDataIfNeeded = async (zip: JSZip, tableData?: TableData,
         throw new Error(sheetsNotFoundErr);
     }
 
-    const newSheet: string = updateSheetsInitialData(sheetsXmlString, tableData);
+    const {newSheet, formatStyles} = updateSheetsInitialData(sheetsXmlString, tableData);
     zip.file(sheetsXmlPath, newSheet);
+
+    if (formatStyles.length > 0) {
+        const stylesXmlString: string | undefined = await zip.file(stylesXmlPath)?.async(textResultType);
+        if (stylesXmlString === undefined) {
+            throw new Error(stylesNotFoundErr);
+        }
+
+        const newStyles: string = await updateStylesInitialData(stylesXmlString, formatStyles);
+        zip.file(stylesXmlPath, newStyles);
+    }
 
     if (updateQueryTable) {
         const queryTableXmlString: string | undefined = await zip.file(queryTableXmlPath)?.async(textResultType);
@@ -59,6 +76,42 @@ const updateTableInitialDataIfNeeded = async (zip: JSZip, tableData?: TableData,
 
     const newTable: string = updateTablesInitialData(tableXmlString, tableData, updateQueryTable);
     zip.file(tableXmlPath, newTable);
+};
+
+const updateStylesInitialData = (stylesXmlString: string, formatStyles: DataTypes[]): string => {
+    const parser: DOMParser = new DOMParser();
+    const serializer: XMLSerializer = new XMLSerializer();
+    const stylesDoc: Document = parser.parseFromString(stylesXmlString, xmlTextResultType);
+    let numFmtsCount: number = 0;
+    const cellXfs: Element = stylesDoc.getElementsByTagName(element.cellXfs)[0];
+    const fonts: Element = stylesDoc.getElementsByTagName(element.fonts)[0];
+    const numFmts: Element = stylesDoc.createElementNS(stylesDoc.documentElement.namespaceURI, element.numFmts);
+    formatStyles.forEach((style, i) => {
+        // Add new numfmtId when necessary
+        let numFmtId: number = style == DataTypes.shortDate ? shortDateId : i + customNumberFormatId;
+        if (style != DataTypes.shortDate) {
+            const numFmt: Element = stylesDoc.createElementNS(stylesDoc.documentElement.namespaceURI, element.numFmt);
+            numFmt.setAttribute(elementAttributes.numFmtId, numFmtId.toString());
+            numFmt.setAttribute(elementAttributes.formatCode, dateTimeUtils.getFormatCode(style));
+            numFmts.appendChild(numFmt);
+            numFmtsCount++;
+        }
+        const xf: Element = stylesDoc.createElementNS(stylesDoc.documentElement.namespaceURI, element.xf);
+        xf.setAttribute(elementAttributes.numFmtId, numFmtId.toString());
+        xf.setAttribute(elementAttributes.fontId, falseValue);
+        xf.setAttribute(elementAttributes.fillId, falseValue);
+        xf.setAttribute(elementAttributes.borderId, falseValue);
+        xf.setAttribute(elementAttributes.xfId, falseValue);
+        xf.setAttribute(elementAttributes.applyNumberFormat, trueValue);
+        cellXfs.appendChild(xf);
+    });
+    // count includes the formatStyles and default null format
+    if (numFmtsCount > 0) {
+        stylesDoc.getElementsByTagName(element.styleSheet)[0].insertBefore(numFmts, fonts);
+        numFmts.setAttribute(elementAttributes.count, numFmtsCount.toString());
+    }
+
+    return serializer.serializeToString(stylesDoc);
 };
 
 const updateTablesInitialData = (tableXmlString: string, tableData: TableData, updateQueryTable = false): string => {
@@ -121,7 +174,7 @@ const updateQueryTablesInitialData = (queryTableXmlString: string, tableData: Ta
     return serializer.serializeToString(queryTableDoc);
 };
 
-const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData): string => {
+const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData) => {
     const parser: DOMParser = new DOMParser();
     const serializer: XMLSerializer = new XMLSerializer();
     const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, xmlTextResultType);
@@ -133,9 +186,10 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData):
     columnRow.setAttribute(elementAttributes.spans, "1:" + tableData.columnNames.length);
     columnRow.setAttribute(elementAttributes.x14acDyDescent, "0.3");
     tableData.columnNames.forEach((col: string, colIndex: number) => {
-        columnRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, col));
+        columnRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, col, []));
     });
     sheetData.appendChild(columnRow);
+    let formatStyles: DataTypes[] = [];
     rowIndex++;
     tableData.rows.forEach((row) => {
         const newRow = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, element.row);
@@ -143,7 +197,7 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData):
         newRow.setAttribute(elementAttributes.spans, "1:" + row.length);
         newRow.setAttribute(elementAttributes.x14acDyDescent, "0.3");
         row.forEach((cellContent, colIndex) => {
-            newRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, cellContent));
+            newRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, cellContent, formatStyles));
         });
         sheetData.appendChild(newRow);
         rowIndex++;
@@ -152,7 +206,8 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData):
 
     sheetsDoc.getElementsByTagName(element.dimension)[0].setAttribute(elementAttributes.reference, reference);
     sheetsDoc.getElementsByTagName(element.selection)[0].setAttribute(elementAttributes.sqref, reference);
-    return serializer.serializeToString(sheetsDoc);
+    const newSheet = serializer.serializeToString(sheetsDoc);
+    return {newSheet, formatStyles};
 };
 
 export default {

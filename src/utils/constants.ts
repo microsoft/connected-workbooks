@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { DataTypes } from "../types";
+
 export const connectionsXmlPath = "xl/connections.xml";
 export const sharedStringsXmlPath = "xl/sharedStrings.xml";
 export const sheetsXmlPath = "xl/worksheets/sheet1.xml";
@@ -9,6 +11,7 @@ export const queryTableXmlPath = "xl/queryTables/queryTable1.xml";
 export const workbookXmlPath = "xl/workbook.xml";
 export const queryTablesPath = "xl/queryTables/";
 export const pivotCachesPath = "xl/pivotCache/";
+export const stylesXmlPath = "xl/styles.xml";
 export const section1mPath = "Formulas/Section1.m";
 export const docPropsCoreXmlPath = "docProps/core.xml";
 export const relsXmlPath = "_rels/.rels";
@@ -40,6 +43,7 @@ export const unexpectedErr = "Unexpected error";
 export const arrayIsntMxNErr = "Array isn't MxN";
 export const templateFileNotSupportedErr = "Template file is not supported for this API call";
 export const relsNotFoundErr = ".rels were not found in template";
+export const invalidDateTimeErr = "Invalid DateTime format";
 
 export const blobFileType = "blob";
 export const uint8ArrayType = "uint8array";
@@ -56,6 +60,11 @@ export const maxQueryLength = 80;
 export const trueStr = "true";
 export const falseStr = "false";
 export const BOM = "\ufeff";
+export const milliSecPerDay = 86400000;
+//This contains the number of days between 01/01/1970 and 01/01/1900
+export const numberOfDaysTillExcelBeginYear = 25569;
+export const monthsbeforeLeap = 2;
+export const beginYear = 1900;
 
 export const element = {
     sharedStringTable: "sst",
@@ -85,6 +94,12 @@ export const element = {
     dimension: "dimension",
     selection: "selection",
     kindCell: "c",
+    numFmt: "numFmt",
+    numFmts: "numFmts",
+    cellXfs : "cellXfs",
+    xf: "xf",
+    styleSheet: "styleSheet",
+    fonts: "fonts",
 };
 
 export const elementAttributes = {
@@ -118,7 +133,38 @@ export const elementAttributes = {
     x14acDyDescent: "x14ac:dyDescent",
     xr3uid: "xr3:uid",
     space: "xml:space",
+    style: "s",
+    numFmtId: "numFmtId",
+    formatCode: "formatCode",
+    fontId: "fontId",
+    fillId: "fillId",
+    borderId: "borderId",
+    xfId: "xfId",
+    applyNumberFormat: "applyNumberFormat",
 };
+
+export const longDateFormat = "[$-F800]dddd\,\ mmmm\ dd\,\ yyyy";
+export const longTimeFormat = "[$-F400]h:mm:ss\ AM/PM";
+export const shortTimeFormat = "[$]h:mm;@";
+export const shortDateId = 14;
+export const customNumberFormatId = 164;
+
+export const shortDateReg: RegExp = /^(([1-9])|(1[0-2]))\/(([1-9])|([1-2]\d)|(3[0-1]))\/\d{4}$/;
+export const longDateReg: RegExp = /^(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday), (January|February|March|April|May|June|July|August|September|October|November|December) ([1-9]|[1-2]\d|3[0-1]) \d{4}$/;
+export const shortTimeReg: RegExp = /^(([1-9])|(1[0-2])):([0-5]\d) (A|P)M$/;
+export const longTimeReg: RegExp = /^(([1-9])|(1[0-2])):([0-5]\d):([0-5]\d) (A|P)M$/;
+export const defaultDate = "12/31/1899 ";
+export const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']; 
+// create an array of strings that contains all the months in the year
+export const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
+'September', 'October', 'November', 'December'];
+
+export const dateTimeRegexMap: Map<RegExp, DataTypes> = new Map<RegExp, DataTypes>([
+    [shortDateReg, DataTypes.shortDate],
+    [longDateReg, DataTypes.longDate],
+    [shortTimeReg, DataTypes.shortTime],
+    [longTimeReg, DataTypes.longTime],
+]);
 
 export const dataTypeKind = {
     string: "str",
