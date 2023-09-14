@@ -65,11 +65,11 @@ describe("Table Utils tests", () => {
     test("test valid initial data in SheetsXML", () => {
         const defaultString =
             '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="x14ac xr xr2 xr3" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" xmlns:xr="http://schemas.microsoft.com/office/spreadsheetml/2014/revision" xmlns:xr2="http://schemas.microsoft.com/office/spreadsheetml/2015/revision2" xmlns:xr3="http://schemas.microsoft.com/office/spreadsheetml/2016/revision3" xr:uid="{EDF0138E-D216-4CD1-8EFA-1396A1BB4478}"><sheetPr codeName="Sheet1"/><dimension ref="A1:B2"/><sheetViews><sheetView tabSelected="1" workbookViewId="0"><selection sqref="A1:B2"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="14.4" x14ac:dyDescent="0.3"/><cols><col min="1" max="1" width="9.6640625" bestFit="1" customWidth="1"/></cols><sheetData><row r="1" spans="1:1" x14ac:dyDescent="0.3"><c r="A1" t="s"><v>0</v></c></row><row r="2" spans="1:1" x14ac:dyDescent="0.3"><c r="A2" t="s"><v>1</v></c></row></sheetData><pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/><tableParts count="1"><tablePart r:id="rId1"/></tableParts></worksheet>';
-        const sheetsXmlString = tableUtils.updateSheetsInitialData(defaultString, {
+        const  {newSheet} = tableUtils.updateSheetsInitialData(defaultString, {
             columnNames: ["Column1", "Column2"],
             rows: [["1", "2"]],
         });
-        expect(sheetsXmlString).toContain(sheetsXmlMock);
+        expect(newSheet).toContain(sheetsXmlMock);
     });
 
     test("tests Query Tables contain initial data", () => {
