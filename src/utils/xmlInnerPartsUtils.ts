@@ -268,26 +268,25 @@ const updatePivotTable = (tableXmlString: string, connectionId: string, refreshO
     return { isPivotTableUpdated, newPivotTable };
 };
 
-const addNewConnection = async (connectionsXmlString: string, queryName: string): Promise<string> => {
-    const parser: DOMParser = new DOMParser();
-    const serializer: XMLSerializer = new XMLSerializer();
-    const connectionsDoc: Document = parser.parseFromString(connectionsXmlString, xmlTextResultType);
+const addNewConnection = async (connectionsDoc: Document, queryName: string): Promise<Document> => {
     const connections = connectionsDoc.getElementsByTagName(element.connections)[0];
     const newConnection = connectionsDoc.createElementNS(connectionsDoc.documentElement.namespaceURI, element.connection);
-    connections.append(newConnection);
     newConnection.setAttribute(elementAttributes.id, [...connectionsDoc.getElementsByTagName(element.connection)].length.toString());
     newConnection.setAttribute(elementAttributes.xr16uid, elementAttributesValues.randomizedUid());
     newConnection.setAttribute(elementAttributes.keepAlive, trueValue);
     newConnection.setAttribute(elementAttributes.name, elementAttributesValues.connectionName(queryName));
     newConnection.setAttribute(elementAttributes.description, elementAttributesValues.connectionDescription(queryName));
-    newConnection.setAttribute(elementAttributes.type, "5");
+    newConnection.setAttribute(elementAttributes.typeLowerCase, elementAttributesValues.defaultConnectionType());
     newConnection.setAttribute(elementAttributes.refreshedVersion, falseValue);
     newConnection.setAttribute(elementAttributes.background, trueValue);
-    const newDbPr = connectionsDoc.createElementNS(connectionsDoc.documentElement.namespaceURI, element.dbpr);
-    newDbPr.setAttribute(elementAttributes.connection, elementAttributesValues.connection(queryName));
-    newDbPr.setAttribute(elementAttributes.command, elementAttributesValues.connectionCommand(queryName));
-    newConnection.appendChild(newDbPr);
-    return serializer.serializeToString(connectionsDoc);
+    connections.append(newConnection);
+   
+    const databaseProperties = connectionsDoc.createElementNS(connectionsDoc.documentElement.namespaceURI, element.databaseProps);
+    databaseProperties.setAttribute(elementAttributes.connection, elementAttributesValues.connection(queryName));
+    databaseProperties.setAttribute(elementAttributes.command, elementAttributesValues.connectionCommand(queryName));
+    newConnection.appendChild(databaseProperties);
+    
+    return connectionsDoc;
     };
 
 export default {

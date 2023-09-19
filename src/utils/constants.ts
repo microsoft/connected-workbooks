@@ -89,7 +89,7 @@ export const element = {
     kindCell: "c",
     connection: "connection",
     connections: "connections",
-    dbpr: "dbPr",
+    databaseProps: "dbPr",
 };
 
 export const elementAttributes = {
@@ -104,6 +104,7 @@ export const elementAttributes = {
     name: "name",
     description: "description",
     id: "id",
+    typeLowerCase: "type",
     type: "Type",
     value: "Value",
     relationshipInfo: "RelationshipInfoContainer",
@@ -143,6 +144,8 @@ export const dataTypeKind = {
     boolean: "b",
 };
 
+export const itemPathTextContext = (queryName: string, isSource: boolean) => isSource ? `Section1/${queryName}/Source` : `Section1/${queryName}`;
+
 export const elementAttributesValues = {
     connectionName: (queryName: string) => `Query - ${queryName}`,
     connectionDescription: (queryName: string) => `Connection to the '${queryName}' query in the workbook.`,
@@ -153,6 +156,7 @@ export const elementAttributesValues = {
     fillStatusComplete: () => "sComplete",
     fillErrorCodeUnknown: () => "sUnknown",
     randomizedUid: () => "{" + v4().toUpperCase() + "}",
+    defaultConnectionType: () => "5",
 };
 
 export const defaults = {

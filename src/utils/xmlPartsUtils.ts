@@ -11,8 +11,9 @@ import {
     sharedStringsNotFoundErr,
     sheetsXmlPath,
     sheetsNotFoundErr,
+    xmlTextResultType,
 } from "./constants";
-import { addConnectionOnlyQuery, replaceSingleQuery } from "./mashupDocumentParser";
+import { addConnectionOnlyQueries, replaceSingleQuery } from "./mashupDocumentParser";
 import { FileConfigs, TableData } from "../types";
 import pqUtils from "./pqUtils";
 import xmlInnerPartsUtils from "./xmlInnerPartsUtils";
@@ -37,7 +38,7 @@ const updateWorkbookPowerQueryDocument = async (zip: JSZip, queryName: string, q
     const new_base64: string = await replaceSingleQuery(old_base64, queryName, queryMashupDoc);
     let updated_base64: string = new_base64;
     if (connectionOnlyQueryNames) {
-        updated_base64 = await addConnectionOnlyQuery(new_base64, connectionOnlyQueryNames);
+        updated_base64 = await addConnectionOnlyQueries(new_base64, connectionOnlyQueryNames);
     }    
     await pqUtils.setBase64(zip, updated_base64);
 };
@@ -81,9 +82,15 @@ const addConnectionOnlyQueriesToWorkbook = async (zip: JSZip, connectionOnlyQuer
         throw new Error(connectionsNotFoundErr);
     }
 
+    const parser: DOMParser = new DOMParser();
+    const serializer: XMLSerializer = new XMLSerializer();
+    let connectionsDoc: Document = parser.parseFromString(connectionsXmlString, xmlTextResultType);
     connectionOnlyQueryNames.forEach(async (queryName: string) => { 
-        connectionsXmlString = await xmlInnerPartsUtils.addNewConnection(connectionsXmlString!, queryName);
+        connectionsDoc = await xmlInnerPartsUtils.addNewConnection(connectionsDoc, queryName);
     });
+    
+    connectionsXmlString = serializer.serializeToString(connectionsDoc);
+    zip.file(connectionsXmlPath, connectionsXmlString);
     
 };
 
