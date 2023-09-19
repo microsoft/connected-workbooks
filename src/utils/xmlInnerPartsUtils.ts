@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import JSZip from "jszip";
-import { DOMParser, XMLSerializer } from 'xmldom'
+import { DOMParser, XMLSerializer } from "xmldom";
 import { DocProps, DocPropsAutoUpdatedElements, DocPropsModifiableElements } from "../types";
 import {
     docPropsCoreXmlPath,
@@ -70,11 +70,11 @@ const clearLabelInfo = async (zip: JSZip): Promise<void> => {
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(relsString, xmlTextResultType);
-    const relationships = doc.xpath("Relationships");
+    const relationships = doc.querySelector("Relationships");
     if (relationships === null) {
         throw new Error(unexpectedErr);
     }
-    const element = relationships.xpath('Relationship[Target="docMetadata/LabelInfo.xml"]');
+    const element = relationships.querySelector('Relationship[Target="docMetadata/LabelInfo.xml"]');
     if (element) {
         relationships.removeChild(element);
     }
