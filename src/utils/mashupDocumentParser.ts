@@ -3,6 +3,7 @@
 
 import * as base64 from "base64-js";
 import JSZip from "jszip";
+import { DOMParser, XMLSerializer } from 'xmldom'
 import {
     section1mPath,
     defaults,
@@ -111,7 +112,7 @@ export const editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Met
     if (itemPaths && itemPaths.length) {
         for (let i = 0; i < itemPaths.length; i++) {
             const itemPath: Element = itemPaths[i];
-            const content: string = itemPath.innerHTML;
+            const content: string = itemPath.textContent as string;
             if (content.includes(section1PathPrefix)) {
                 const strArr: string[] = content.split(divider);
                 strArr[1] = encodeURIComponent(metadata.queryName);
@@ -125,8 +126,7 @@ export const editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Met
     if (entries && entries.length) {
         for (let i = 0; i < entries.length; i++) {
             const entry: Element = entries[i];
-            const entryAttributes: NamedNodeMap = entry.attributes;
-            const entryAttributesArr: Attr[] = [...entryAttributes];
+            const entryAttributesArr: Attr[] = Array.from(entry.attributes);
             const entryProp: Attr | undefined = entryAttributesArr.find((prop) => {
                 return prop?.name === elementAttributes.type;
             });

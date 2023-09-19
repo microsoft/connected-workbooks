@@ -1,6 +1,6 @@
 {
   "name": "@microsoft/connected-workbooks",
-  "version": "3.0.0",
+  "version": "3.0.3",
   "description": "Microsoft backed, Excel advanced xlsx workbook generation JavaScript library",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -40,7 +40,8 @@
     "base64-js": "^1.5.1",
     "buffer": "^6.0.3",
     "jszip": "^3.5.0",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "xmldom": "^0.6.0"
   },
   "devDependencies": {
     "@babel/core": "^7.14.6",
@@ -51,6 +52,7 @@
     "@types/jszip": "^3.4.1",
     "@types/uuid": "^9.0.2",
     "@types/webpack-bundle-analyzer": "^4.6.0",
+    "@types/xmldom": "^0.1.32",
     "@typescript-eslint/eslint-plugin": "^4.28.2",
     "@typescript-eslint/parser": "^4.28.2",
     "@webpack-cli/generators": "^3.0.7",

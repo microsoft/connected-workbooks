@@ -28,7 +28,7 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
 };
 
 const updateWorkbookPowerQueryDocument = async (zip: JSZip, queryName: string, queryMashupDoc: string): Promise<void> => {
-    const old_base64: string | undefined = await pqUtils.getBase64(zip);
+    const old_base64: string | null = await pqUtils.getBase64(zip);
 
     if (!old_base64) {
         throw new Error(base64NotFoundErr);

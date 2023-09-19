@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import JSZip from "jszip";
+import { DOMParser, XMLSerializer } from 'xmldom'
 import { DocProps, DocPropsAutoUpdatedElements, DocPropsModifiableElements } from "../types";
 import {
     docPropsCoreXmlPath,
@@ -69,11 +70,11 @@ const clearLabelInfo = async (zip: JSZip): Promise<void> => {
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(relsString, xmlTextResultType);
-    const relationships = doc.querySelector("Relationships");
+    const relationships = doc.xpath("Relationships");
     if (relationships === null) {
         throw new Error(unexpectedErr);
     }
-    const element = relationships.querySelector('Relationship[Target="docMetadata/LabelInfo.xml"]');
+    const element = relationships.xpath('Relationship[Target="docMetadata/LabelInfo.xml"]');
     if (element) {
         relationships.removeChild(element);
     }
@@ -100,11 +101,11 @@ const updateConnections = (
     dbPr.setAttribute(elementAttributes.refreshOnLoad, refreshOnLoadValue);
 
     // Update query details to match queryName
-    dbPr.parentElement?.setAttribute(elementAttributes.name, elementAttributesValues.connectionName(queryName));
-    dbPr.parentElement?.setAttribute(elementAttributes.description, elementAttributesValues.connectionDescription(queryName));
+    (dbPr.parentNode as Element)?.setAttribute(elementAttributes.name, elementAttributesValues.connectionName(queryName));
+    (dbPr.parentNode as Element)?.setAttribute(elementAttributes.description, elementAttributesValues.connectionDescription(queryName));
     dbPr.setAttribute(elementAttributes.connection, elementAttributesValues.connection(queryName));
     dbPr.setAttribute(elementAttributes.command, elementAttributesValues.connectionCommand(queryName));
-    const connectionId: string | null | undefined = dbPr.parentElement?.getAttribute(elementAttributes.id);
+    const connectionId: string | null | undefined = (dbPr.parentNode as Element)?.getAttribute(elementAttributes.id);
     const connectionXmlFileString: string = serializer.serializeToString(connectionsDoc);
 
     if (connectionId === null) {
@@ -128,7 +129,7 @@ const updateSharedStrings = (sharedStringsXmlString: string, queryName: string):
     let sharedStringIndex: number = textElementCollection.length;
     if (textElementCollection && textElementCollection.length) {
         for (let i = 0; i < textElementCollection.length; i++) {
-            if (textElementCollection[i].innerHTML === queryName) {
+            if (textElementCollection[i].textContent === queryName) {
                 textElement = textElementCollection[i];
                 sharedStringIndex = i + 1;
                 break;
