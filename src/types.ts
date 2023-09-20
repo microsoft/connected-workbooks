@@ -42,9 +42,9 @@ export interface FileConfigs {
     docProps?: DocProps;
 }
 
+// Standard Date and Time Format Strings, as noted in
+// http://msdn.microsoft.com/en-us/library/az4se3k1.aspx
 export enum DataTypes {
-    // Standard Date and Time Format Strings, as noted in
-    // http://msdn.microsoft.com/en-us/library/az4se3k1.aspx
     null = 0,
     string = 1,
     number = 2,

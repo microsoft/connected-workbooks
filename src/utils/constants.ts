@@ -159,12 +159,12 @@ export const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday
 export const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
 'September', 'October', 'November', 'December'];
 
-export const dateTimeRegexMap: Map<RegExp, DataTypes> = new Map<RegExp, DataTypes>([
+export const dateTimeRegexes: [RegExp, DataTypes][] = [
     [shortDateReg, DataTypes.shortDate],
     [longDateReg, DataTypes.longDate],
     [shortTimeReg, DataTypes.shortTime],
     [longTimeReg, DataTypes.longTime],
-]);
+];
 
 export const dataTypeKind = {
     string: "str",
