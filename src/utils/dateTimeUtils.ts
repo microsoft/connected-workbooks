@@ -1,5 +1,5 @@
 import { DataTypes } from "../types";
-import { dateTimeRegexMap, daysOfWeek, defaultDate, invalidDateTimeErr, longDateFormat, longTimeFormat, milliSecPerDay, months, monthsbeforeLeap, numberOfDaysTillExcelBeginYear,  shortTimeFormat } from "./constants";
+import { dateTimeRegexes, daysOfWeek, defaultDate, invalidDateTimeErr, longDateFormat, longTimeFormat, milliSecPerDay, months, monthsbeforeLeap, numberOfDaysTillExcelBeginYear,  shortTimeFormat } from "./constants";
 
 
 const convertToExcelDate = (dateTime: string, dataType: DataTypes) => {
@@ -38,32 +38,39 @@ const getFormatCode = (format: DataTypes): string => {
 };
 
 export const detectDateTimeFormat = (dateTime: string): DataTypes|undefined => { 
-    for (const [regex, dataType] of dateTimeRegexMap) {
+    for (const [regex, dataType] of dateTimeRegexes) {
         if (regex.test(dateTime)) {
-            return validateDate(dateTime, dataType);
+            return validateDate(dateTime, dataType) ? dataType : undefined;
         }
     }
 };
 
-const validateDate = (data: string, dataType: DataTypes): DataTypes|undefined => {
+const validateDate = (data: string, dataType: DataTypes): boolean => {
     const date: Date = new Date(data);
     switch(dataType) {
         case DataTypes.shortDate:  
             const [parsedMonth, parsedDay, parsedYear] = data.split("/").map((x) => Number(x));
             
-            return (date.getDate() != parsedDay || date.getMonth() + 1 != parsedMonth || date.getFullYear() != parsedYear) ? undefined : dataType; 
+            return (date.getDate() == parsedDay && date.getMonth() + 1 == parsedMonth && date.getFullYear() == parsedYear); 
 
         case DataTypes.longDate:
             const dateParts: string[] = data.split(', ');
+            if (dateParts.length != 2) {
+                return false;
+            }   
             // Extract day of the week
             const dayOfWeek: string = dateParts[0];
             // Extract day, month, and year
             const [parsedLongMonth, parsedLongDay, parsedLongYear] = dateParts[1].split(' ');
             
-            return (date.getDate() != Number(parsedLongDay) || date.getMonth() != months.indexOf(parsedLongMonth) || date.getFullYear() != Number(parsedLongYear) || date.getDay()!= daysOfWeek.indexOf(dayOfWeek)) ? undefined : dataType;
+            return (date.getDate() == Number(parsedLongDay) && date.getMonth() == months.indexOf(parsedLongMonth) && date.getFullYear() == Number(parsedLongYear) && date.getDay()== daysOfWeek.indexOf(dayOfWeek));
 
+        case DataTypes.shortTime:
+            return true;
+        case DataTypes.longTime:
+            return true;    
         default:
-            return dataType;
+            return false;
     }
 }; 
 
