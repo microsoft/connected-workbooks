@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import JSZip from "jszip";
-import { DOMParser, XMLSerializer } from "xmldom";
+import { DOMParser, XMLSerializer } from "xmldom-qsa";
 import { DocProps, DocPropsAutoUpdatedElements, DocPropsModifiableElements } from "../types";
 import {
     docPropsCoreXmlPath,

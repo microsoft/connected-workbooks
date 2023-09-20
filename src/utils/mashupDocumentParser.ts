@@ -3,7 +3,7 @@
 
 import * as base64 from "base64-js";
 import JSZip from "jszip";
-import { DOMParser, XMLSerializer } from 'xmldom'
+import { DOMParser, XMLSerializer } from "xmldom-qsa";
 import {
     section1mPath,
     defaults,
