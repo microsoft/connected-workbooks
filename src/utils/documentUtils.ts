@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import JSZip from "jszip";
+import { DOMParser } from "xmldom-qsa";
 import {
     dataTypeKind,
     docPropsCoreXmlPath,

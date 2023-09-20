@@ -3,6 +3,7 @@
 
 import JSZip from "jszip";
 import { TableData } from "../types";
+import { DOMParser, XMLSerializer } from "xmldom-qsa";
 import {
     defaults,
     element,

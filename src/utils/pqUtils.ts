@@ -5,15 +5,16 @@ import JSZip from "jszip";
 import { EmptyQueryNameErr, QueryNameMaxLengthErr, maxQueryLength, URLS, BOM, QueryNameInvalidCharsErr } from "./constants";
 import { generateMashupXMLTemplate, generateCustomXmlFilePath } from "../generators";
 import { Buffer } from "buffer";
+import { DOMParser } from "xmldom-qsa";
 
 type CustomXmlFile = {
     found: boolean;
     path: string;
     xmlString: string | undefined;
-    value: string | undefined;
+    value: string | null;
 };
 
-const getBase64 = async (zip: JSZip): Promise<string | undefined> => {
+const getBase64 = async (zip: JSZip): Promise<string | null> => {
     const mashup = await getDataMashupFile(zip);
     return mashup.value;
 };
@@ -54,7 +55,7 @@ const getCustomXmlFile = async (zip: JSZip, url: string, encoding: BufferEncodin
     let found = false;
     let path: string;
     let xmlString: string | undefined;
-    let value: string | undefined;
+    let value: string | null = null;
 
     for (let i = 1; i <= itemsArray.length; i++) {
         path = generateCustomXmlFilePath(i);
@@ -72,7 +73,7 @@ const getCustomXmlFile = async (zip: JSZip, url: string, encoding: BufferEncodin
         found = doc?.documentElement?.namespaceURI === url;
 
         if (found) {
-            value = doc.documentElement.innerHTML;
+            value = doc.documentElement.textContent;
             break;
         }
     }
