@@ -193,6 +193,8 @@ const addConnectionOnlyQueryMetadata = (metadataArray: Uint8Array, connectionOnl
             items.appendChild(stableEntriesItem);
             const sourceItem: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.item);
             sourceItem.appendChild(createItemLocation(metadataDoc, queryName, true));
+            const stableEntries: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.stableEntries);
+            sourceItem.appendChild(stableEntries);
             items.appendChild(sourceItem);
         });    
 
