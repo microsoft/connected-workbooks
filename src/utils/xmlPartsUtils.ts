@@ -37,7 +37,7 @@ const updateWorkbookPowerQueryDocument = async (zip: JSZip, queryName: string, q
 
     const new_base64: string = await replaceSingleQuery(old_base64, queryName, queryMashupDoc);
     let updated_base64: string = new_base64;
-    if (connectionOnlyQueryNames) {
+    if (connectionOnlyQueryNames && connectionOnlyQueryNames.length > 0) {
         updated_base64 = await addConnectionOnlyQueries(new_base64, connectionOnlyQueryNames);
     }    
     await pqUtils.setBase64(zip, updated_base64);
