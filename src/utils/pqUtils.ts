@@ -134,18 +134,20 @@ const assignQueryNames = (queries: ConnectionOnlyQueryInfo[], loadedQueryName: s
     // Generate unique name for queries without a name
     queries.forEach((query: ConnectionOnlyQueryInfo) => {
         if (!query.queryName) {
-            query.queryName = generateUniqueQueryName(queryNames);
-            queryNames.push(query.queryName);
+            query.queryName = generateUniqueQueryName(queryNames, loadedQueryName);
+            queryNames.push(query.queryName.toLowerCase());
         }
     });
 
     return queries;
 };
 
-const generateUniqueQueryName = (queryNames: string[]): string => {
+const generateUniqueQueryName = (queryNames: string[], loadedQueryName: string,): string => {
     let queryName: string = defaults.queryName;
     let index: number = 2;
-    while (queryNames.includes(queryName)) {
+    const cleanedLoadedQueryName: string = loadedQueryName.trim().toLowerCase();
+    // Assumes that query names are lower case
+    while (queryNames.includes(queryName.toLowerCase()) || queryName.toLowerCase() === cleanedLoadedQueryName) {
         queryName = defaults.queryNamePrefix + index++;
     }
 
@@ -160,4 +162,5 @@ export default {
     validateQueryName,
     assignQueryNames,
     validateMultipleQueryNames,
+    generateUniqueQueryName
 };
