@@ -63,8 +63,11 @@ describe("Workbook Manager tests", () => {
     });
 
     test("Connections XML contains new connection", async () => {
-        const newConnectionsXml: string = await xmlInnerPartsUtils.addNewConnection(mockConnectionString, "newQueryName");
-        expect((newConnectionsXml.match(/<connection id/g) || []).length).toEqual(2);
+        const serializer = new XMLSerializer();
+        const mockXml = new DOMParser().parseFromString(mockConnectionString, "text/xml");
+        const newConnectionsXml: Document = await xmlInnerPartsUtils.addNewConnection(mockXml, "newQueryName");
+        const newConnectionsXmlString = serializer.serializeToString(newConnectionsXml);
+        expect((newConnectionsXmlString.match(/<connection id/g) || []).length).toEqual(2);
         
     });
 });
