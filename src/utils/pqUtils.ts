@@ -114,15 +114,16 @@ const validateQueryName = (queryName: string): void => {
 
 const validateMultipleQueryNames = (queries: ConnectionOnlyQueryInfo[],  loadedQueryName: string): string[] => {
     const queryNames: string[] = [];
+    const cleanedLoadedQueryName: string = loadedQueryName.trim().toLowerCase();
     queries.forEach((query: ConnectionOnlyQueryInfo) => {
         if (query.queryName) {
             validateQueryName(query.queryName);
-            const trimmedQueryName: string | undefined = query.queryName.trim();
-            if (queryNames.includes(trimmedQueryName) || trimmedQueryName === loadedQueryName.trim()) {
+            const cleanedQueryName: string | undefined = query.queryName.trim().toLowerCase();
+            if (queryNames.includes(cleanedQueryName) || cleanedQueryName === cleanedLoadedQueryName) {
                 throw new Error(queryNameAlreadyExistsErr);
             }
 
-            queryNames.push(trimmedQueryName);
+            queryNames.push(cleanedQueryName);
         } 
     });
     
