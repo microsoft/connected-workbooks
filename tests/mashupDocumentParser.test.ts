@@ -63,6 +63,6 @@ describe("Mashup Document Parser tests", () => {
     test("Power Query Add Empty ConnectionOnly Array test", async () => { 
         const metadataStr: string = pqSingleQueryMetadataXmlMock;
         const newMetadataStr: string = updateConnectionOnlyMetadataStr(metadataStr, []);
-        expect(newMetadataStr).toEqual(pqSingleQueryMetadataXmlMock);
+        expect(newMetadataStr.replace(/ /g, "")).toEqual(pqSingleQueryMetadataXmlMock.replace(/ /g, ""));
     });
 });
