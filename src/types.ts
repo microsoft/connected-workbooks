@@ -8,11 +8,11 @@ export interface QueryInfo {
 }
 
 export interface MultipleQueriesInfo {
-    loadedQueryName: string;
-    refreshOnOpen: boolean;
-    connectionOnlyQueryNames: string[];
-    mashupDocument: string;
+    loadedQuery: QueryInfo;
+    connectionOnlyQueries: ConnectionOnlyQueryInfo[];
 }
+
+export type ConnectionOnlyQueryInfo = Omit<QueryInfo, 'refreshOnOpen'>;
 
 export interface DocProps {
     title?: string | null;

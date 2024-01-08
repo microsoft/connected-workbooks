@@ -42,6 +42,7 @@ export const unexpectedErr = "Unexpected error";
 export const arrayIsntMxNErr = "Array isn't MxN";
 export const templateFileNotSupportedErr = "Template file is not supported for this API call";
 export const relsNotFoundErr = ".rels were not found in template";
+export const queryNameAlreadyExistsErr = "Queries must have unique names";
 
 export const blobFileType = "blob";
 export const uint8ArrayType = "uint8array";
@@ -161,6 +162,7 @@ export const elementAttributesValues = {
 
 export const defaults = {
     queryName: "Query1",
+    queryNamePrefix: "Query",
     sheetName: "Sheet1",
     columnName: "Column",
 };

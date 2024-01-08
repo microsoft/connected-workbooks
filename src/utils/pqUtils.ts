@@ -2,9 +2,10 @@
 // Licensed under the MIT license.
 
 import JSZip from "jszip";
-import { EmptyQueryNameErr, QueryNameMaxLengthErr, maxQueryLength, URLS, BOM, QueryNameInvalidCharsErr } from "./constants";
+import { EmptyQueryNameErr, QueryNameMaxLengthErr, maxQueryLength, URLS, BOM, QueryNameInvalidCharsErr, queryNameAlreadyExistsErr, defaults } from "./constants";
 import { generateMashupXMLTemplate, generateCustomXmlFilePath } from "../generators";
 import { Buffer } from "buffer";
+import { ConnectionOnlyQueryInfo } from "../types";
 
 type CustomXmlFile = {
     found: boolean;
@@ -110,10 +111,51 @@ const validateQueryName = (queryName: string): void => {
         throw new Error(EmptyQueryNameErr);
     }
 };
+
+const validateMultipleQueryNames = (queries: ConnectionOnlyQueryInfo[],  loadedQueryName: string): string[] => {
+    const queryNames: string[] = [];
+    queries.forEach((query: ConnectionOnlyQueryInfo) => {
+        if (query.queryName) {
+            validateQueryName(query.queryName);
+            if (queryNames.includes(query.queryName) || query.queryName === loadedQueryName) {
+                throw new Error(queryNameAlreadyExistsErr);
+            }
+
+            queryNames.push(query.queryName);
+        } 
+    });
+    
+    return queryNames;
+};
+
+const assignQueryNames = (queries: ConnectionOnlyQueryInfo[], loadedQueryName: string, queryNames: string[]):  ConnectionOnlyQueryInfo[] => {
+    // Generate unique name for queries without a name
+    queries.forEach((query: ConnectionOnlyQueryInfo) => {
+        if (!query.queryName) {
+            query.queryName = generateUniqueQueryName(queryNames);
+            queryNames.push(query.queryName);
+        }
+    });
+
+    return queries;
+};
+
+const generateUniqueQueryName = (queryNames: string[]): string => {
+    let queryName: string = defaults.queryName;
+    let index: number = 2;
+    while (queryNames.includes(queryName)) {
+        queryName = defaults.queryNamePrefix + index++;
+    }
+
+    return queryName;
+};
+
 export default {
     getBase64,
     setBase64,
     getCustomXmlFile,
     getDataMashupFile,
     validateQueryName,
+    assignQueryNames,
+    validateMultipleQueryNames,
 };
