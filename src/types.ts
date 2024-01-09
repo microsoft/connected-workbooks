@@ -7,7 +7,7 @@ export interface QueryInfo {
     queryName?: string;
 }
 
-export interface MultipleQueriesInfo {
+export interface QueriesInfo {
     loadedQuery: QueryInfo;
     connectionOnlyQueries: ConnectionOnlyQueryInfo[];
 }

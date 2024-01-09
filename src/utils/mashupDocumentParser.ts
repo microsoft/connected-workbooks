@@ -170,7 +170,7 @@ const addConnectionOnlyQueryMetadata = (metadataArray: Uint8Array, connectionOnl
 
         // parse metadataXml
         const metadataString: string = new TextDecoder("utf-8").decode(metadataXml);
-        const newMetadataString: string = updateConnectionOnlyMetadataStr(metadataString, connectionOnlyQueryNames);
+        const newMetadataString: string = addConnectionOnlyQueriesToMetadataStr(metadataString, connectionOnlyQueryNames);
         const encoder: TextEncoder = new TextEncoder();
         const newMetadataXml: Uint8Array = encoder.encode(newMetadataString);
         const newMetadataXmlSize: Uint8Array = arrayUtils.getInt32Buffer(newMetadataXml.byteLength);
@@ -184,7 +184,7 @@ const addConnectionOnlyQueryMetadata = (metadataArray: Uint8Array, connectionOnl
         return newMetadataArray;
     };
 
-    const updateConnectionOnlyMetadataStr = (metadataString: string, connectionOnlyQueryNames: string[]) => {
+    const addConnectionOnlyQueriesToMetadataStr = (metadataString: string, connectionOnlyQueryNames: string[]) => {
         const parser: DOMParser = new DOMParser();
         let metadataDoc: Document = parser.parseFromString(metadataString, xmlTextResultType);      
         connectionOnlyQueryNames.forEach((queryName: string) => {

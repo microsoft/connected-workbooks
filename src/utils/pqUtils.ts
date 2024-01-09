@@ -143,12 +143,12 @@ const assignQueryNames = (queries: ConnectionOnlyQueryInfo[], loadedQueryName: s
 };
 
 const generateUniqueQueryName = (queryNames: string[], loadedQueryName: string,): string => {
-    let queryName: string = defaults.queryName;
-    let index: number = 2;
+    let index: number = 1;
+    let queryName: string = defaults.connectionOnlyQueryNamePrefix + index++;
     const cleanedLoadedQueryName: string = loadedQueryName.trim().toLowerCase();
     // Assumes that query names are lower case
     while (queryNames.includes(queryName.toLowerCase()) || queryName.toLowerCase() === cleanedLoadedQueryName) {
-        queryName = defaults.queryNamePrefix + index++;
+        queryName = defaults.connectionOnlyQueryNamePrefix + index++;
     }
 
     return queryName;

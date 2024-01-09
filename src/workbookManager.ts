@@ -13,7 +13,7 @@ import {
     tableNotFoundErr,
     templateFileNotSupportedErr,
 } from "./utils/constants";
-import { QueryInfo, TableData, Grid, FileConfigs, MultipleQueriesInfo } from "./types";
+import { QueryInfo, TableData, Grid, FileConfigs, QueriesInfo } from "./types";
 import { generateMultipleQueryMashup, generateSingleQueryMashup } from "./generators";
 
 export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataGrid?: Grid, fileConfigs?: FileConfigs): Promise<Blob> => {
@@ -40,7 +40,7 @@ export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataG
     return await generateSingleQueryWorkbookFromZip(zip, query, fileConfigs, tableData);
 };
 
-export const generateMultipleQueryWorkbook = async (queries: MultipleQueriesInfo, initialDataGrid?: Grid, fileConfigs?: FileConfigs): Promise<Blob> => {
+export const generateMultipleQueryWorkbook = async (queries: QueriesInfo, initialDataGrid?: Grid, fileConfigs?: FileConfigs): Promise<Blob> => {
     const templateFile: File | undefined = fileConfigs?.templateFile;
     if (templateFile !== undefined && initialDataGrid !== undefined) {
         throw new Error(templateWithInitialDataErr);
@@ -49,15 +49,13 @@ export const generateMultipleQueryWorkbook = async (queries: MultipleQueriesInfo
     if (!queries.loadedQuery.queryName) {
         queries.loadedQuery.queryName = defaults.queryName;
     }
-
+    
+    pqUtils.validateQueryName(queries.loadedQuery.queryName!);
+    const connectionOnlyQueryNames: string[] = pqUtils.validateMultipleQueryNames(queries.connectionOnlyQueries, queries.loadedQuery.queryName!);
+    pqUtils.assignQueryNames(queries.connectionOnlyQueries, queries.loadedQuery.queryName!, connectionOnlyQueryNames);
     const zip: JSZip =
         templateFile === undefined ? await JSZip.loadAsync(SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true }) : await JSZip.loadAsync(templateFile);
-
-    const tableData = initialDataGrid ? gridUtils.parseToTableData(initialDataGrid) : undefined;
-
-    const connectionOnlyQueryNames: string[] = pqUtils.validateMultipleQueryNames(queries.connectionOnlyQueries, queries.loadedQuery.queryName!);
-    pqUtils.validateQueryName(queries.loadedQuery.queryName!);
-    pqUtils.assignQueryNames(queries.connectionOnlyQueries, queries.loadedQuery.queryName!, connectionOnlyQueryNames);
+    const tableData: TableData | undefined = initialDataGrid ? gridUtils.parseToTableData(initialDataGrid) : undefined;
 
     return await generateMultipleQueryWorkbookFromZip(zip, queries, fileConfigs, tableData);
 };
@@ -103,7 +101,7 @@ const generateSingleQueryWorkbookFromZip = async (zip: JSZip, query: QueryInfo, 
     });
 };
 
-const generateMultipleQueryWorkbookFromZip = async (zip: JSZip, queries: MultipleQueriesInfo, fileConfigs?: FileConfigs, tableData?: TableData): Promise<Blob> => {
+const generateMultipleQueryWorkbookFromZip = async (zip: JSZip, queries: QueriesInfo, fileConfigs?: FileConfigs, tableData?: TableData): Promise<Blob> => {
     const connectionOnlyQueryNames: string[] = queries.connectionOnlyQueries.map((query) => query.queryName!);
     const mashupDocument: string = generateMultipleQueryMashup(queries.loadedQuery, queries.connectionOnlyQueries);
     await xmlPartsUtils.updateWorkbookPowerQueryDocument(zip, queries.loadedQuery.queryName!, mashupDocument, connectionOnlyQueryNames);

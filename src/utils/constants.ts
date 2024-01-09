@@ -162,7 +162,7 @@ export const elementAttributesValues = {
 
 export const defaults = {
     queryName: "Query1",
-    queryNamePrefix: "Query",
+    connectionOnlyQueryNamePrefix: "Connection only query-",
     sheetName: "Sheet1",
     columnName: "Column",
 };
