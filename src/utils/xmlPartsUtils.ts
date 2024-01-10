@@ -34,16 +34,24 @@ const updateWorkbookPowerQueryDocument = async (zip: JSZip, loadedQueryName: str
         throw new Error(base64NotFoundErr);
     }
     // The mashupDoc contains a default query, we replace that query with the loaded query 
-    const new_base64: string = await replaceSingleQuery(old_base64, loadedQueryName, queryMashupDoc);
-    let updated_base64: string = new_base64;
-
+    let updated_base64: string = await replaceSingleQuery(old_base64, loadedQueryName, queryMashupDoc);
+    
     // If connection-only queries were given, add them to the mashupDoc
-    if (connectionOnlyQueryNames && (connectionOnlyQueryNames.length > 0)) {
-        updated_base64 = await addConnectionOnlyQueries(new_base64, connectionOnlyQueryNames);
-    }    
+    updated_base64 = await addConnectionOnlyQueriesIfNeeded(updated_base64, connectionOnlyQueryNames);          
 
     await pqUtils.setBase64(zip, updated_base64);
 };
+
+const addConnectionOnlyQueriesIfNeeded = async(base64: string, connectionOnlyQueryNames?:string[]):Promise<string> => {
+    if (!connectionOnlyQueryNames || (connectionOnlyQueryNames.length == 0))
+    {
+        return base64;
+    } 
+
+    return await addConnectionOnlyQueries(base64, connectionOnlyQueryNames);
+};
+
+
 
 const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string, refreshOnOpen: boolean): Promise<void> => {
     // Update connections

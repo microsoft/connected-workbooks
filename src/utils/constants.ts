@@ -145,15 +145,18 @@ export const dataTypeKind = {
     boolean: "b",
 };
 
-export const itemPathTextContext = (queryName: string, isSource: boolean) => isSource ? `Section1/${queryName}/Source` : `Section1/${queryName}`;
+export const powerQueryResultType = {
+    table: "sTable",
+    connectionOnly: "sConnectionOnly",
+};
+
+export const itemPathTextContext = (queryName: string, isSource: boolean) => isSource ? `Section1/${encodeURIComponent(queryName)}/Source` : `Section1/${queryName}`;
 
 export const elementAttributesValues = {
     connectionName: (queryName: string) => `Query - ${queryName}`,
     connectionDescription: (queryName: string) => `Connection to the '${queryName}' query in the workbook.`,
     connection: (queryName: string) => `Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location="${queryName}";`,
     connectionCommand: (queryName: string) => `SELECT * FROM [${queryName}]`,
-    tableResultType: () => "sTable",
-    connectionOnlyResultType: () => "sConnectionOnly",
     fillStatusComplete: () => "sComplete",
     fillErrorCodeUnknown: () => "sUnknown",
     randomizedUid: () => "{" + v4().toUpperCase() + "}",

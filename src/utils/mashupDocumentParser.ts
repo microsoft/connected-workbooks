@@ -17,6 +17,7 @@ import {
     elementAttributes,
     elementAttributesValues,
     itemPathTextContext,
+    powerQueryResultType,
 } from "./constants";
 import { arrayUtils } from ".";
 import { Metadata } from "../types";
@@ -140,7 +141,7 @@ export const editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Met
                 return prop?.name === elementAttributes.type;
             });
             if (entryProp?.nodeValue == elementAttributes.resultType) {
-                entry.setAttribute(elementAttributes.value, elementAttributesValues.tableResultType());
+                entry.setAttribute(elementAttributes.value, powerQueryResultType.table);
             }
 
             if (entryProp?.nodeValue == elementAttributes.fillLastUpdated) {
@@ -184,19 +185,19 @@ const addConnectionOnlyQueryMetadata = (metadataArray: Uint8Array, connectionOnl
         return newMetadataArray;
     };
 
-    const addConnectionOnlyQueriesToMetadataStr = (metadataString: string, connectionOnlyQueryNames: string[]) => {
-        const parser: DOMParser = new DOMParser();
-        let metadataDoc: Document = parser.parseFromString(metadataString, xmlTextResultType);      
-        connectionOnlyQueryNames.forEach((queryName: string) => {
-            const items: Element = metadataDoc.getElementsByTagName(element.items)[0];
-            const stableEntriesItem: Element = createStableEntriesItem(metadataDoc, queryName);
-            items.appendChild(stableEntriesItem);
-            const sourceItem: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.item);
-            sourceItem.appendChild(createItemLocation(metadataDoc, queryName, true));
-            const stableEntries: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.stableEntries);
-            sourceItem.appendChild(stableEntries);
-            items.appendChild(sourceItem);
-        });    
+export const addConnectionOnlyQueriesToMetadataStr = (metadataString: string, connectionOnlyQueryNames: string[]) => {
+    const parser: DOMParser = new DOMParser();
+    let metadataDoc: Document = parser.parseFromString(metadataString, xmlTextResultType);      
+    connectionOnlyQueryNames.forEach((queryName: string) => {
+        const items: Element = metadataDoc.getElementsByTagName(element.items)[0];
+        const stableEntriesItem: Element = createStableEntriesItem(metadataDoc, queryName);
+        items.appendChild(stableEntriesItem);
+        const sourceItem: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.item);
+        sourceItem.appendChild(createItemLocation(metadataDoc, queryName, true));
+        const stableEntries: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.stableEntries);
+        sourceItem.appendChild(stableEntries);
+        items.appendChild(sourceItem);
+    });    
 
         const updatedMetdataString: string = new XMLSerializer().serializeToString(metadataDoc);
 
@@ -218,7 +219,7 @@ const addConnectionOnlyQueryMetadata = (metadataArray: Uint8Array, connectionOnl
     const createStableEntriesItem = (metadataDoc: Document, queryName: string) => {
         const newItem: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.item);
         newItem.appendChild(createItemLocation(metadataDoc, queryName, false));
-        const stableEntries: Element = createConnectionOnlyEntries(metadataDoc);
+        const stableEntries: Element = createEntries(metadataDoc, powerQueryResultType.connectionOnly);
         newItem.appendChild(stableEntries);
         
         return newItem;
@@ -232,16 +233,16 @@ const addConnectionOnlyQueryMetadata = (metadataArray: Uint8Array, connectionOnl
         return elementObject;
     };
     
-    const createConnectionOnlyEntries = (metadataDoc: Document) => {
+    const createEntries = (metadataDoc: Document, fillObjectType: string) => {
         const stableEntries: Element = metadataDoc.createElementNS(metadataDoc.documentElement.namespaceURI, element.stableEntries);
         const nowTime: string = new Date().toISOString();
 
         stableEntries.appendChild(createElementObject(metadataDoc, elementAttributes.isPrivate, "l0"));
         stableEntries.appendChild(createElementObject(metadataDoc, elementAttributes.fillEnabled, "l0"));
-        stableEntries.appendChild(createElementObject(metadataDoc, elementAttributes.fillObjectType, elementAttributesValues.connectionOnlyResultType()));
+        stableEntries.appendChild(createElementObject(metadataDoc, elementAttributes.fillObjectType, fillObjectType));
         stableEntries.appendChild(createElementObject(metadataDoc, elementAttributes.fillToDataModelEnabled, "l0"));
         stableEntries.appendChild(createElementObject(metadataDoc, elementAttributes.fillLastUpdated, (elementAttributes.day + nowTime).replace(/Z/, "0000Z")));
-        stableEntries.appendChild(createElementObject(metadataDoc, elementAttributes.resultType, elementAttributesValues.tableResultType()));
+        stableEntries.appendChild(createElementObject(metadataDoc, elementAttributes.resultType, powerQueryResultType.table));
         stableEntries.appendChild(createElementObject(metadataDoc, elementAttributes.filledCompleteResultToWorksheet, "l0"));
         stableEntries.appendChild(createElementObject(metadataDoc, elementAttributes.addedToDataModel, "l0"));
         stableEntries.appendChild(createElementObject(metadataDoc, elementAttributes.fillErrorCode, elementAttributesValues.fillErrorCodeUnknown()));
