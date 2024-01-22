@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { TextDecoder, TextEncoder } from "util";
-import { replaceSingleQuery, getPackageComponents, editSingleQueryMetadata } from "../src/utils/mashupDocumentParser";
+import { replaceSingleQuery, getPackageComponents, editSingleQueryMetadata, addConnectionOnlyQueriesToMetadataStr } from "../src/utils/mashupDocumentParser";
 import { arrayUtils, pqUtils } from "../src/utils";
 import { section1mNewQueryNameSimpleMock, pqMetadataXmlMockPart1, pqMetadataXmlMockPart2 } from "./mocks";
 import base64 from "base64-js";
@@ -11,6 +11,7 @@ import { SIMPLE_QUERY_WORKBOOK_TEMPLATE } from "../src/workbookTemplate";
 import { section1mPath } from "../src/utils/constants";
 
 import util from "util";
+import { pqSingleQueryMetadataXmlMock, pqConnectionOnlyMetadataXmlMockPart1, pqConnectionOnlyMetadataXmlMockPart2 } from "./mocks/xmlMocks";
 
 (global as any).TextDecoder = TextDecoder;
 (global as any).TextEncoder = TextEncoder;
@@ -46,5 +47,23 @@ describe("Mashup Document Parser tests", () => {
             expect(metadataString.replace(/ /g, "")).toContain(pqMetadataXmlMockPart1.replace(/ /g, ""));
             expect(metadataString.replace(/ /g, "")).toContain(pqMetadataXmlMockPart2.replace(/ /g, ""));
         }
+    });
+
+     test("Power Query Multiple Queries MetadataXml test", async () => { 
+        const metadataStr: string = pqSingleQueryMetadataXmlMock;
+        const newMetadataString: string = addConnectionOnlyQueriesToMetadataStr(metadataStr, ["Query2", "Query3"]);
+        expect(newMetadataString.replace(/ /g, "")).toContain(pqConnectionOnlyMetadataXmlMockPart1("Query2").replace(/ /g, ""));
+        expect(newMetadataString.replace(/ /g, "")).toContain(pqConnectionOnlyMetadataXmlMockPart2("Query2").replace(/ /g, "")); 
+        expect(newMetadataString.replace(/ /g, "")).toContain(pqConnectionOnlyMetadataXmlMockPart1("Query3").replace(/ /g, ""));
+        expect(newMetadataString.replace(/ /g, "")).toContain(pqConnectionOnlyMetadataXmlMockPart2("Query3").replace(/ /g, ""));            
+        // checks that there are exactly 7 <Item> tags in the metadata
+        expect((newMetadataString.replace(/ /g, "").match(/<Item>/g) || []).length).toEqual(7);
+
+    });
+
+    test("Power Query Add Empty ConnectionOnly Array test", async () => { 
+        const metadataStr: string = pqSingleQueryMetadataXmlMock;
+        const newMetadataStr: string = addConnectionOnlyQueriesToMetadataStr(metadataStr, []);
+        expect(newMetadataStr.replace(/ /g, "")).toEqual(pqSingleQueryMetadataXmlMock.replace(/ /g, ""));
     });
 });
