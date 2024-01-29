@@ -1,15 +1,30 @@
 import { DataTypes } from "../types";
-import { dateTimeRegexes, daysOfWeek, defaultDate, invalidDateTimeErr, longDateFormat, longTimeFormat, milliSecPerDay, months, monthsbeforeLeap, numberOfDaysTillExcelBeginYear,  shortTimeFormat } from "./constants";
+import { defaultDate, invalidDateTimeErr, longDateFormat, longDateReg, longDateValidation, longTimeFormat, longTimeReg, milliSecPerDay, monthsbeforeLeap, numberOfDaysTillExcelBeginYear,  shortDateId,  shortDateReg, shortDateValidation,  shortTimeFormat, shortTimeReg } from "./constants";
 
+export interface DateTimeFormat {
+    regex: RegExp;
+    validateDate: (data: string) => boolean;
+    isDate: boolean;
+    formatCode?: string;
+    formatId?: number;
+}
 
-const convertToExcelDate = (dateTime: string, dataType: DataTypes) => {
-    let dateTimeStr: string = dateTime;
-    if (dataType == DataTypes.shortTime || dataType == DataTypes.longTime) {
+// Supported datetime formats
+export const dateTimeFormatArr: DateTimeFormat[] = 
+    [{regex: shortDateReg, validateDate: shortDateValidation, formatId: shortDateId, isDate: true}, // M/d/yyyy
+     {regex: longDateReg, validateDate: longDateValidation, formatCode: longDateFormat, isDate: true}, // dddd, mmmm dd, yyyy
+     {regex: shortTimeReg, validateDate: (data: string) => true, formatCode: shortTimeFormat, isDate: false}, // h:mm AM/PM
+     {regex: longTimeReg, validateDate: (data: string) => true, formatCode: longTimeFormat, isDate: false}, // h:mm:ss AM/PM
+    ];
+
+const convertToExcelDate = (data: string, dateTime: DateTimeFormat) => {
+    let dataStr: string = data;
+    if (!dateTime.isDate) {
         // Excel assumes that the time is in the 31/12/1899 if none is specified
-        dateTimeStr = defaultDate + dateTimeStr;
+        dataStr = defaultDate + dataStr;
     }
 
-    const localDate: Date = new Date(dateTimeStr);
+    const localDate: Date = new Date(dataStr);
     if (isNaN(localDate.getTime())) {
         throw new Error(invalidDateTimeErr);
     }
@@ -17,65 +32,37 @@ const convertToExcelDate = (dateTime: string, dataType: DataTypes) => {
     const globalDate = new Date(Date.UTC(localDate.getFullYear(), localDate.getMonth(), 
         localDate.getDate(), localDate.getHours(), localDate.getMinutes(), localDate.getSeconds())).getTime();
     // Excel incorrectly assumes that the year 1900 is a leap year. This is a workaround for that
-    if ((localDate.getFullYear() == 1900 && localDate.getMonth() <= monthsbeforeLeap) || localDate.getFullYear() < 1900) {
+    if ((localDate.getFullYear() == 1900 && localDate.getMonth() < monthsbeforeLeap) || localDate.getFullYear() < 1900) {
         return ((globalDate + numberOfDaysTillExcelBeginYear*milliSecPerDay) / (milliSecPerDay)) - 1;
     }
 
     return (globalDate + numberOfDaysTillExcelBeginYear*milliSecPerDay) / (milliSecPerDay);
 };
 
-const getFormatCode = (format: DataTypes): string => {
-    switch (format) {
-        case DataTypes.longDate:
-            return longDateFormat;
-        case DataTypes.longTime:
-            return longTimeFormat;
-        case DataTypes.shortTime:
-            return shortTimeFormat;
-        default:
-           throw new Error (invalidDateTimeErr);
-    }
-};
-
-export const detectDateTimeFormat = (dateTime: string): DataTypes|undefined => { 
-    for (const [regex, dataType] of dateTimeRegexes) {
-        if (regex.test(dateTime)) {
-            return validateDate(dateTime, dataType) ? dataType : undefined;
+export const detectDateTimeFormat = (data: string): DateTimeFormat|undefined => { 
+    let dateTimeFormat: DateTimeFormat|undefined = undefined;
+    Object.values(dateTimeFormatArr).forEach((format) => {
+        if (format.regex.test(data) && format.validateDate(data)) {
+            dateTimeFormat = format;
+            
+            return;
         }
-    }
+    });
+    
+    return dateTimeFormat;
 };
 
-const validateDate = (data: string, dataType: DataTypes): boolean => {
-    const date: Date = new Date(data);
-    switch(dataType) {
-        case DataTypes.shortDate:  
-            const [parsedMonth, parsedDay, parsedYear] = data.split("/").map((x) => Number(x));
-            
-            return (date.getDate() == parsedDay && date.getMonth() + 1 == parsedMonth && date.getFullYear() == parsedYear); 
-
-        case DataTypes.longDate:
-            const dateParts: string[] = data.split(', ');
-            if (dateParts.length != 2) {
-                return false;
-            }   
-            // Extract day of the week
-            const dayOfWeek: string = dateParts[0];
-            // Extract day, month, and year
-            const [parsedLongMonth, parsedLongDay, parsedLongYear] = dateParts[1].split(' ');
-            
-            return (date.getDate() == Number(parsedLongDay) && date.getMonth() == months.indexOf(parsedLongMonth) && date.getFullYear() == Number(parsedLongYear) && date.getDay()== daysOfWeek.indexOf(dayOfWeek));
-
-        case DataTypes.shortTime:
-            return true;
-        case DataTypes.longTime:
-            return true;    
-        default:
-            return false;
+export const getFormatCode = (dataType: DataTypes): string|undefined => {
+    if (dateTimeFormatArr[dataType] && dateTimeFormatArr[dataType]!.formatCode) {
+        return dateTimeFormatArr[dataType]!.formatCode;
     }
-}; 
+
+    return undefined;
+}
 
 export default {
     convertToExcelDate,
-    getFormatCode,
     detectDateTimeFormat,
+    getFormatCode,
+    dateTimeFormatArr
 };

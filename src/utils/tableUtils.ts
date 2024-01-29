@@ -25,7 +25,7 @@ import {
 } from "./constants";
 import documentUtils from "./documentUtils";
 import { v4 } from "uuid";
-import dateTimeUtils from "./dateTimeUtils";
+import dateTimeUtils, { DateTimeFormat } from "./dateTimeUtils";
 
 const updateTableInitialDataIfNeeded = async (zip: JSZip, tableData?: TableData, updateQueryTable?: boolean): Promise<void> => {
     if (!tableData) {
@@ -78,7 +78,7 @@ const updateTableInitialDataIfNeeded = async (zip: JSZip, tableData?: TableData,
     zip.file(tableXmlPath, newTable);
 };
 
-const updateStylesInitialData = (stylesXmlString: string, formatStyles: DataTypes[]): string => {
+const updateStylesInitialData = (stylesXmlString: string, formatStyles: DateTimeFormat[]): string => {
     const parser: DOMParser = new DOMParser();
     const serializer: XMLSerializer = new XMLSerializer();
     const stylesDoc: Document = parser.parseFromString(stylesXmlString, xmlTextResultType);
@@ -86,16 +86,17 @@ const updateStylesInitialData = (stylesXmlString: string, formatStyles: DataType
     const cellXfs: Element = stylesDoc.getElementsByTagName(element.cellXfs)[0];
     const fonts: Element = stylesDoc.getElementsByTagName(element.fonts)[0];
     const numFmts: Element = stylesDoc.createElementNS(stylesDoc.documentElement.namespaceURI, element.numFmts);
-    formatStyles.forEach((style, i) => {
+    formatStyles.forEach((dateTimeFormat, i) => {
         // Add new numfmtId when necessary
-        let numFmtId: number = style == DataTypes.shortDate ? shortDateId : i + customNumberFormatId;
-        if (style != DataTypes.shortDate) {
+        let numFmtId: number = dateTimeFormat.formatId ? dateTimeFormat.formatId : i + customNumberFormatId;
+        if (dateTimeFormat.formatCode) {
             const numFmt: Element = stylesDoc.createElementNS(stylesDoc.documentElement.namespaceURI, element.numFmt);
             numFmt.setAttribute(elementAttributes.numFmtId, numFmtId.toString());
-            numFmt.setAttribute(elementAttributes.formatCode, dateTimeUtils.getFormatCode(style));
+            numFmt.setAttribute(elementAttributes.formatCode, dateTimeFormat.formatCode);
             numFmts.appendChild(numFmt);
             numFmtsCount++;
         }
+        
         const xf: Element = stylesDoc.createElementNS(stylesDoc.documentElement.namespaceURI, element.xf);
         xf.setAttribute(elementAttributes.numFmtId, numFmtId.toString());
         xf.setAttribute(elementAttributes.fontId, falseValue);
@@ -189,7 +190,7 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData) 
         columnRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, col, []));
     });
     sheetData.appendChild(columnRow);
-    let formatStyles: DataTypes[] = [];
+    let formatStyles: DateTimeFormat[] = [];
     rowIndex++;
     tableData.rows.forEach((row) => {
         const newRow = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, element.row);

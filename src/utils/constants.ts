@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { DataTypes } from "../types";
-
 export const connectionsXmlPath = "xl/connections.xml";
 export const sharedStringsXmlPath = "xl/sharedStrings.xml";
 export const sheetsXmlPath = "xl/worksheets/sheet1.xml";
@@ -155,16 +153,31 @@ export const shortTimeReg: RegExp = /^(([1-9])|(1[0-2])):([0-5]\d) (A|P)M$/;
 export const longTimeReg: RegExp = /^(([1-9])|(1[0-2])):([0-5]\d):([0-5]\d) (A|P)M$/;
 export const defaultDate = "12/31/1899 ";
 export const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']; 
-// create an array of strings that contains all the months in the year
 export const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
 'September', 'October', 'November', 'December'];
 
-export const dateTimeRegexes: [RegExp, DataTypes][] = [
-    [shortDateReg, DataTypes.shortDate],
-    [longDateReg, DataTypes.longDate],
-    [shortTimeReg, DataTypes.shortTime],
-    [longTimeReg, DataTypes.longTime],
-];
+export const longDateValidation = (data: string): boolean => {
+    const dateParts: string[] = data.split(', ');
+    if (dateParts.length != 2) {
+        return false;
+    }   
+
+    const parsedDayofWeek: Number = daysOfWeek.indexOf(dateParts[0]);
+    let parsedData: number[] = dateParts[1].split(' ').map((x) => Number(x) ? Number(x) : months.indexOf(x));
+    const date: Date = new Date(parsedData![2], parsedData![0], parsedData![1]);
+    
+    return (date.getMonth() == parsedData![0] && date.getDate() == parsedData![1] && date.getFullYear() == parsedData![2] && date.getDay() == parsedDayofWeek);
+}
+
+export const shortDateValidation = (data: string): boolean => {
+    const parsedData = data.split("/").map((x) => Number(x));
+    const date = new Date(data);
+    if (parsedData.length != 3) {
+        return false;
+    }
+    
+    return (date.getMonth() + 1 == parsedData[0] && date.getDate() == parsedData[1] && date.getFullYear() == parsedData[2]);
+}
 
 export const dataTypeKind = {
     string: "str",

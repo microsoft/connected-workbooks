@@ -49,10 +49,7 @@ export enum DataTypes {
     string = 1,
     number = 2,
     boolean = 3,
-    shortTime = 4, //
-    longTime = 5, // 
-    shortDate = 6, // 14
-    longDate = 7, // dddd\,\ mmmm\ d\,\ yyyy
+    dateTime = 4
 }
 
 export enum DocPropsModifiableElements {
@@ -70,3 +67,5 @@ export enum DocPropsAutoUpdatedElements {
     created = "dcterms:created",
     modified = "dcterms:modified",
 }
+
+

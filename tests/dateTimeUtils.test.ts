@@ -1,14 +1,18 @@
-import { DataTypes } from "../src/types";
 import { dateTimeUtils } from "../src/utils/";
-import { shortTimeFormat } from "../src/utils/constants";
 
 describe("DateTime Utils tests", () => {
+    // test ("Convert to Excel Date success", () => {
+    //     console.log(new Date("Sunday, January 24 1996").getMonth());
+    //     console.log(new Date("Sunday, January 24 1996").getDate());
+    //     console.log(new Date("Sunday, January 24 1996").getFullYear());
+    //     console.log(new Date("Sunday, January 24 1996").getDay());
+    // });
     
     test("Detect DateTime format success", () => {
-        expect(dateTimeUtils.detectDateTimeFormat("1/24/1996")).toEqual(DataTypes.shortDate);
-        expect(dateTimeUtils.detectDateTimeFormat("Wednesday, January 24 1996")).toEqual(DataTypes.longDate);
-        expect(dateTimeUtils.detectDateTimeFormat("1:24 PM")).toEqual(DataTypes.shortTime);
-        expect(dateTimeUtils.detectDateTimeFormat("1:24:00 PM")).toEqual(DataTypes.longTime);
+        expect(dateTimeUtils.detectDateTimeFormat("1/24/1996")).toEqual(dateTimeUtils.dateTimeFormatArr[0]);
+        expect(dateTimeUtils.detectDateTimeFormat("Wednesday, January 24 1996")).toEqual(dateTimeUtils.dateTimeFormatArr[1]);
+        expect(dateTimeUtils.detectDateTimeFormat("1:24 PM")).toEqual(dateTimeUtils.dateTimeFormatArr[2]);
+        expect(dateTimeUtils.detectDateTimeFormat("1:24:00 PM")).toEqual(dateTimeUtils.dateTimeFormatArr[3]);
     });
 
     test("Detect DateTime format failure", () => {
@@ -23,11 +27,12 @@ describe("DateTime Utils tests", () => {
     });
 
     test ("Convert to Excel Date success", () => {
-        expect(dateTimeUtils.convertToExcelDate("1/2/1900", DataTypes.shortDate)).toEqual(2);
-        expect(dateTimeUtils.convertToExcelDate("Sunday, January 2 1900",DataTypes.longDate)).toEqual(2);
-        expect(dateTimeUtils.convertToExcelDate("1:00 AM",  DataTypes.shortTime)).toBeCloseTo(1/24);
-        expect(dateTimeUtils.convertToExcelDate("0:01:00 AM", DataTypes.longTime)).toBeCloseTo(1/(24*60));
-
+        expect(dateTimeUtils.convertToExcelDate("1/2/1900", dateTimeUtils.dateTimeFormatArr[0])).toEqual(2);
+        expect(dateTimeUtils.convertToExcelDate("Sunday, January 2 1900", dateTimeUtils.dateTimeFormatArr[1])).toEqual(2);
+        expect(dateTimeUtils.convertToExcelDate("Sunday, March 1 1900", dateTimeUtils.dateTimeFormatArr[1])).toEqual(61);
+        expect(dateTimeUtils.convertToExcelDate("Sunday, February 29 1900", dateTimeUtils.dateTimeFormatArr[1])).toEqual(61);
+        expect(dateTimeUtils.convertToExcelDate("1:00 AM", dateTimeUtils.dateTimeFormatArr[2])).toBeCloseTo(1/24);
+        expect(dateTimeUtils.convertToExcelDate("0:01:00 AM", dateTimeUtils.dateTimeFormatArr[3])).toBeCloseTo(1/(24*60));
     });
 
 });
