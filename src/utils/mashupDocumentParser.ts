@@ -46,7 +46,7 @@ export const replaceSingleQuery = async (base64Str: string, queryName: string, q
 
 export const addConnectionOnlyQueries = async (base64Str: string, connectionOnlyQueryNames: string[]): Promise<string> => {
         var { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } = getPackageComponents(base64Str);
-        const newMetadataBuffer: Uint8Array = addConnectionOnlyQueryMetadata(metadata, connectionOnlyQueryNames);
+        const newMetadataBuffer: Uint8Array = addConnectionOnlyQuerieMetadata(metadata, connectionOnlyQueryNames);
         const newMashup: Uint8Array = arrayUtils.concatArrays(version, arrayUtils.getInt32Buffer(packageOPC.byteLength), packageOPC, arrayUtils.getInt32Buffer(permissionsSize), permissions, arrayUtils.getInt32Buffer(newMetadataBuffer.byteLength), newMetadataBuffer, endBuffer);
         
         return base64.fromByteArray(newMashup);
@@ -161,7 +161,7 @@ export const editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Met
     return newMetadataArray;
 };
 
-const addConnectionOnlyQueryMetadata = (metadataArray: Uint8Array, connectionOnlyQueryNames: string[]) => {
+const addConnectionOnlyQuerieMetadata = (metadataArray: Uint8Array, connectionOnlyQueryNames: string[]) => {
         // extract metadataXml
         const mashupArray: ArrayReader = new arrayUtils.ArrayReader(metadataArray.buffer);
         const metadataVersion: Uint8Array = mashupArray.getBytes(4);
