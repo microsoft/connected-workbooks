@@ -42,11 +42,20 @@ export interface FileConfigs {
     docProps?: DocProps;
 }
 
+export interface DateTimeFormat {
+    regex: RegExp;
+    validateDate: (data: string) => boolean;
+    isDate: boolean;
+    formatCode?: string;
+    formatId?: number;
+}
+
 export enum DataTypes {
     null = 0,
     string = 1,
     number = 2,
     boolean = 3,
+    dateTime = 4,
 }
 
 export enum DocPropsModifiableElements {
