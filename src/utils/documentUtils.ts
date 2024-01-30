@@ -13,7 +13,8 @@ import {
     trueStr,
     xmlTextResultType,
 } from "./constants";
-import { DataTypes } from "../types";
+import { DataTypes, DateTimeFormat } from "../types";
+import dateTimeUtils, { detectDateTimeFormat } from "./dateTimeUtils";
 
 const createOrUpdateProperty = (doc: Document, parent: Element, property: string, value?: string | null): void => {
     if (value === undefined) {
@@ -64,18 +65,25 @@ const getTableReference = (numberOfCols: number, numberOfRows: number): string =
     return `A1:${getCellReferenceRelative(numberOfCols, numberOfRows)}`;
 };
 
-const createCellElement = (doc: Document, colIndex: number, rowIndex: number, data: string): Element => {
+const getFormatStyleIndex = (dateTimeFormat: DateTimeFormat, formats: DateTimeFormat[]) => {
+    // Style Index is the index of the format in the styleFormats array + 1 
+    const styleIndex: number = formats.includes(dateTimeFormat) ? formats.indexOf(dateTimeFormat) + 1 : formats.push(dateTimeFormat);
+    return styleIndex.toString();
+ };
+
+const createCell = (doc: Document, colIndex: number, rowIndex: number, data: string, formats: DateTimeFormat[]): Element => {
     const cell: Element = doc.createElementNS(doc.documentElement.namespaceURI, element.kindCell);
     cell.setAttribute(elementAttributes.row, getCellReferenceRelative(colIndex, rowIndex + 1));
     const cellData: Element = doc.createElementNS(doc.documentElement.namespaceURI, element.cellValue);
-    updateCellData(data, cell, cellData, rowIndex === 0);
+    updateCellData(data, cell, cellData, rowIndex === 0, formats);
     cell.appendChild(cellData);
 
     return cell;
 };
 
-const updateCellData = (data: string, cell: Element, cellData: Element, rowHeader: boolean) => {
-    switch (resolveType(data, rowHeader)) {
+const updateCellData = (data: string, cell: Element, cellData: Element, rowHeader: boolean, formats: DateTimeFormat[]) => {
+    let dateTimeFormat: DateTimeFormat|undefined = detectDateTimeFormat(data);
+    switch (resolveType(data, rowHeader, dateTimeFormat)) {
         case DataTypes.string:
             cell.setAttribute(element.text, dataTypeKind.string);
             break;
@@ -85,7 +93,14 @@ const updateCellData = (data: string, cell: Element, cellData: Element, rowHeade
         case DataTypes.boolean:
             cell.setAttribute(element.text, dataTypeKind.boolean);
             break;
+        case DataTypes.dateTime:
+            cell.setAttribute(elementAttributes.style, getFormatStyleIndex(dateTimeFormat!, formats));
+            data = dateTimeUtils.convertToExcelDate(data, dateTimeFormat!).toString();
+            break;
+        default:
+            throw new Error("Unsupported DataType");
     }
+
     if (data.startsWith(" ") || data.endsWith(" ")) {
         cellData.setAttribute(elementAttributes.space, "preserve");        
     }
@@ -93,12 +108,17 @@ const updateCellData = (data: string, cell: Element, cellData: Element, rowHeade
     cellData.textContent = data;
 };
 
-const resolveType = (originalData: string | number | boolean, rowHeader: boolean): DataTypes => {
+const resolveType = (originalData: string | number | boolean, rowHeader: boolean, format: DateTimeFormat|undefined): DataTypes => {
     const data: string = originalData as string;
     if ((rowHeader) || (data.trim() === "")) {
         // Headers and whitespace should be string by default.
         return DataTypes.string;
     }
+
+    if (format != undefined) {
+        return DataTypes.dateTime;
+    }
+
     let dataType: DataTypes = isNaN(Number(data)) ? DataTypes.string : DataTypes.number;
     if (dataType == DataTypes.string) {
         if (data.trim() == trueStr || data.trim() == falseStr) {
@@ -114,7 +134,7 @@ export default {
     getDocPropsProperties,
     getCellReferenceRelative,
     getCellReferenceAbsolute,
-    createCell: createCellElement,
+    createCell,
     getTableReference,
     updateCellData,
     resolveType,

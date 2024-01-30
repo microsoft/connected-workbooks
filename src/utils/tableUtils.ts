@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import JSZip from "jszip";
-import { TableData } from "../types";
+import { DateTimeFormat, TableData } from "../types";
 import {
     defaults,
     element,
@@ -133,9 +133,10 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData):
     columnRow.setAttribute(elementAttributes.spans, "1:" + tableData.columnNames.length);
     columnRow.setAttribute(elementAttributes.x14acDyDescent, "0.3");
     tableData.columnNames.forEach((col: string, colIndex: number) => {
-        columnRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, col));
+        columnRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, col, []));
     });
     sheetData.appendChild(columnRow);
+    let formatStyles: DateTimeFormat[] = [];
     rowIndex++;
     tableData.rows.forEach((row) => {
         const newRow = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, element.row);
@@ -143,7 +144,7 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData):
         newRow.setAttribute(elementAttributes.spans, "1:" + row.length);
         newRow.setAttribute(elementAttributes.x14acDyDescent, "0.3");
         row.forEach((cellContent, colIndex) => {
-            newRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, cellContent));
+            newRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, cellContent, formatStyles));
         });
         sheetData.appendChild(newRow);
         rowIndex++;
@@ -152,6 +153,7 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData):
 
     sheetsDoc.getElementsByTagName(element.dimension)[0].setAttribute(elementAttributes.reference, reference);
     sheetsDoc.getElementsByTagName(element.selection)[0].setAttribute(elementAttributes.sqref, reference);
+    
     return serializer.serializeToString(sheetsDoc);
 };
 
