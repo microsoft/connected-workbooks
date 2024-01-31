@@ -4,16 +4,21 @@
 import JSZip from "jszip";
 import { DateTimeFormat, TableData } from "../types";
 import {
+    customNumberFormatId,
     defaults,
     element,
     elementAttributes,
+    falseValue,
     queryTableNotFoundErr,
     queryTableXmlPath,
     sheetsNotFoundErr,
     sheetsXmlPath,
+    stylesNotFoundErr,
+    stylesXmlPath,
     tableNotFoundErr,
     tableXmlPath,
     textResultType,
+    trueValue,
     workbookXmlPath,
     xmlTextResultType,
 } from "./constants";
@@ -30,8 +35,18 @@ const updateTableInitialDataIfNeeded = async (zip: JSZip, tableData?: TableData,
         throw new Error(sheetsNotFoundErr);
     }
 
-    const newSheet: string = updateSheetsInitialData(sheetsXmlString, tableData);
+    const  {newSheet, formatStyles} = updateSheetsInitialData(sheetsXmlString, tableData);
     zip.file(sheetsXmlPath, newSheet);
+
+     if (formatStyles.length > 0) {
+        const stylesXmlString: string | undefined = await zip.file(stylesXmlPath)?.async(textResultType);
+        if (stylesXmlString === undefined) {
+            throw new Error(stylesNotFoundErr);
+        }
+
+        const newStyles: string = await updateStylesInitialData(stylesXmlString, formatStyles);
+        zip.file(stylesXmlPath, newStyles);
+    }
 
     if (updateQueryTable) {
         const queryTableXmlString: string | undefined = await zip.file(queryTableXmlPath)?.async(textResultType);
@@ -91,6 +106,43 @@ const updateTablesInitialData = (tableXmlString: string, tableData: TableData, u
     return serializer.serializeToString(tableDoc);
 };
 
+const updateStylesInitialData = (stylesXmlString: string, formatStyles: DateTimeFormat[]): string => {
+    const parser: DOMParser = new DOMParser();
+    const serializer: XMLSerializer = new XMLSerializer();
+    const stylesDoc: Document = parser.parseFromString(stylesXmlString, xmlTextResultType);
+    let numFmtsCount: number = 0;
+    const cellXfs: Element = stylesDoc.getElementsByTagName(element.cellXfs)[0];
+    const fonts: Element = stylesDoc.getElementsByTagName(element.fonts)[0];
+    const numFmts: Element = stylesDoc.createElementNS(stylesDoc.documentElement.namespaceURI, element.numFmts);
+    formatStyles.forEach((dateTimeFormat, i) => {
+        // Add new numfmtId when necessary
+        let numFmtId: number = dateTimeFormat.formatId ? dateTimeFormat.formatId : i + customNumberFormatId;
+        if (dateTimeFormat.formatCode) {
+            const numFmt: Element = stylesDoc.createElementNS(stylesDoc.documentElement.namespaceURI, element.numFmt);
+            numFmt.setAttribute(elementAttributes.numFmtId, numFmtId.toString());
+            numFmt.setAttribute(elementAttributes.formatCode, dateTimeFormat.formatCode);
+            numFmts.appendChild(numFmt);
+            numFmtsCount++;
+        }
+
+        const xf: Element = stylesDoc.createElementNS(stylesDoc.documentElement.namespaceURI, element.xf);
+        xf.setAttribute(elementAttributes.numFmtId, numFmtId.toString());
+        xf.setAttribute(elementAttributes.fontId, falseValue);
+        xf.setAttribute(elementAttributes.fillId, falseValue);
+        xf.setAttribute(elementAttributes.borderId, falseValue);
+        xf.setAttribute(elementAttributes.xfId, falseValue);
+        xf.setAttribute(elementAttributes.applyNumberFormat, trueValue);
+        cellXfs.appendChild(xf);
+    });
+    // count includes the formatStyles and default null format
+    if (numFmtsCount > 0) {
+        stylesDoc.getElementsByTagName(element.styleSheet)[0].insertBefore(numFmts, fonts);
+        numFmts.setAttribute(elementAttributes.count, numFmtsCount.toString());
+    }
+
+    return serializer.serializeToString(stylesDoc);
+};
+
 const updateWorkbookInitialData = (workbookXmlString: string, tableData: TableData): string => {
     const newParser: DOMParser = new DOMParser();
     const newSerializer: XMLSerializer = new XMLSerializer();
@@ -121,7 +173,7 @@ const updateQueryTablesInitialData = (queryTableXmlString: string, tableData: Ta
     return serializer.serializeToString(queryTableDoc);
 };
 
-const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData): string => {
+const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData) => {
     const parser: DOMParser = new DOMParser();
     const serializer: XMLSerializer = new XMLSerializer();
     const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, xmlTextResultType);
@@ -154,8 +206,8 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData):
     sheetsDoc.getElementsByTagName(element.dimension)[0].setAttribute(elementAttributes.reference, reference);
     sheetsDoc.getElementsByTagName(element.selection)[0].setAttribute(elementAttributes.sqref, reference);
     
-    return serializer.serializeToString(sheetsDoc);
-};
+    const newSheet = serializer.serializeToString(sheetsDoc);
+    return {newSheet, formatStyles};};
 
 export default {
     updateTableInitialDataIfNeeded,

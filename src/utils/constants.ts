@@ -105,6 +105,12 @@ export const element = {
     dimension: "dimension",
     selection: "selection",
     kindCell: "c",
+    numFmt: "numFmt",
+    numFmts: "numFmts",
+    cellXfs : "cellXfs",
+    xf: "xf",
+    styleSheet: "styleSheet",
+    fonts: "fonts",
 };
 
 export const elementAttributes = {
@@ -139,6 +145,13 @@ export const elementAttributes = {
     xr3uid: "xr3:uid",
     space: "xml:space",
     style: "s",
+    numFmtId: "numFmtId",
+    formatCode: "formatCode",
+    fontId: "fontId",
+    fillId: "fillId",
+    borderId: "borderId",
+    xfId: "xfId",
+    applyNumberFormat: "applyNumberFormat",
 };
 
 export const dataTypeKind = {
