@@ -117,9 +117,11 @@ export const openInExcelWeb = async (file: Blob, filename: string) => {
                 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             };
 
+            const fileNameGuid = new Date().getTime().toString() + '_' + filename;
+
             // Send the POST request to the desired endpoint
             const response = await client.post(
-                `https://view.officeapps.live.com/op/viewpost.aspx?src=http://connectedWorkbooks.excel/${filename}`,
+                `https://view.officeapps.live.com/op/viewpost.aspx?src=http://connectedWorkbooks.excel/${fileNameGuid}`,
                 fileContent,
                 {
                     headers: headers
@@ -131,7 +133,7 @@ export const openInExcelWeb = async (file: Blob, filename: string) => {
                 console.log('File uploaded successfully.');
                 // if upload was successful - open the file in a new tab
                 window.open(
-                    `https://view.officeapps.live.com/op/view.aspx?src=http://connectedWorkbooks.excel/${filename}`,
+                    `https://view.officeapps.live.com/op/view.aspx?src=http://connectedWorkbooks.excel/${fileNameGuid}`,
                     '_blank'
                 );
             } else {
