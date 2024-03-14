@@ -149,3 +149,8 @@ export const URLS = {
     ],
     CONNECTED_WORKBOOK: "http://schemas.microsoft.com/ConnectedWorkbook",
 };
+
+// Content-Type header to indicate that the content is an Excel document
+export const headers = {
+    "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+};
