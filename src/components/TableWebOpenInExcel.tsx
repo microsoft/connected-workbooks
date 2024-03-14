@@ -3,8 +3,8 @@
 
 import React, { ReactNode, useState } from 'react';
 import { PrimaryButton, Stack } from '@fluentui/react';
-import { exportTableFromHtml } from '../workbook-api/api';
 import ReactDOMServer from 'react-dom/server';
+import workbookManager from '..';
 
 interface TableWebOpenInExcelProps {
     children: ReactNode;
@@ -36,6 +36,15 @@ const TableWebOpenInExcel: React.FC<TableWebOpenInExcelProps> = ({ children }) =
             </Stack>
         </div>
     );
+};
+
+const exportTableFromHtml = async (filename: string, HTMLTableString: string) => {
+    const parser = new DOMParser();
+    const htmlDoc = parser.parseFromString(HTMLTableString, 'text/html');
+    const blob = await workbookManager.generateTableWorkbookFromHtml(
+        htmlDoc.querySelector('table') as HTMLTableElement
+    );
+    workbookManager.openInExcelWeb(blob, filename);
 };
 
 export default TableWebOpenInExcel;
