@@ -106,42 +106,35 @@ export const downloadWorkbook = (file: Blob, filename: string): void => {
 export const openInExcelWeb = async (file: Blob, filename?: string, allowTyping?: boolean): Promise<void> => {
     // Check if the file exists
     if (file.size > 0) {
-        try {
-            // Read the content of the Excel file into a buffer
-            const fileContent = file;
+        // Read the content of the Excel file into a buffer
+        const fileContent = file;
 
-            // Create a new axios instance
-            const client = axios.create();
+        // Create a new axios instance
+        const client = axios.create();
 
-            const fileNameGuid = new Date().getTime().toString() + "_" + filename ?? "";
+        const fileNameGuid = new Date().getTime().toString() + "_" + filename ?? "";
 
-            // Parse allowTyping parameter
-            const allowTypingParam = allowTyping ? 1 : 0;
+        // Parse allowTyping parameter
+        const allowTypingParam = allowTyping ? 1 : 0;
 
-            // Send the POST request to the desired endpoint
-            const response = await client.post(
-                `https://view.officeapps.live.com/op/viewpost.aspx?src=http://connectedWorkbooks.excel/${fileNameGuid}`,
-                fileContent,
-                {
-                    headers: headers,
-                }
-            );
-
-            // Check if the response is successful
-            if (response.status === 200) {
-                console.log("File uploaded successfully.");
-                // if upload was successful - open the file in a new tab
-                window.open(
-                    `https://view.officeapps.live.com/op/view.aspx?src=http://connectedWorkbooks.excel/${fileNameGuid}&allowTyping=${allowTypingParam}`,
-                    "_blank"
-                );
-            } else {
-                console.log("File upload failed. Status code:", response.status);
+        // Send the POST request to the desired endpoint
+        const response = await client.post(
+            `https://view.officeapps.live.com/op/viewpost.aspx?src=http://connectedWorkbooks.excel/${fileNameGuid}&wdwaccluster=PSG3`,
+            fileContent,
+            {
+                headers: headers,
             }
-        } catch (error) {
-            console.error("Error:", error);
+        );
+
+        // Check if the response is successful
+        if (response.status === 200) {
+            // if upload was successful - open the file in a new tab
+            window.open(
+                `https://view.officeapps.live.com/op/view.aspx?src=http://connectedWorkbooks.excel/${fileNameGuid}&allowTyping=${allowTypingParam}&wdwaccluster=PSG3`,
+                "_blank"
+            );
+        } else {
+            throw new Error(`File upload failed. Status code: ${response.status}`);
         }
-    } else {
-        console.log("File does not exist:", file);
     }
 };
