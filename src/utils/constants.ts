@@ -38,7 +38,6 @@ export const InvalidColumnNameErr = "Invalid column name";
 export const promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr = "Headers cannot be promoted without adjusting column names";
 export const unexpectedErr = "Unexpected error";
 export const arrayIsntMxNErr = "Array isn't MxN";
-export const templateFileNotSupportedErr = "Template file is not supported for this API call";
 export const relsNotFoundErr = ".rels were not found in template";
 
 export const blobFileType = "blob";

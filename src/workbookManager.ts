@@ -4,15 +4,7 @@
 import JSZip from "jszip";
 import { pqUtils, xmlPartsUtils, htmlUtils, gridUtils } from "./utils";
 import { SIMPLE_BLANK_TABLE_TEMPLATE, SIMPLE_QUERY_WORKBOOK_TEMPLATE } from "./workbookTemplate";
-import {
-    defaults,
-    emptyQueryMashupErr,
-    blobFileType,
-    application,
-    templateWithInitialDataErr,
-    tableNotFoundErr,
-    templateFileNotSupportedErr,
-} from "./utils/constants";
+import { defaults, emptyQueryMashupErr, blobFileType, application, templateWithInitialDataErr, tableNotFoundErr } from "./utils/constants";
 import { QueryInfo, TableData, Grid, FileConfigs } from "./types";
 import { generateSingleQueryMashup } from "./generators";
 
@@ -41,18 +33,16 @@ export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataG
 };
 
 export const generateTableWorkbookFromHtml = async (htmlTable: HTMLTableElement, fileConfigs?: FileConfigs): Promise<Blob> => {
-    if (fileConfigs?.templateFile !== undefined) {
-        throw new Error(templateFileNotSupportedErr);
-    }
     const gridData = htmlUtils.extractTableValues(htmlTable);
     return await generateTableWorkbookFromGrid({ data: gridData, config: { promoteHeaders: true } }, fileConfigs);
 };
 
 export const generateTableWorkbookFromGrid = async (grid: Grid, fileConfigs?: FileConfigs): Promise<Blob> => {
-    if (fileConfigs?.templateFile !== undefined) {
-        throw new Error(templateFileNotSupportedErr);
-    }
-    const zip: JSZip = await JSZip.loadAsync(SIMPLE_BLANK_TABLE_TEMPLATE, { base64: true });
+    const zip: JSZip =
+        fileConfigs?.templateFile === undefined
+            ? await JSZip.loadAsync(SIMPLE_BLANK_TABLE_TEMPLATE, { base64: true })
+            : await JSZip.loadAsync(fileConfigs.templateFile);
+
     const tableData = gridUtils.parseToTableData(grid);
     if (tableData === undefined) {
         throw new Error(tableNotFoundErr);
