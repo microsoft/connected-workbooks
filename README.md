@@ -1,5 +1,4 @@
 # Connected Workbooks
-[![Build Status](https://obilshield.visualstudio.com/ConnectedWorkbooks/_apis/build/status/microsoft.connected-workbooks?branchName=main)](https://obilshield.visualstudio.com/ConnectedWorkbooks/_build/latest?definitionId=14&branchName=main)
 [![License](https://img.shields.io/github/license/microsoft/connected-workbooks)](https://github.com/microsoft/connected-workbooks/blob/master/LICENSE)
 
 A pure JS library, Microsoft backed, that provides xlsx workbook generation capabilities, allowing for:
