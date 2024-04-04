@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import axios from "axios";
 import JSZip from "jszip";
 import { pqUtils, xmlPartsUtils, htmlUtils, gridUtils } from "./utils";
 import { SIMPLE_BLANK_TABLE_TEMPLATE, SIMPLE_QUERY_WORKBOOK_TEMPLATE } from "./workbookTemplate";
-import { defaults, emptyQueryMashupErr, blobFileType, application, templateWithInitialDataErr, tableNotFoundErr } from "./utils/constants";
+import { defaults, emptyQueryMashupErr, blobFileType, application, templateWithInitialDataErr, tableNotFoundErr, headers } from "./utils/constants";
 import { QueryInfo, TableData, Grid, FileConfigs } from "./types";
 import { generateSingleQueryMashup } from "./generators";
 
@@ -88,5 +89,41 @@ export const downloadWorkbook = (file: Blob, filename: string): void => {
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
         }, 0);
+    }
+};
+
+export const openInExcelWeb = async (file: Blob, filename?: string, allowTyping?: boolean): Promise<void> => {
+    // Check if the file exists
+    if (file.size > 0) {
+        // Read the content of the Excel file into a buffer
+        const fileContent = file;
+
+        // Create a new axios instance
+        const client = axios.create();
+
+        const fileNameGuid = new Date().getTime().toString() + "_" + filename ?? "";
+
+        // Parse allowTyping parameter
+        const allowTypingParam = allowTyping ? 1 : 0;
+
+        // Send the POST request to the desired endpoint
+        const response = await client.post(
+            `https://view.officeapps.live.com/op/viewpost.aspx?src=http://connectedWorkbooks.excel/${fileNameGuid}`,
+            fileContent,
+            {
+                headers: headers,
+            }
+        );
+
+        // Check if the response is successful
+        if (response.status === 200) {
+            // if upload was successful - open the file in a new tab
+            window.open(
+                `https://view.officeapps.live.com/op/view.aspx?src=http://connectedWorkbooks.excel/${fileNameGuid}&allowTyping=${allowTypingParam}`,
+                "_blank"
+            );
+        } else {
+            throw new Error(`File upload failed. Status code: ${response.status}`);
+        }
     }
 };
