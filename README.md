@@ -25,7 +25,7 @@ Connected Workbooks allows you to avoid "data dumps" in CSV form, providing a ri
 import workbookManager from '@microsoft/connected-workbooks';
 
 const blob = await workbookManager.generateTableWorkbookFromHtml(document.querySelector('table') as HTMLTableElement);    
-workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
+workbookManager.openInExcelWeb(blob, "MyTable.xlsx", true /*allowTyping*/);
 ```
 
 ### 2. Export a table from raw data:
@@ -44,7 +44,7 @@ const grid = {
   ]
 };
 const blob = await workbookManager.generateTableWorkbookFromGrid(grid);    
-workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
+workbookManager.openInExcelWeb(blob, "MyTable.xlsx", true /*allowTyping*/);
 ```
 <img width="281" alt="image" src="https://github.com/microsoft/connected-workbooks/assets/7674478/b91e5d69-8444-4a19-a4b0-3fd721e5576f">
 
