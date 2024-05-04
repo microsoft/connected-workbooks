@@ -150,6 +150,8 @@ async function `generateTableWorkbookFromGrid`: `Promise<Blob>`
 async function `openInExcelWeb`: `Promise<void>`
 ```
 
+⭐ This API is supported only for an HTTPS domain.
+
 |Parameter   | Type   | Required   | Description   |
 |---      |---    |---          |---            |
 | blob  | [Blob](https://developer.mozilla.org/docs/Web/API/Blob)   | __required__   | Initial data loaded to workbook  | 
