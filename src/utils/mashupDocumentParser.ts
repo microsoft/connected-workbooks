@@ -126,7 +126,7 @@ export const editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Met
         for (let i = 0; i < entries.length; i++) {
             const entry: Element = entries[i];
             const entryAttributes: NamedNodeMap = entry.attributes;
-            const entryAttributesArr: Attr[] = [...entryAttributes];
+            const entryAttributesArr: Attr[] = [...(entryAttributes as any)];
             const entryProp: Attr | undefined = entryAttributesArr.find((prop) => {
                 return prop?.name === elementAttributes.type;
             });
