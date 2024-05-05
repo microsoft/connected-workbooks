@@ -25,7 +25,7 @@ Connected Workbooks allows you to avoid "data dumps" in CSV form, providing a ri
 import workbookManager from '@microsoft/connected-workbooks';
 
 const blob = await workbookManager.generateTableWorkbookFromHtml(document.querySelector('table') as HTMLTableElement);    
-workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
+workbookManager.openInExcelWeb(blob, "MyTable.xlsx", true /*allowTyping*/);
 ```
 
 ### 2. Export a table from raw data:
@@ -33,7 +33,7 @@ workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
 import workbookManager from '@microsoft/connected-workbooks';
 
 const grid = {
-  config: { promoteHeaders:true, adjustColumnNames:true }
+  config: { promoteHeaders:true, adjustColumnNames:true },
   data: [
       ["Product", "Price", "InStock", "Category", "Date"],
       ["Widget A", 19.99, true, "Electronics", "10/26/2024"],
@@ -44,7 +44,7 @@ const grid = {
   ]
 };
 const blob = await workbookManager.generateTableWorkbookFromGrid(grid);    
-workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
+workbookManager.openInExcelWeb(blob, "MyTable.xlsx", true /*allowTyping*/);
 ```
 <img width="281" alt="image" src="https://github.com/microsoft/connected-workbooks/assets/7674478/b91e5d69-8444-4a19-a4b0-3fd721e5576f">
 
@@ -144,6 +144,19 @@ async function `generateTableWorkbookFromGrid`: `Promise<Blob>`
 |---      |---    |---          |---            |
 | grid  | [Grid](#grid)   | __required__   | Initial data loaded to workbook  | 
 | fileConfigs  | [FileConfigs](#fileconfigs)   | optional  | Custom file configurations |
+
+#### 3. Open the created workbook in excel for the web
+```typescript
+async function `openInExcelWeb`: `Promise<void>`
+```
+
+⭐ This API is supported only for an HTTPS domain.
+
+|Parameter   | Type   | Required   | Description   |
+|---      |---    |---          |---            |
+| blob  | [Blob](https://developer.mozilla.org/docs/Web/API/Blob)   | __required__   | Initial data loaded to workbook  | 
+| filename  |  string  | optional  | Custom the opened file name |
+| allowTyping  |  boolean  | optional  | allow user editing (typing) |
 </br>
 
 ### Types
@@ -172,6 +185,7 @@ async function `generateTableWorkbookFromGrid`: `Promise<Blob>`
 |---|---|---|---|
 | templateFile | File | optional   | Custom Excel workbook  |
 | docProps  | [DocProps](#docprops)   | optional  | Custom workbook properties |
+| hostName  | string | optional  | specify the host creator name |
 
 #### DocProps
 |Parameter   | Type   | Required  
