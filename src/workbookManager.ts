@@ -101,27 +101,21 @@ export const openInExcelWeb = async (file: Blob, filename?: string, allowTyping?
         // Create a new axios instance
         const client = axios.create();
 
-        const fileNameGuid = new Date().getTime().toString() + "_" + filename ?? "";
+        const fileNameGuid = new Date().getTime().toString() + (filename ? "_" + filename : "");
+        const OFUUrl = `https://view.officeapps.live.com/op/viewpost.aspx?src=http://connectedWorkbooks.excel/${fileNameGuid}.xlsx`;
 
         // Parse allowTyping parameter
         const allowTypingParam = allowTyping ? 1 : 0;
 
         // Send the POST request to the desired endpoint
-        const response = await client.post(
-            `https://view.officeapps.live.com/op/viewpost.aspx?src=http://connectedWorkbooks.excel/${fileNameGuid}`,
-            fileContent,
-            {
-                headers: headers,
-            }
-        );
+        const response = await client.post(OFUUrl, fileContent, {
+            headers: headers,
+        });
 
         // Check if the response is successful
         if (response.status === 200) {
             // if upload was successful - open the file in a new tab
-            window.open(
-                `https://view.officeapps.live.com/op/view.aspx?src=http://connectedWorkbooks.excel/${fileNameGuid}&allowTyping=${allowTypingParam}`,
-                "_blank"
-            );
+            window.open(`${OFUUrl}&allowTyping=${allowTypingParam}`, "_blank");
         } else {
             throw new Error(`File upload failed. Status code: ${response.status}`);
         }
