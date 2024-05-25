@@ -114,7 +114,7 @@ export const openInExcelWeb = async (file: Blob, filename?: string, allowTyping?
         // Check if the response is successful
         if (response.status === 200) {
             // if upload was successful - open the file in a new tab
-            window.open(`${OFU.ViewUrl}${fileNameGuid}${OFU.allowTyping}}=${allowTypingParam}`, "_blank");
+            window.open(`${OFU.ViewUrl}${fileNameGuid}${OFU.allowTyping}=${allowTypingParam}`, "_blank");
         } else {
             throw new Error(`File upload failed. Status code: ${response.status}`);
         }
