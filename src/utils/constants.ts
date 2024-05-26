@@ -153,3 +153,9 @@ export const URLS = {
 export const headers = {
     "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 };
+
+export const OFU = {
+    ViewUrl: "https://view.officeapps.live.com/op/view.aspx?src=http://connectedWorkbooks.excel/",
+    PostUrl: "https://view.officeapps.live.com/op/viewpost.aspx?src=http://connectedWorkbooks.excel/",
+    allowTyping: "AllowTyping",
+};
