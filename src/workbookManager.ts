@@ -101,7 +101,7 @@ export const openInExcelWeb = async (file: Blob, filename?: string, allowTyping?
 
         // Parse allowTyping parameter
         const allowTypingParam = allowTyping ? 1 : 0;
-
+      
         try {
             // Send the POST request to the desired endpoint using Fetch
             const response = await fetch(`${OFU.PostUrl}${fileNameGuid}`, {
