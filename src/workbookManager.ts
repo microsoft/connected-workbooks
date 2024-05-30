@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import axios from "axios";
 import JSZip from "jszip";
 import { pqUtils, xmlPartsUtils, htmlUtils, gridUtils } from "./utils";
 import { SIMPLE_BLANK_TABLE_TEMPLATE, SIMPLE_QUERY_WORKBOOK_TEMPLATE } from "./workbookTemplate";
@@ -98,25 +97,28 @@ export const openInExcelWeb = async (file: Blob, filename?: string, allowTyping?
         // Read the content of the Excel file into a buffer
         const fileContent = file;
 
-        // Create a new axios instance
-        const client = axios.create();
-
         const fileNameGuid = new Date().getTime().toString() + (filename ? "_" + filename : "") + ".xlsx";
 
         // Parse allowTyping parameter
         const allowTypingParam = allowTyping ? 1 : 0;
+      
+        try {
+            // Send the POST request to the desired endpoint using Fetch
+            const response = await fetch(`${OFU.PostUrl}${fileNameGuid}`, {
+                method: "POST",
+                headers: headers,
+                body: fileContent,
+            });
 
-        // Send the POST request to the desired endpoint
-        const response = await client.post(`${OFU.PostUrl}${fileNameGuid}`, fileContent, {
-            headers: headers,
-        });
-
-        // Check if the response is successful
-        if (response.status === 200) {
-            // if upload was successful - open the file in a new tab
-            window.open(`${OFU.ViewUrl}${fileNameGuid}&${OFU.allowTyping}=${allowTypingParam}`, "_blank");
-        } else {
-            throw new Error(`File upload failed. Status code: ${response.status}`);
+            // Check if the response is successful
+            if (response.ok) {
+                // if upload was successful - open the file in a new tab
+                window.open(`${OFU.ViewUrl}${fileNameGuid}&${OFU.allowTyping}=${allowTypingParam}`, "_blank");
+            } else {
+                throw new Error(`File upload failed. Status code: ${response.status}`);
+            }
+        } catch (error) {
+            console.error("An error occurred:", error);
         }
     }
 };
