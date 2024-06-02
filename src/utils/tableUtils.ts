@@ -19,6 +19,7 @@ import {
 } from "./constants";
 import documentUtils from "./documentUtils";
 import { v4 } from "uuid";
+import { DOMParser, XMLSerializer } from "xmldom-qsa";
 
 const updateTableInitialDataIfNeeded = async (zip: JSZip, tableData?: TableData, updateQueryTable?: boolean): Promise<void> => {
     if (!tableData) {
