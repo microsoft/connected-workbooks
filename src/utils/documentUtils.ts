@@ -14,6 +14,7 @@ import {
     xmlTextResultType,
 } from "./constants";
 import { DataTypes } from "../types";
+import { DOMParser } from "xmldom-qsa";
 
 const createOrUpdateProperty = (doc: Document, parent: Element, property: string, value?: string | null): void => {
     if (value === undefined) {
@@ -87,7 +88,7 @@ const updateCellData = (data: string, cell: Element, cellData: Element, rowHeade
             break;
     }
     if (data.startsWith(" ") || data.endsWith(" ")) {
-        cellData.setAttribute(elementAttributes.space, "preserve");        
+        cellData.setAttribute(elementAttributes.space, "preserve");
     }
 
     cellData.textContent = data;
@@ -95,7 +96,7 @@ const updateCellData = (data: string, cell: Element, cellData: Element, rowHeade
 
 const resolveType = (originalData: string | number | boolean, rowHeader: boolean): DataTypes => {
     const data: string = originalData as string;
-    if ((rowHeader) || (data.trim() === "")) {
+    if (rowHeader || data.trim() === "") {
         // Headers and whitespace should be string by default.
         return DataTypes.string;
     }
