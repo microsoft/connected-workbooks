@@ -3,6 +3,7 @@
 
 import JSZip from "jszip";
 import {
+    columnIndexOutOfRangeErr,
     dataTypeKind,
     docPropsCoreXmlPath,
     docPropsRootElement,
@@ -59,6 +60,10 @@ const getCellReferenceRelative = (col: number, row: number): string => {
 };
 
 const convertToExcelColumn = (index: number): string => {
+    if (index >= 16384) {
+        throw new Error(columnIndexOutOfRangeErr);
+    }
+
     let columnStr = "";
     const base = 26; // number of letters in the alphabet
     while (index >= 0) {

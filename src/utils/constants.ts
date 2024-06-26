@@ -39,6 +39,7 @@ export const promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr = "Header
 export const unexpectedErr = "Unexpected error";
 export const arrayIsntMxNErr = "Array isn't MxN";
 export const relsNotFoundErr = ".rels were not found in template";
+export const columnIndexOutOfRangeErr = "Column index out of range";
 
 export const blobFileType = "blob";
 export const uint8ArrayType = "uint8array";
