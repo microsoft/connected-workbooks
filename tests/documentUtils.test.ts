@@ -55,4 +55,15 @@ describe("Document Utils tests", () => {
         documentUtils.updateCellData("a     a", cell, cellData, false);
         expect(cellData.getAttribute("xml:space")).toBeNull();
     });
+
+    test("Test convert column number To Excel Column", () => {
+        expect(documentUtils.convertToExcelColumn(0)).toEqual("A");
+        expect(documentUtils.convertToExcelColumn(701)).toEqual("ZZ");
+        expect(documentUtils.convertToExcelColumn(16383)).toEqual("XFD");
+        try {
+            documentUtils.convertToExcelColumn(16384);
+        } catch (e) {
+            expect(e.message).toEqual("Column index out of range");
+        }
+    });
 });

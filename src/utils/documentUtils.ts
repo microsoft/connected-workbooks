@@ -3,6 +3,7 @@
 
 import JSZip from "jszip";
 import {
+    columnIndexOutOfRangeErr,
     dataTypeKind,
     docPropsCoreXmlPath,
     docPropsRootElement,
@@ -51,13 +52,27 @@ const getDocPropsProperties = async (zip: JSZip): Promise<{ doc: Document; prope
 };
 
 const getCellReferenceAbsolute = (col: number, row: number): string => {
-    // 65 is the ascii value of first column 'A'
-    return "$" + String.fromCharCode(col + 65) + "$" + row.toString();
+    return "$" + convertToExcelColumn(col) + "$" + row.toString();
 };
 
 const getCellReferenceRelative = (col: number, row: number): string => {
-    // 65 is the ascii value of first column 'A'
-    return String.fromCharCode(col + 65) + row.toString();
+    return convertToExcelColumn(col) + row.toString();
+};
+
+const convertToExcelColumn = (index: number): string => {
+    if (index >= 16384) {
+        throw new Error(columnIndexOutOfRangeErr);
+    }
+
+    let columnStr = "";
+    const base = 26; // number of letters in the alphabet
+    while (index >= 0) {
+        const remainder = index % base;
+        columnStr = String.fromCharCode(remainder + 65) + columnStr; // ASCII 'A' is 65
+        index = Math.floor(index / base) - 1;
+    }
+
+    return columnStr;
 };
 
 const getTableReference = (numberOfCols: number, numberOfRows: number): string => {
@@ -87,7 +102,7 @@ const updateCellData = (data: string, cell: Element, cellData: Element, rowHeade
             break;
     }
     if (data.startsWith(" ") || data.endsWith(" ")) {
-        cellData.setAttribute(elementAttributes.space, "preserve");        
+        cellData.setAttribute(elementAttributes.space, "preserve");
     }
 
     cellData.textContent = data;
@@ -95,7 +110,7 @@ const updateCellData = (data: string, cell: Element, cellData: Element, rowHeade
 
 const resolveType = (originalData: string | number | boolean, rowHeader: boolean): DataTypes => {
     const data: string = originalData as string;
-    if ((rowHeader) || (data.trim() === "")) {
+    if (rowHeader || data.trim() === "") {
         // Headers and whitespace should be string by default.
         return DataTypes.string;
     }
@@ -118,4 +133,5 @@ export default {
     getTableReference,
     updateCellData,
     resolveType,
+    convertToExcelColumn,
 };
