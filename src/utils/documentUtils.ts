@@ -15,6 +15,7 @@ import {
     xmlTextResultType,
 } from "./constants";
 import { DataTypes } from "../types";
+import { DOMParser } from "xmldom-qsa";
 
 const createOrUpdateProperty = (doc: Document, parent: Element, property: string, value?: string | null): void => {
     if (value === undefined) {

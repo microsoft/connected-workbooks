@@ -25,6 +25,7 @@ import {
     relsNotFoundErr,
 } from "./constants";
 import documentUtils from "./documentUtils";
+import { DOMParser, XMLSerializer } from "xmldom-qsa";
 
 const updateDocProps = async (zip: JSZip, docProps: DocProps = {}): Promise<void> => {
     const { doc, properties } = await documentUtils.getDocPropsProperties(zip);
@@ -100,11 +101,11 @@ const updateConnections = (
     dbPr.setAttribute(elementAttributes.refreshOnLoad, refreshOnLoadValue);
 
     // Update query details to match queryName
-    dbPr.parentElement?.setAttribute(elementAttributes.name, elementAttributesValues.connectionName(queryName));
-    dbPr.parentElement?.setAttribute(elementAttributes.description, elementAttributesValues.connectionDescription(queryName));
+    (dbPr.parentNode as Element)?.setAttribute(elementAttributes.name, elementAttributesValues.connectionName(queryName));
+    (dbPr.parentNode as Element)?.setAttribute(elementAttributes.description, elementAttributesValues.connectionDescription(queryName));
     dbPr.setAttribute(elementAttributes.connection, elementAttributesValues.connection(queryName));
     dbPr.setAttribute(elementAttributes.command, elementAttributesValues.connectionCommand(queryName));
-    const connectionId: string | null | undefined = dbPr.parentElement?.getAttribute(elementAttributes.id);
+    const connectionId: string | null | undefined = (dbPr.parentNode as Element)?.getAttribute(elementAttributes.id);
     const connectionXmlFileString: string = serializer.serializeToString(connectionsDoc);
 
     if (connectionId === null) {
@@ -128,7 +129,7 @@ const updateSharedStrings = (sharedStringsXmlString: string, queryName: string):
     let sharedStringIndex: number = textElementCollection.length;
     if (textElementCollection && textElementCollection.length) {
         for (let i = 0; i < textElementCollection.length; i++) {
-            if (textElementCollection[i].innerHTML === queryName) {
+            if (textElementCollection[i].textContent === queryName) {
                 textElement = textElementCollection[i];
                 sharedStringIndex = i + 1;
                 break;
