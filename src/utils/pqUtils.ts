@@ -6,7 +6,6 @@ import { EmptyQueryNameErr, QueryNameMaxLengthErr, maxQueryLength, URLS, BOM, Qu
 import { generateMashupXMLTemplate, generateCustomXmlFilePath } from "../generators";
 import { Buffer } from "buffer";
 import { DOMParser } from "xmldom-qsa";
-import { NormalModuleReplacementPlugin } from "webpack";
 
 type CustomXmlFile = {
     found: boolean;
