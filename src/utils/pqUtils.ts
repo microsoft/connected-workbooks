@@ -44,7 +44,7 @@ const getDataMashupFile = async (zip: JSZip): Promise<CustomXmlFile> => {
     return mashup;
 };
 
-const getCustomXmlFile = async (zip: JSZip, url: string, encoding: BufferEncoding = "utf16le"): Promise<CustomXmlFile> => {
+const getCustomXmlFile = async (zip: JSZip, url: string): Promise<CustomXmlFile> => {
     const parser: DOMParser = new DOMParser();
     const itemsArray = await zip.file(/customXml\/item\d.xml/);
 
@@ -65,8 +65,14 @@ const getCustomXmlFile = async (zip: JSZip, url: string, encoding: BufferEncodin
             break;
         }
 
-        xmlString = Buffer.from(xmlValue)
-            .toString(encoding)
+        const buffer: Buffer = Buffer.from(xmlValue);
+        const encoding: string | null = detectEncoding(xmlValue);
+        if (!encoding){
+            throw new Error("Failed to detect xml encoding")
+        }
+
+        xmlString = buffer
+            .toString(encoding as BufferEncoding)
             .replace(/^\ufeff/, "");
         const doc: Document = parser.parseFromString(xmlString, "text/xml");
 
@@ -111,6 +117,27 @@ const validateQueryName = (queryName: string): void => {
         throw new Error(EmptyQueryNameErr);
     }
 };
+
+const detectEncoding = (xmlBytes: Uint8Array): string | null => {
+    if (!xmlBytes){
+        return null;
+    }
+
+    if (xmlBytes.length >= 3 && xmlBytes[0] === 0xEF && xmlBytes[1] === 0xBB && xmlBytes[2] === 0xBF) {
+        return 'utf-8';
+    }
+    if (xmlBytes.length >= 3 && xmlBytes[0] === 0xFF && xmlBytes[1] === 0xFE) {
+        return 'utf-16le';
+    }
+
+    if (xmlBytes.length >= 3 && xmlBytes[0] === 0xFE && xmlBytes[1] === 0xFF) {
+        return 'utf-16be';
+    }
+
+    // Default to utf-8, that not required a BOM for encoding.
+    return 'utf-8';
+}
+
 export default {
     getBase64,
     setBase64,
