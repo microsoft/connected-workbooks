@@ -158,5 +158,7 @@ export const headers = {
 export const OFU = {
     ViewUrl: "https://view.officeapps.live.com/op/view.aspx?src=http://connectedWorkbooks.excel/",
     PostUrl: "https://view.officeapps.live.com/op/viewpost.aspx?src=http://connectedWorkbooks.excel/",
-    allowTyping: "AllowTyping",
+    AllowTyping: "AllowTyping",
+    WdOrigin: "wdOrigin",
+    OpenInExcelOririgin: "OpenInExcel",
 };
