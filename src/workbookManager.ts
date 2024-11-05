@@ -101,10 +101,10 @@ export const openInExcelWeb = async (file: Blob, filename?: string, allowTyping?
 
         // Parse allowTyping parameter
         const allowTypingParam = allowTyping ? 1 : 0;
-      
+
         try {
             // Send the POST request to the desired endpoint using Fetch
-            const response = await fetch(`${OFU.PostUrl}${fileNameGuid}`, {
+            const response = await fetch(`${OFU.PostUrl}${fileNameGuid}&${OFU.WdOrigin}=${OFU.OpenInExcelOririgin}`, {
                 method: "POST",
                 headers: headers,
                 body: fileContent,
@@ -113,7 +113,7 @@ export const openInExcelWeb = async (file: Blob, filename?: string, allowTyping?
             // Check if the response is successful
             if (response.ok) {
                 // if upload was successful - open the file in a new tab
-                window.open(`${OFU.ViewUrl}${fileNameGuid}&${OFU.allowTyping}=${allowTypingParam}`, "_blank");
+                window.open(`${OFU.ViewUrl}${fileNameGuid}&${OFU.AllowTyping}=${allowTypingParam}&${OFU.WdOrigin}=${OFU.OpenInExcelOririgin}`, "_blank");
             } else {
                 throw new Error(`File upload failed. Status code: ${response.status}`);
             }

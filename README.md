@@ -1,4 +1,4 @@
-# Connected Workbooks
+# Open In Excel
 [![License](https://img.shields.io/github/license/microsoft/connected-workbooks)](https://github.com/microsoft/connected-workbooks/blob/master/LICENSE)
 
 A pure JS library, Microsoft backed, that provides xlsx workbook generation capabilities, allowing for:
@@ -8,7 +8,7 @@ A pure JS library, Microsoft backed, that provides xlsx workbook generation capa
     - Allows for initial data population.
     - Supports more advanced scenarios where you provide branded/custom workbooks, and load your data into PivotTables or PivotCharts.
 
-Connected Workbooks allows you to avoid "data dumps" in CSV form, providing a richer experience with Tables and/or connected Queries for when your business application supports it.
+Open in Excel allows you to avoid "data dumps" in CSV form, providing a richer experience with Tables and/or connected Queries for when your business application supports it.
 
 [Learn about Power Query here](https://powerquery.microsoft.com/en-us/)
 
