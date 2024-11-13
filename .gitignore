@@ -21,3 +21,5 @@ coverage/
 
 # bundles
 *.tgz
+
+.idea
