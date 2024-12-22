@@ -102,7 +102,7 @@ export const openInExcelWeb = async (file: Blob, filename?: string, allowTyping?
 
 export const getExcelForWebWorkbookUrl = async (file: Blob, filename?: string, allowTyping?: boolean): Promise<string> => {
     // Check if the file exists
-    if (file.size < 0) {
+    if (file.size <= 0) {
         throw new Error("File is empty");
     }
 
