@@ -93,7 +93,7 @@ export const downloadWorkbook = (file: Blob, filename: string): void => {
 
 export const openInExcelWeb = async (file: Blob, filename?: string, allowTyping?: boolean): Promise<void> => {
     try {
-        const url = await getExcelForWebUrl(file, filename, allowTyping);
+        const url = await getExcelForWebWorkbookUrl(file, filename, allowTyping);
         window.open(url, "_blank");
     } catch (error) {
         console.error("An error occurred:", error);
