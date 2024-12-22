@@ -92,33 +92,43 @@ export const downloadWorkbook = (file: Blob, filename: string): void => {
 };
 
 export const openInExcelWeb = async (file: Blob, filename?: string, allowTyping?: boolean): Promise<void> => {
+    try {
+        const url = await getExcelForWebUrl(file, filename, allowTyping);
+        window.open(url, "_blank");
+    } catch (error) {
+        console.error("An error occurred:", error);
+    }
+};
+
+export const getExcelForWebUrl = async (file: Blob, filename?: string, allowTyping?: boolean): Promise<string> => {
     // Check if the file exists
-    if (file.size > 0) {
-        // Read the content of the Excel file into a buffer
-        const fileContent = file;
+    if (file.size < 0) {
+        throw new Error("File is empty");
+    }
 
-        const fileNameGuid = new Date().getTime().toString() + (filename ? "_" + filename : "") + ".xlsx";
+    // Read the content of the Excel file into a buffer
+    const fileContent = file;
+    const fileNameGuid = new Date().getTime().toString() + (filename ? "_" + filename : "") + ".xlsx";
 
-        // Parse allowTyping parameter
-        const allowTypingParam = allowTyping ? 1 : 0;
-      
-        try {
-            // Send the POST request to the desired endpoint using Fetch
-            const response = await fetch(`${OFU.PostUrl}${fileNameGuid}`, {
-                method: "POST",
-                headers: headers,
-                body: fileContent,
-            });
+    // Parse allowTyping parameter
+    const allowTypingParam = allowTyping ? 1 : 0;
 
-            // Check if the response is successful
-            if (response.ok) {
-                // if upload was successful - open the file in a new tab
-                window.open(`${OFU.ViewUrl}${fileNameGuid}&${OFU.allowTyping}=${allowTypingParam}`, "_blank");
-            } else {
-                throw new Error(`File upload failed. Status code: ${response.status}`);
-            }
-        } catch (error) {
-            console.error("An error occurred:", error);
+    try {
+        // Send the POST request to the desired endpoint using Fetch
+        const response = await fetch(`${OFU.PostUrl}${fileNameGuid}&${OFU.WdOrigin}=${OFU.OpenInExcelOririgin}`, {
+            method: "POST",
+            headers: headers,
+            body: fileContent,
+        });
+
+        // Check if the response is successful
+        if (response.ok) {
+            // if upload was successful - open the file in a new tab
+            return `${OFU.ViewUrl}${fileNameGuid}&${OFU.AllowTyping}=${allowTypingParam}&${OFU.WdOrigin}=${OFU.OpenInExcelOririgin}`;
+        } else {
+            throw new Error(`File upload failed. Status code: ${response.status}`);
         }
+    } catch (error) {
+        throw new Error(`An error occurred: ${error}`);
     }
 };
