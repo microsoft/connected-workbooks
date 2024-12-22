@@ -38,7 +38,7 @@ describe("Single query template tests", () => {
     });
 
     test("ConnectedWorkbook XML exists as item1.xml", async () => {
-        const { found, path, xmlString } = await pqUtils.getCustomXmlFile(defaultZipFile, URLS.CONNECTED_WORKBOOK, "utf-8");
+        const { found, path, xmlString } = await pqUtils.getCustomXmlFile(defaultZipFile, URLS.CONNECTED_WORKBOOK);
 
         expect(found).toBeTruthy();
         expect(xmlString).toEqual(connectedWorkbookXmlMock);
