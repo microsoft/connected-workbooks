@@ -54,18 +54,18 @@ type PackageComponents = {
 export const getPackageComponents = (base64Str: string): PackageComponents => {
     const buffer = Buffer.from(base64Str,'base64');
 
-    const version = buffer.slice(0,4);
+    const version = buffer.subarray(0,4);
 
     const packageSize = buffer.readInt32LE(4);
-    const packageOPC = new Uint8Array(buffer.slice(8, 8 + packageSize));
+    const packageOPC = new Uint8Array(buffer.subarray(8, 8 + packageSize));
 
     const permissionsSize = buffer.readInt32LE(8 + packageSize);
-    const permissions = new Uint8Array(buffer.slice(12 + packageSize, 12 + packageSize + permissionsSize));
+    const permissions = new Uint8Array(buffer.subarray(12 + packageSize, 12 + packageSize + permissionsSize));
 
     const metadataSize = buffer.readInt32LE(12 + packageSize + permissionsSize);
-    const metadata = new Uint8Array(buffer.slice(16 + packageSize + permissionsSize, 16 + packageSize + permissionsSize + metadataSize));
+    const metadata = new Uint8Array(buffer.subarray(16 + packageSize + permissionsSize, 16 + packageSize + permissionsSize + metadataSize));
 
-    const endBuffer = new Uint8Array(buffer.slice(16 + packageSize + permissionsSize + metadataSize))
+    const endBuffer = new Uint8Array(buffer.subarray(16 + packageSize + permissionsSize + metadataSize))
 
     return {
         version,
@@ -98,10 +98,10 @@ const setSection1m = (queryMashupDoc: string, zip: JSZip): void => {
 export const editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Metadata): Uint8Array => {
     
     const dataView = new DataView(metadataArray.buffer, metadataArray.byteOffset, metadataArray.byteLength);
-    const metadataVersion = metadataArray.slice(0, 4);
+    const metadataVersion = metadataArray.subarray(0, 4);
     const metadataXmlSize = dataView.getInt32(4, true);
-    const metadataXml: Uint8Array = metadataArray.slice(8, 8 + metadataXmlSize);
-    const endBuffer: Uint8Array = metadataArray.slice(8+metadataXmlSize);
+    const metadataXml: Uint8Array = metadataArray.subarray(8, 8 + metadataXmlSize);
+    const endBuffer: Uint8Array = metadataArray.subarray(8+metadataXmlSize);
 
     //parse metdataXml
     const textDecoder: TextDecoder = new TextDecoder();

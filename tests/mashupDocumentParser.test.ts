@@ -25,7 +25,7 @@ describe("Mashup Document Parser tests", () => {
             const buffer = Buffer.from(replacedQueryBase64Str,'base64');
             
             const packageSize = buffer.readInt32LE(4);
-            const packageOPC = new Uint8Array(buffer.slice(8, 8 + packageSize));
+            const packageOPC = new Uint8Array(buffer.subarray(8, 8 + packageSize));
             const zip = await JSZip.loadAsync(packageOPC);
             const section1m = await zip.file(section1mPath)?.async("text");
             if (section1m) {
