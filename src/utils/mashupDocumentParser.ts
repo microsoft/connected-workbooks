@@ -4,7 +4,6 @@
 import JSZip from "jszip";
 import {
     section1mPath,
-    defaults,
     uint8ArrayType,
     emptyValue,
     textResultType,
@@ -19,7 +18,6 @@ import {
 import { arrayUtils } from ".";
 import { Metadata } from "../types";
 import { DOMParser, XMLSerializer } from "xmldom-qsa";
-import { Buffer } from "buffer";
 
 export const replaceSingleQuery = async (base64Str: string, queryName: string, queryMashupDoc: string): Promise<string> => {
     const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } = getPackageComponents(base64Str);
@@ -39,7 +37,7 @@ export const replaceSingleQuery = async (base64Str: string, queryName: string, q
         endBuffer
     );
 
-    return Buffer.from(newMashup).toString('base64');
+    return arrayUtils.uint8ArrayToBase64(newMashup);
 };
 
 type PackageComponents = {
@@ -52,17 +50,16 @@ type PackageComponents = {
 };
 
 export const getPackageComponents = (base64Str: string): PackageComponents => {
-    const buffer = Buffer.from(base64Str,'base64');
-
+    const [buffer, dataView] = arrayUtils.base64ToUint8Array(base64Str);
     const version = buffer.subarray(0,4);
 
-    const packageSize = buffer.readInt32LE(4);
+    const packageSize = dataView.getInt32(4, true);
     const packageOPC = new Uint8Array(buffer.subarray(8, 8 + packageSize));
 
-    const permissionsSize = buffer.readInt32LE(8 + packageSize);
+    const permissionsSize = dataView.getInt32(8 + packageSize, true);
     const permissions = new Uint8Array(buffer.subarray(12 + packageSize, 12 + packageSize + permissionsSize));
 
-    const metadataSize = buffer.readInt32LE(12 + packageSize + permissionsSize);
+    const metadataSize = dataView.getInt32(12 + packageSize + permissionsSize, true);
     const metadata = new Uint8Array(buffer.subarray(16 + packageSize + permissionsSize, 16 + packageSize + permissionsSize + metadataSize));
 
     const endBuffer = new Uint8Array(buffer.subarray(16 + packageSize + permissionsSize + metadataSize))
@@ -77,7 +74,7 @@ export const getPackageComponents = (base64Str: string): PackageComponents => {
     };
 };
 
-const editSingleQueryPackage = async (packageOPC: ArrayBuffer, queryMashupDoc: string): Promise<Uint8Array> => {
+const editSingleQueryPackage = async (packageOPC: Uint8Array, queryMashupDoc: string): Promise<Uint8Array> => {
     const packageZip: JSZip = await JSZip.loadAsync(packageOPC);
     setSection1m(queryMashupDoc, packageZip);
 

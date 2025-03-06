@@ -4,8 +4,8 @@
 import JSZip from "jszip";
 import { maxQueryLength, URLS, BOM, Errors } from "./constants";
 import { generateMashupXMLTemplate, generateCustomXmlFilePath } from "../generators";
-import { Buffer } from "buffer";
 import { DOMParser } from "xmldom-qsa";
+import arrayUtils from "./arrayUtils";
 
 type CustomXmlFile = {
     found: boolean;
@@ -21,7 +21,7 @@ const getBase64 = async (zip: JSZip): Promise<string | null> => {
 
 const setBase64 = async (zip: JSZip, base64: string): Promise<void> => {
     const newXml = generateMashupXMLTemplate(base64);
-    const encoded = Buffer.from(BOM + newXml, "ucs2");
+    const encoded = arrayUtils.encodeStringToUCS2(BOM + newXml);
     const mashup = await getDataMashupFile(zip);
     zip.file(mashup?.path, encoded);
 };
@@ -64,16 +64,8 @@ const getCustomXmlFile = async (zip: JSZip, url: string): Promise<CustomXmlFile>
         if (xmlValue === undefined) {
             break;
         }
+        xmlString = arrayUtils.decodeXml(xmlValue);
 
-        const buffer: Buffer = Buffer.from(xmlValue);
-        const encoding: string | null = detectEncoding(xmlValue);
-        if (!encoding){
-            throw new Error("Failed to detect xml encoding")
-        }
-
-        xmlString = buffer
-            .toString(encoding as BufferEncoding)
-            .replace(/^\ufeff/, "");
         const doc: Document = parser.parseFromString(xmlString, "text/xml");
 
         found = doc?.documentElement?.namespaceURI === url;
@@ -117,26 +109,6 @@ const validateQueryName = (queryName: string): void => {
         throw new Error(Errors.emptyQueryName);
     }
 };
-
-const detectEncoding = (xmlBytes: Uint8Array): string | null => {
-    if (!xmlBytes){
-        return null;
-    }
-
-    if (xmlBytes.length >= 3 && xmlBytes[0] === 0xEF && xmlBytes[1] === 0xBB && xmlBytes[2] === 0xBF) {
-        return 'utf-8';
-    }
-    if (xmlBytes.length >= 3 && xmlBytes[0] === 0xFF && xmlBytes[1] === 0xFE) {
-        return 'utf-16le';
-    }
-
-    if (xmlBytes.length >= 3 && xmlBytes[0] === 0xFE && xmlBytes[1] === 0xFF) {
-        return 'utf-16be';
-    }
-
-    // Default to utf-8, that not required a BOM for encoding.
-    return 'utf-8';
-}
 
 export default {
     getBase64,

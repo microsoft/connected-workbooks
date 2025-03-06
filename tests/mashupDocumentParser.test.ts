@@ -22,10 +22,10 @@ describe("Mashup Document Parser tests", () => {
 
         if (originalBase64Str) {
             const replacedQueryBase64Str = await replaceSingleQuery(originalBase64Str, "newQueryName", section1mNewQueryNameSimpleMock);
-            const buffer = Buffer.from(replacedQueryBase64Str,'base64');
+            const [buffer,dataView] = arrayUtils.base64ToUint8Array(replacedQueryBase64Str);
             
-            const packageSize = buffer.readInt32LE(4);
-            const packageOPC = new Uint8Array(buffer.subarray(8, 8 + packageSize));
+            const packageSize = dataView.getInt32(4, true);
+            const packageOPC = buffer.subarray(8, 8 + packageSize);
             const zip = await JSZip.loadAsync(packageOPC);
             const section1m = await zip.file(section1mPath)?.async("text");
             if (section1m) {
