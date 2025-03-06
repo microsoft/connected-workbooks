@@ -5,7 +5,6 @@ import { TextDecoder, TextEncoder } from "util";
 import { replaceSingleQuery, getPackageComponents, editSingleQueryMetadata } from "../src/utils/mashupDocumentParser";
 import { arrayUtils, pqUtils } from "../src/utils";
 import { section1mNewQueryNameSimpleMock, pqMetadataXmlMockPart1, pqMetadataXmlMockPart2 } from "./mocks";
-import base64 from "base64-js";
 import JSZip from "jszip";
 import { SIMPLE_QUERY_WORKBOOK_TEMPLATE } from "../src/workbookTemplate";
 import { section1mPath } from "../src/utils/constants";
@@ -23,11 +22,10 @@ describe("Mashup Document Parser tests", () => {
 
         if (originalBase64Str) {
             const replacedQueryBase64Str = await replaceSingleQuery(originalBase64Str, "newQueryName", section1mNewQueryNameSimpleMock);
-            const buffer = base64.toByteArray(replacedQueryBase64Str).buffer;
-            const mashupArray = new arrayUtils.ArrayReader(buffer);
-            const startArray = mashupArray.getBytes(4);
-            const packageSize = mashupArray.getInt32();
-            const packageOPC = mashupArray.getBytes(packageSize);
+            const buffer = Buffer.from(replacedQueryBase64Str,'base64');
+            
+            const packageSize = buffer.readInt32LE(4);
+            const packageOPC = new Uint8Array(buffer.slice(8, 8 + packageSize));
             const zip = await JSZip.loadAsync(packageOPC);
             const section1m = await zip.file(section1mPath)?.async("text");
             if (section1m) {
@@ -42,7 +40,7 @@ describe("Mashup Document Parser tests", () => {
         const originalBase64Str = await pqUtils.getBase64(defaultZipFile);
         if (originalBase64Str) {
             const { metadata } = getPackageComponents(originalBase64Str);
-            const newMetadataArray = editSingleQueryMetadata(metadata, { queryName: "newQueryName" });
+            const newMetadataArray = editSingleQueryMetadata(metadata as Uint8Array, { queryName: "newQueryName" });
             const metadataString = new util.TextDecoder("utf-8").decode(newMetadataArray);
             expect(metadataString.replace(/ /g, "")).toContain(pqMetadataXmlMockPart1.replace(/ /g, ""));
             expect(metadataString.replace(/ /g, "")).toContain(pqMetadataXmlMockPart2.replace(/ /g, ""));

@@ -3,32 +3,7 @@
 
 import { describe, test, expect } from '@jest/globals';
 import { arrayUtils } from "../src/utils/";
-import * as base64 from "base64-js";
 
-describe("ArrayReader tests", () => {
-    const buffer = base64.toByteArray("UHJhaXNlIFRoZSBTdW4h").buffer;
-    const arrReader = new arrayUtils.ArrayReader(buffer);
-
-    test("getInt32 test", () => {
-        const int32 = arrReader.getInt32();
-
-        expect(int32).toEqual(1767993936);
-        expect((arrReader as any)._position).toEqual(4);
-    });
-
-    test("getBytes test", () => {
-        const bytes = arrReader.getBytes(4);
-
-        expect(bytes).toEqual(new Uint8Array([115, 101, 32, 84]));
-        expect((arrReader as any)._position).toEqual(8);
-    });
-
-    test("reset test", () => {
-        arrReader.reset();
-
-        expect((arrReader as any)._position).toEqual(0);
-    });
-});
 
 test("getInt32Buffer test", () => {
     const size = 4;

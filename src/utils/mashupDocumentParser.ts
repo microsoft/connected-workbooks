@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as base64 from "base64-js";
 import JSZip from "jszip";
 import {
     section1mPath,
@@ -19,8 +18,8 @@ import {
 } from "./constants";
 import { arrayUtils } from ".";
 import { Metadata } from "../types";
-import { ArrayReader } from "./arrayUtils";
 import { DOMParser, XMLSerializer } from "xmldom-qsa";
+import { Buffer } from "buffer";
 
 export const replaceSingleQuery = async (base64Str: string, queryName: string, queryMashupDoc: string): Promise<string> => {
     const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } = getPackageComponents(base64Str);
@@ -40,7 +39,7 @@ export const replaceSingleQuery = async (base64Str: string, queryName: string, q
         endBuffer
     );
 
-    return base64.fromByteArray(newMashup);
+    return Buffer.from(newMashup).toString('base64');
 };
 
 type PackageComponents = {
@@ -53,16 +52,20 @@ type PackageComponents = {
 };
 
 export const getPackageComponents = (base64Str: string): PackageComponents => {
-    const buffer: ArrayBufferLike = base64.toByteArray(base64Str).buffer;
-    const mashupArray: ArrayReader = new arrayUtils.ArrayReader(buffer);
-    const version: Uint8Array = mashupArray.getBytes(4);
-    const packageSize: number = mashupArray.getInt32();
-    const packageOPC: Uint8Array = mashupArray.getBytes(packageSize);
-    const permissionsSize: number = mashupArray.getInt32();
-    const permissions: Uint8Array = mashupArray.getBytes(permissionsSize);
-    const metadataSize: number = mashupArray.getInt32();
-    const metadata: Uint8Array = mashupArray.getBytes(metadataSize);
-    const endBuffer: Uint8Array = mashupArray.getBytes();
+    const buffer = Buffer.from(base64Str,'base64');
+
+    const version = buffer.slice(0,4);
+
+    const packageSize = buffer.readInt32LE(4);
+    const packageOPC = new Uint8Array(buffer.slice(8, 8 + packageSize));
+
+    const permissionsSize = buffer.readInt32LE(8 + packageSize);
+    const permissions = new Uint8Array(buffer.slice(12 + packageSize, 12 + packageSize + permissionsSize));
+
+    const metadataSize = buffer.readInt32LE(12 + packageSize + permissionsSize);
+    const metadata = new Uint8Array(buffer.slice(16 + packageSize + permissionsSize, 16 + packageSize + permissionsSize + metadataSize));
+
+    const endBuffer = new Uint8Array(buffer.slice(16 + packageSize + permissionsSize + metadataSize))
 
     return {
         version,
@@ -93,12 +96,12 @@ const setSection1m = (queryMashupDoc: string, zip: JSZip): void => {
 };
 
 export const editSingleQueryMetadata = (metadataArray: Uint8Array, metadata: Metadata): Uint8Array => {
-    //extract metadataXml
-    const mashupArray: ArrayReader = new arrayUtils.ArrayReader(metadataArray.buffer);
-    const metadataVersion: Uint8Array = mashupArray.getBytes(4);
-    const metadataXmlSize: number = mashupArray.getInt32();
-    const metadataXml: Uint8Array = mashupArray.getBytes(metadataXmlSize);
-    const endBuffer: Uint8Array = mashupArray.getBytes();
+    
+    const dataView = new DataView(metadataArray.buffer, metadataArray.byteOffset, metadataArray.byteLength);
+    const metadataVersion = metadataArray.slice(0, 4);
+    const metadataXmlSize = dataView.getInt32(4, true);
+    const metadataXml: Uint8Array = metadataArray.slice(8, 8 + metadataXmlSize);
+    const endBuffer: Uint8Array = metadataArray.slice(8+metadataXmlSize);
 
     //parse metdataXml
     const textDecoder: TextDecoder = new TextDecoder();
