@@ -76,8 +76,8 @@ const convertToExcelColumn = (index: number): string => {
     return columnStr;
 };
 
-const getTableReference = (numberOfCols: number, numberOfRows: number): string => {
-    return `A1:${getCellReferenceRelative(numberOfCols, numberOfRows)}`;
+const getTableReference = (numberOfCols: number, numberOfRows: number,startCol: number, startRow: number): string => {
+    return `${getCellReferenceRelative(startCol, startRow)}:${getCellReferenceRelative(numberOfCols, numberOfRows)}`;
 };
 
 const createCellElement = (doc: Document, colIndex: number, rowIndex: number, data: string): Element => {

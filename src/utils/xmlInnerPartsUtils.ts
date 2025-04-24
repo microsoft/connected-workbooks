@@ -23,6 +23,8 @@ import {
     relsXmlPath,
     unexpectedErr,
     relsNotFoundErr,
+    WorkbookNotFoundERR,
+    workbookXmlPath,
 } from "./constants";
 import documentUtils from "./documentUtils";
 import { DOMParser, XMLSerializer } from "xmldom-qsa";
@@ -269,6 +271,61 @@ const updatePivotTable = (tableXmlString: string, connectionId: string, refreshO
     return { isPivotTableUpdated, newPivotTable };
 };
 
+// get sheet name from workbook
+const getSheetIdByNameFromZip = async (zip: JSZip, sheetName: string): Promise<string> => {
+    const sheetsXmlString: string | undefined = await zip.file(workbookXmlPath)?.async("text");
+    if (!sheetsXmlString) {
+        throw new Error(WorkbookNotFoundERR);
+    }
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(sheetsXmlString, xmlTextResultType);
+    let sheetId = "";
+    const sheetElements = doc.getElementsByTagName("sheet");
+    for (let i = 0; i < sheetElements.length; i++) {
+        if (sheetElements[i].getAttribute("name") === sheetName) {
+            return (i+1).toString();
+        }
+    }
+    throw new Error(`Sheet with name ${sheetName} not found`);
+};
+
+// get definedName
+const getDefinedNameFromTable = async (zip: JSZip, tablePath: string): Promise<string> => {
+    const tableXmlString: string | undefined = await zip.file(tablePath)?.async("text");
+    if (!tableXmlString) {
+        throw new Error(WorkbookNotFoundERR);
+    }
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(tableXmlString, xmlTextResultType);
+    const definedNamesElements = doc.getElementsByTagName("table");
+    return definedNamesElements[0]?.getAttribute("ref") || "" 
+};
+
+const findTablePathFromZip = async (zip: JSZip, desiredTableName: string): Promise<string> => {
+    const tablesFolder = zip.folder("xl/tables");
+    if (!tablesFolder) return "";
+
+    const tableFilePromises: Promise<{ path: string; content: string }>[] = [];
+    tablesFolder.forEach((relativePath, file) => {
+        tableFilePromises.push(
+            file.async(textResultType).then(content => ({ path: relativePath, content }))
+        );
+    });
+
+    const tableFiles = await Promise.all(tableFilePromises);
+    const parser = new DOMParser();
+    for (const { path, content } of tableFiles) {
+        const doc = parser.parseFromString(content, xmlTextResultType);
+        const tableElem = doc.getElementsByTagName("table")[0];
+        if (tableElem && tableElem.getAttribute("name") === desiredTableName) {
+            return path;
+        }
+    }
+    return "";
+};
+
 export default {
     updateDocProps,
     clearLabelInfo,
@@ -278,4 +335,7 @@ export default {
     updatePivotTablesandQueryTables,
     updateQueryTable,
     updatePivotTable,
+    getSheetIdByNameFromZip,
+    getDefinedNameFromTable,
+    findTablePathFromZip,
 };

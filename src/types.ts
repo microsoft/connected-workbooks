@@ -41,6 +41,8 @@ export interface FileConfigs {
     templateFile?: File;
     docProps?: DocProps;
     hostName?: string;
+    tableName?: string;
+    sheetName?: string;
 }
 
 export enum DataTypes {

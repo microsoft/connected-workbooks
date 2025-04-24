@@ -8,6 +8,7 @@ export const tableXmlPath = "xl/tables/table1.xml";
 export const queryTableXmlPath = "xl/queryTables/queryTable1.xml";
 export const workbookXmlPath = "xl/workbook.xml";
 export const queryTablesPath = "xl/queryTables/";
+export const tablesFolderPath = "xl/tables/";
 export const pivotCachesPath = "xl/pivotCache/";
 export const section1mPath = "Formulas/Section1.m";
 export const docPropsCoreXmlPath = "docProps/core.xml";
@@ -17,6 +18,7 @@ export const docPropsRootElement = "cp:coreProperties";
 
 export const sharedStringsNotFoundErr = "SharedStrings were not found in template";
 export const connectionsNotFoundErr = "Connections were not found in template";
+export const WorkbookNotFoundERR = "workbook was not found in template";
 export const sheetsNotFoundErr = "Sheets were not found in template";
 export const base64NotFoundErr = "Base64 was not found in template";
 export const emptyQueryMashupErr = "Query mashup is empty";
@@ -138,6 +140,7 @@ export const defaults = {
     queryName: "Query1",
     sheetName: "Sheet1",
     columnName: "Column",
+    tableName: "Table1",
 };
 
 export const URLS = {

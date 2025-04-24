@@ -11,20 +11,51 @@ import {
     sharedStringsNotFoundErr,
     sheetsXmlPath,
     sheetsNotFoundErr,
+    tableXmlPath,
+    defaults,
+    tablesFolderPath,
 } from "./constants";
 import { replaceSingleQuery } from "./mashupDocumentParser";
 import { FileConfigs, TableData } from "../types";
 import pqUtils from "./pqUtils";
-import xmlInnerPartsUtils from "./xmlInnerPartsUtils";
 import tableUtils from "./tableUtils";
-
+import xmlInnerPartsUtils from "./xmlInnerPartsUtils";
+import documentUtils from "./documentUtils";
+ 
 const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: FileConfigs, tableData?: TableData, updateQueryTable = false): Promise<void> => {
+    let sheetPath: string = sheetsXmlPath;
+    // Getting the sheet id based on location in the workbook
+    if (fileConfigs?.sheetName !== undefined) {
+        const sheetId = await xmlInnerPartsUtils.getSheetIdByNameFromZip(zip, fileConfigs.sheetName);
+        sheetPath = sheetPath.replace("1", sheetId);
+    }
+
+    // Getting the table location based on which table has the same name as the one in the fileConfigs
+    // If no table name is provided, we will use the default one
+    let tablePath: string = tableXmlPath;
+    if (fileConfigs?.tableName !== undefined) {
+        tablePath = tablesFolderPath + await xmlInnerPartsUtils.findTablePathFromZip(zip, fileConfigs.tableName);
+    }else{
+        fileConfigs = fileConfigs ?? {};
+        fileConfigs.tableName = defaults.tableName;
+    }
+    
+    // Getting the table start and end location string from the table path
+    // If no table path is provided, we will consider A1 as the start location
+    let ref: string = "";
+    if(fileConfigs?.templateFile != null) {
+        ref = await xmlInnerPartsUtils.getDefinedNameFromTable(zip,tablePath) 
+    }
+    else if (tableData) {
+        ref = `A1:${documentUtils.getCellReferenceRelative(tableData.columnNames.length - 1, tableData.rows.length + 1)}`; 
+    }
+
     await xmlInnerPartsUtils.updateDocProps(zip, fileConfigs?.docProps);
     if (fileConfigs?.templateFile === undefined) {
         // If we are using our base template, we need to clear label info
         await xmlInnerPartsUtils.clearLabelInfo(zip);
     }
-    await tableUtils.updateTableInitialDataIfNeeded(zip, tableData, updateQueryTable);
+    await tableUtils.updateTableInitialDataIfNeeded(zip, ref, sheetPath, tablePath, fileConfigs.tableName, tableData, updateQueryTable);
 };
 
 const updateWorkbookPowerQueryDocument = async (zip: JSZip, queryName: string, queryMashupDoc: string): Promise<void> => {
@@ -38,7 +69,7 @@ const updateWorkbookPowerQueryDocument = async (zip: JSZip, queryName: string, q
     await pqUtils.setBase64(zip, new_base64);
 };
 
-const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string, refreshOnOpen: boolean): Promise<void> => {
+const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string, refreshOnOpen: boolean, sheetName?: string): Promise<void> => {
     // Update connections
     const connectionsXmlString: string | undefined = await zip.file(connectionsXmlPath)?.async(textResultType);
     if (connectionsXmlString === undefined) {
@@ -58,13 +89,19 @@ const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string
     zip.file(sharedStringsXmlPath, newSharedStrings);
 
     // Update sheet
-    const sheetsXmlString: string | undefined = await zip.file(sheetsXmlPath)?.async(textResultType);
+    let sheetPath: string = sheetsXmlPath;
+    if ( sheetName !== undefined) {
+        const sheetId = await xmlInnerPartsUtils.getSheetIdByNameFromZip(zip, sheetName);
+        sheetPath = sheetPath.replace("1", sheetId);
+    }
+
+    const sheetsXmlString: string | undefined = await zip.file(sheetPath)?.async(textResultType); // here the correct path sheet
     if (sheetsXmlString === undefined) {
         throw new Error(sheetsNotFoundErr);
     }
 
     const worksheetString: string = xmlInnerPartsUtils.updateWorksheet(sheetsXmlString, sharedStringIndex.toString());
-    zip.file(sheetsXmlPath, worksheetString);
+    zip.file(sheetPath, worksheetString);
 
     // Update tables
     await xmlInnerPartsUtils.updatePivotTablesandQueryTables(zip, queryName, refreshOnOpen, connectionId!);
