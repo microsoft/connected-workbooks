@@ -273,14 +273,14 @@ const updatePivotTable = (tableXmlString: string, connectionId: string, refreshO
 
 // get sheet name from workbook
 const getSheetIdByNameFromZip = async (zip: JSZip, sheetName: string): Promise<string> => {
-    const sheetsXmlString: string | undefined = await zip.file(workbookXmlPath)?.async("text");
-    if (!sheetsXmlString) {
+    const workbookXmlString: string | undefined = await zip.file(workbookXmlPath)?.async("text");
+    if (!workbookXmlString) {
         throw new Error(WorkbookNotFoundERR);
     }
 
     const parser = new DOMParser();
-    const doc = parser.parseFromString(sheetsXmlString, xmlTextResultType);
-    let sheetId = "";
+    const doc = parser.parseFromString(workbookXmlString, xmlTextResultType);
+    
     const sheetElements = doc.getElementsByTagName("sheet");
     for (let i = 0; i < sheetElements.length; i++) {
         if (sheetElements[i].getAttribute("name") === sheetName) {
@@ -291,7 +291,7 @@ const getSheetIdByNameFromZip = async (zip: JSZip, sheetName: string): Promise<s
 };
 
 // get definedName
-const getDefinedNameFromTable = async (zip: JSZip, tablePath: string): Promise<string> => {
+const getRefranceFromTable = async (zip: JSZip, tablePath: string): Promise<string> => {
     const tableXmlString: string | undefined = await zip.file(tablePath)?.async("text");
     if (!tableXmlString) {
         throw new Error(WorkbookNotFoundERR);
@@ -299,8 +299,8 @@ const getDefinedNameFromTable = async (zip: JSZip, tablePath: string): Promise<s
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(tableXmlString, xmlTextResultType);
-    const definedNamesElements = doc.getElementsByTagName("table");
-    return definedNamesElements[0]?.getAttribute("ref") || ""
+    const tableElements = doc.getElementsByTagName("table");
+    return tableElements[0]?.getAttribute("ref") || ""
 };
 
 const findTablePathFromZip = async (zip: JSZip, desiredTableName: string): Promise<string> => {
@@ -336,6 +336,6 @@ export default {
     updateQueryTable,
     updatePivotTable,
     getSheetIdByNameFromZip,
-    getDefinedNameFromTable,
+    getRefranceFromTable,
     findTablePathFromZip,
 };

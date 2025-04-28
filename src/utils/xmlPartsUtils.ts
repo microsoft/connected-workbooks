@@ -44,7 +44,7 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
     // If no table path is provided, we will consider A1 as the start location
     let ref: string = "";
     if (fileConfigs?.templateFile != null) {
-        ref = await xmlInnerPartsUtils.getDefinedNameFromTable(zip, tablePath)
+        ref = await xmlInnerPartsUtils.getRefranceFromTable(zip, tablePath)
     }
     else if (tableData) {
         ref = `A1:${documentUtils.getCellReferenceRelative(tableData.columnNames.length - 1, tableData.rows.length + 1)}`;
