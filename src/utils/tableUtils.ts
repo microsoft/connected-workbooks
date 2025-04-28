@@ -33,7 +33,7 @@ const updateTableInitialDataIfNeeded = async (zip: JSZip, ref: string, sheetPath
         return;
     }
 
-    const sheetsXmlString: string | undefined = await zip.file(sheetPath)?.async(textResultType); // here the correct path sheet
+    const sheetsXmlString: string | undefined = await zip.file(sheetPath)?.async(textResultType);
     if (sheetsXmlString === undefined) {
         throw new Error(sheetsNotFoundErr);
     }
@@ -190,7 +190,7 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData, 
  * @param ref - Range reference string.
  * @returns Object with numeric row and column.
  */
-const getRowAndColFromRange = (ref: string): { row: number; column: number } =>{
+const getRowAndColFromRange = (ref: string): { row: number; column: number } => {
     const match = ref.match(/^([A-Z]+)(\d+):/);
     if (!match) {
         throw new Error("Invalid range reference format");

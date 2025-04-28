@@ -284,7 +284,7 @@ const getSheetIdByNameFromZip = async (zip: JSZip, sheetName: string): Promise<s
     const sheetElements = doc.getElementsByTagName("sheet");
     for (let i = 0; i < sheetElements.length; i++) {
         if (sheetElements[i].getAttribute("name") === sheetName) {
-            return (i+1).toString();
+            return (i + 1).toString();
         }
     }
     throw new Error(`Sheet with name ${sheetName} not found`);
@@ -300,7 +300,7 @@ const getDefinedNameFromTable = async (zip: JSZip, tablePath: string): Promise<s
     const parser = new DOMParser();
     const doc = parser.parseFromString(tableXmlString, xmlTextResultType);
     const definedNamesElements = doc.getElementsByTagName("table");
-    return definedNamesElements[0]?.getAttribute("ref") || "" 
+    return definedNamesElements[0]?.getAttribute("ref") || ""
 };
 
 const findTablePathFromZip = async (zip: JSZip, desiredTableName: string): Promise<string> => {

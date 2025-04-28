@@ -21,7 +21,7 @@ import pqUtils from "./pqUtils";
 import tableUtils from "./tableUtils";
 import xmlInnerPartsUtils from "./xmlInnerPartsUtils";
 import documentUtils from "./documentUtils";
- 
+
 const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: FileConfigs, tableData?: TableData, updateQueryTable = false): Promise<void> => {
     let sheetPath: string = sheetsXmlPath;
     // Getting the sheet id based on location in the workbook
@@ -35,19 +35,19 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
     let tablePath: string = tableXmlPath;
     if (fileConfigs?.tableName !== undefined) {
         tablePath = tablesFolderPath + await xmlInnerPartsUtils.findTablePathFromZip(zip, fileConfigs.tableName);
-    }else{
+    } else {
         fileConfigs = fileConfigs ?? {};
         fileConfigs.tableName = defaults.tableName;
     }
-    
+
     // Getting the table start and end location string from the table path
     // If no table path is provided, we will consider A1 as the start location
     let ref: string = "";
-    if(fileConfigs?.templateFile != null) {
-        ref = await xmlInnerPartsUtils.getDefinedNameFromTable(zip,tablePath) 
+    if (fileConfigs?.templateFile != null) {
+        ref = await xmlInnerPartsUtils.getDefinedNameFromTable(zip, tablePath)
     }
     else if (tableData) {
-        ref = `A1:${documentUtils.getCellReferenceRelative(tableData.columnNames.length - 1, tableData.rows.length + 1)}`; 
+        ref = `A1:${documentUtils.getCellReferenceRelative(tableData.columnNames.length - 1, tableData.rows.length + 1)}`;
     }
 
     await xmlInnerPartsUtils.updateDocProps(zip, fileConfigs?.docProps);
@@ -90,7 +90,7 @@ const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string
 
     // Update sheet
     let sheetPath: string = sheetsXmlPath;
-    if ( sheetName !== undefined) {
+    if (sheetName !== undefined) {
         const sheetId = await xmlInnerPartsUtils.getSheetIdByNameFromZip(zip, sheetName);
         sheetPath = sheetPath.replace("1", sheetId);
     }

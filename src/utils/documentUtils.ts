@@ -69,14 +69,14 @@ const convertToExcelColumn = (index: number): string => {
     const base = 26; // number of letters in the alphabet
     while (index >= 0) {
         const remainder = index % base;
-        columnStr = String.fromCharCode(remainder + 65) + columnStr; // ASCII 'A' is 65
+        columnStr = String.fromCharCode(remainder + 'A'.charCodeAt(0)) + columnStr;
         index = Math.floor(index / base) - 1;
     }
 
     return columnStr;
 };
 
-const getTableReference = (numberOfCols: number, numberOfRows: number,startCol: number, startRow: number): string => {
+const getTableReference = (numberOfCols: number, numberOfRows: number, startCol: number, startRow: number): string => {
     return `${getCellReferenceRelative(startCol, startRow)}:${getCellReferenceRelative(numberOfCols, numberOfRows)}`;
 };
 
