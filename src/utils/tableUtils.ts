@@ -21,14 +21,14 @@ import { DOMParser, XMLSerializer } from "xmldom-qsa";
 /**
  * Update initial data for a table, its sheet, query table, and defined name if provided.
  * @param zip - The JSZip instance containing workbook parts.
- * @param ref - Cell range reference (e.g. "A1:C5").
+ * @param cellRangeRef - Cell range reference (e.g. "A1:C5").
  * @param sheetPath - Path to the sheet XML within the zip.
  * @param tablePath - Path to the table XML within the zip.
  * @param tableName - Name of the table.
  * @param tableData - Optional TableData containing headers and rows.
  * @param updateQueryTable - Whether to update the associated queryTable part.
  */
-const updateTableInitialDataIfNeeded = async (zip: JSZip, ref: string, sheetPath: string, tablePath: string, tableName: string, tableData?: TableData, updateQueryTable?: boolean): Promise<void> => {
+const updateTableInitialDataIfNeeded = async (zip: JSZip, cellRangeRef: string, sheetPath: string, tablePath: string, tableName: string, tableData?: TableData, updateQueryTable?: boolean): Promise<void> => {
     if (!tableData) {
         return;
     }
@@ -38,7 +38,7 @@ const updateTableInitialDataIfNeeded = async (zip: JSZip, ref: string, sheetPath
         throw new Error(sheetsNotFoundErr);
     }
 
-    const newSheet: string = updateSheetsInitialData(sheetsXmlString, tableData, ref);
+    const newSheet: string = updateSheetsInitialData(sheetsXmlString, tableData, cellRangeRef);
     zip.file(sheetPath, newSheet);
 
     if (updateQueryTable) {
@@ -56,7 +56,7 @@ const updateTableInitialDataIfNeeded = async (zip: JSZip, ref: string, sheetPath
             throw new Error(sheetsNotFoundErr);
         }
 
-        const newWorkbook: string = updateWorkbookInitialData(workbookXmlString, tableName + addDollar(ref));
+        const newWorkbook: string = updateWorkbookInitialData(workbookXmlString, tableName + addDollar(cellRangeRef));
         zip.file(workbookXmlPath, newWorkbook);
     }
 
@@ -65,7 +65,7 @@ const updateTableInitialDataIfNeeded = async (zip: JSZip, ref: string, sheetPath
         throw new Error(tableNotFoundErr);
     }
 
-    const newTable: string = updateTablesInitialData(tableXmlString, tableData, ref, updateQueryTable);
+    const newTable: string = updateTablesInitialData(tableXmlString, tableData, cellRangeRef, updateQueryTable);
     zip.file(tablePath, newTable);
 };
 
@@ -73,11 +73,11 @@ const updateTableInitialDataIfNeeded = async (zip: JSZip, ref: string, sheetPath
  * Generate updated table XML string with new columns, reference, and filter range.
  * @param tableXmlString - Original table XML.
  * @param tableData - TableData containing column names.
- * @param ref - Cell range reference.
+ * @param cellRangeRef - Cell range reference.
  * @param updateQueryTable - Whether to include queryTable attributes.
  * @returns Serialized XML string of the updated table.
  */
-const updateTablesInitialData = (tableXmlString: string, tableData: TableData, ref: string, updateQueryTable = false): string => {
+const updateTablesInitialData = (tableXmlString: string, tableData: TableData, cellRangeRef: string, updateQueryTable = false): string => {
     const parser: DOMParser = new DOMParser();
     const serializer: XMLSerializer = new XMLSerializer();
     const tableDoc: Document = parser.parseFromString(tableXmlString, xmlTextResultType);
@@ -99,10 +99,10 @@ const updateTablesInitialData = (tableXmlString: string, tableData: TableData, r
     tableColumns.setAttribute(elementAttributes.count, tableData.columnNames.length.toString());
     tableDoc
         .getElementsByTagName(element.table)[0]
-        .setAttribute(elementAttributes.reference, ref);
+        .setAttribute(elementAttributes.reference, cellRangeRef);
     tableDoc
         .getElementsByTagName(element.autoFilter)[0]
-        .setAttribute(elementAttributes.reference, ref);
+        .setAttribute(elementAttributes.reference, cellRangeRef);
 
     return serializer.serializeToString(tableDoc);
 };
@@ -146,52 +146,51 @@ const updateQueryTablesInitialData = (queryTableXmlString: string, tableData: Ta
  * Update sheet XML with header row and data rows based on TableData.
  * @param sheetsXmlString - Original sheet XML string.
  * @param tableData - TableData containing headers and rows.
- * @param ref - Cell range reference.
+ * @param cellRangeRef - Cell range reference.
  * @returns Serialized XML string of the updated sheet.
  */
-const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData, ref: string): string => {
-    const { row, column } = getRowAndColFromRange(ref);
+const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData, cellRangeRef: string): string => {
+    let { row, column } = getRowAndColFromRange(cellRangeRef);
     const parser: DOMParser = new DOMParser();
     const serializer: XMLSerializer = new XMLSerializer();
     const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, xmlTextResultType);
     const sheetData: Element = sheetsDoc.getElementsByTagName(element.sheetData)[0];
     sheetData.textContent = "";
-    let rowIndex = row;
 
     const columnRow: Element = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, element.row);
-    columnRow.setAttribute(elementAttributes.row, rowIndex.toString());
+    columnRow.setAttribute(elementAttributes.row, row.toString());
     columnRow.setAttribute(elementAttributes.spans, column + ":" + (column + tableData.columnNames.length - 1));
     columnRow.setAttribute(elementAttributes.x14acDyDescent, "0.3");
     tableData.columnNames.forEach((col: string, colIndex: number) => {
-        columnRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex + column - 1, rowIndex - 1, col));
+        columnRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex + column - 1, row - 1, col));
     });
     sheetData.appendChild(columnRow);
-    rowIndex++;
+    row++;
 
     tableData.rows.forEach((_row) => {
         const newRow = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, element.row);
-        newRow.setAttribute(elementAttributes.row, rowIndex.toString());
+        newRow.setAttribute(elementAttributes.row, row.toString());
         columnRow.setAttribute(elementAttributes.spans, column + ":" + (column + tableData.columnNames.length - 1));
         newRow.setAttribute(elementAttributes.x14acDyDescent, "0.3");
         _row.forEach((cellContent, colIndex) => {
-            newRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex + column - 1, rowIndex - 1, cellContent));
+            newRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex + column - 1, row - 1, cellContent));
         });
         sheetData.appendChild(newRow);
-        rowIndex++;
+        row++;
     });
 
-    sheetsDoc.getElementsByTagName(element.dimension)[0].setAttribute(elementAttributes.reference, ref);
-    sheetsDoc.getElementsByTagName(element.selection)[0].setAttribute(elementAttributes.sqref, ref);
+    sheetsDoc.getElementsByTagName(element.dimension)[0].setAttribute(elementAttributes.reference, cellRangeRef);
+    sheetsDoc.getElementsByTagName(element.selection)[0].setAttribute(elementAttributes.sqref, cellRangeRef);
     return serializer.serializeToString(sheetsDoc);
 };
 
 /**
  * Parse an Excel range (e.g. "B2:D10") and return its starting row and column indices.
- * @param ref - Range reference string.
+ * @param cellRangeRef - Range reference string.
  * @returns Object with numeric row and column.
  */
-const getRowAndColFromRange = (ref: string): { row: number; column: number } => {
-    const match = ref.match(/^([A-Z]+)(\d+):/);
+const getRowAndColFromRange = (cellRangeRef: string): { row: number; column: number } => {
+    const match = cellRangeRef.match(/^([A-Z]+)(\d+):/);
     if (!match) {
         throw new Error("Invalid range reference format");
     }
@@ -208,11 +207,11 @@ const getRowAndColFromRange = (ref: string): { row: number; column: number } => 
 /**
  * Add Excel-style dollar signs and a '!' prefix to a cell range.
  * Converts "A1:B2" into "!$A$1:$B$2".
- * @param ref - Range reference string without dollar signs.
+ * @param cellRangeRef - Range reference string without dollar signs.
  * @returns Range with dollar signs and prefix.
  */
-const addDollar = (ref: string): string => {
-    return "!" + ref.split(":").map(part => {
+const addDollar = (cellRangeRef: string): string => {
+    return "!" + cellRangeRef.split(":").map(part => {
         const match = part.match(/^([A-Za-z]+)(\d+)$/);
         if (match) {
             const [, col, row] = match;

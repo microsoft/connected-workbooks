@@ -29,6 +29,7 @@ export const formulaSectionNotFoundErr = "Formula section wasn't found in templa
 export const templateWithInitialDataErr = "Cannot use a template file with initial data";
 export const queryTableNotFoundErr = "Query table wasn't found in template";
 export const tableNotFoundErr = "Table wasn't found in template";
+export const tableReferenceNotFoundErr = "Reference not found in the table XML.";
 export const invalidValueInColumnErr = "Invalid cell value in column";
 export const headerNotFoundErr = "Invalid JSON file, header is missing";
 export const invalidDataTypeErr = "Invalid JSON file, invalid data type";

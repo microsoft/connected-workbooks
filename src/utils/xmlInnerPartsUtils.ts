@@ -25,6 +25,8 @@ import {
     relsNotFoundErr,
     WorkbookNotFoundERR,
     workbookXmlPath,
+    tableNotFoundErr,
+    tableReferenceNotFoundErr,
 } from "./constants";
 import documentUtils from "./documentUtils";
 import { DOMParser, XMLSerializer } from "xmldom-qsa";
@@ -280,7 +282,7 @@ const getSheetIdByNameFromZip = async (zip: JSZip, sheetName: string): Promise<s
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(workbookXmlString, xmlTextResultType);
-    
+
     const sheetElements = doc.getElementsByTagName("sheet");
     for (let i = 0; i < sheetElements.length; i++) {
         if (sheetElements[i].getAttribute("name") === sheetName) {
@@ -291,7 +293,7 @@ const getSheetIdByNameFromZip = async (zip: JSZip, sheetName: string): Promise<s
 };
 
 // get definedName
-const getRefranceFromTable = async (zip: JSZip, tablePath: string): Promise<string> => {
+const getReferenceFromTable = async (zip: JSZip, tablePath: string): Promise<string> => {
     const tableXmlString: string | undefined = await zip.file(tablePath)?.async("text");
     if (!tableXmlString) {
         throw new Error(WorkbookNotFoundERR);
@@ -300,10 +302,15 @@ const getRefranceFromTable = async (zip: JSZip, tablePath: string): Promise<stri
     const parser = new DOMParser();
     const doc = parser.parseFromString(tableXmlString, xmlTextResultType);
     const tableElements = doc.getElementsByTagName("table");
-    return tableElements[0]?.getAttribute("ref") || ""
+    const reference = tableElements[0]?.getAttribute("ref");
+    if (!reference) {
+        throw new Error(tableReferenceNotFoundErr);
+    }
+
+    return reference;
 };
 
-const findTablePathFromZip = async (zip: JSZip, desiredTableName: string): Promise<string> => {
+const findTablePathFromZip = async (zip: JSZip, targetTableName: string): Promise<string> => {
     const tablesFolder = zip.folder("xl/tables");
     if (!tablesFolder) return "";
 
@@ -319,11 +326,12 @@ const findTablePathFromZip = async (zip: JSZip, desiredTableName: string): Promi
     for (const { path, content } of tableFiles) {
         const doc = parser.parseFromString(content, xmlTextResultType);
         const tableElem = doc.getElementsByTagName("table")[0];
-        if (tableElem && tableElem.getAttribute("name") === desiredTableName) {
+        if (tableElem && tableElem.getAttribute("name") === targetTableName) {
             return path;
         }
     }
-    return "";
+
+    throw new Error(tableNotFoundErr);
 };
 
 export default {
@@ -336,6 +344,6 @@ export default {
     updateQueryTable,
     updatePivotTable,
     getSheetIdByNameFromZip,
-    getRefranceFromTable,
+    getReferenceFromTable,
     findTablePathFromZip,
 };

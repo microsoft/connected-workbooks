@@ -42,12 +42,12 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
 
     // Getting the table start and end location string from the table path
     // If no table path is provided, we will consider A1 as the start location
-    let ref: string = "";
+    let cellRangeRef: string = "";
     if (fileConfigs?.templateFile != null) {
-        ref = await xmlInnerPartsUtils.getRefranceFromTable(zip, tablePath)
+        cellRangeRef = await xmlInnerPartsUtils.getReferenceFromTable(zip, tablePath)
     }
     else if (tableData) {
-        ref = `A1:${documentUtils.getCellReferenceRelative(tableData.columnNames.length - 1, tableData.rows.length + 1)}`;
+        cellRangeRef = `A1:${documentUtils.getCellReferenceRelative(tableData.columnNames.length - 1, tableData.rows.length + 1)}`;
     }
 
     await xmlInnerPartsUtils.updateDocProps(zip, fileConfigs?.docProps);
@@ -55,7 +55,7 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
         // If we are using our base template, we need to clear label info
         await xmlInnerPartsUtils.clearLabelInfo(zip);
     }
-    await tableUtils.updateTableInitialDataIfNeeded(zip, ref, sheetPath, tablePath, fileConfigs.tableName, tableData, updateQueryTable);
+    await tableUtils.updateTableInitialDataIfNeeded(zip, cellRangeRef, sheetPath, tablePath, fileConfigs.tableName, tableData, updateQueryTable);
 };
 
 const updateWorkbookPowerQueryDocument = async (zip: JSZip, queryName: string, queryMashupDoc: string): Promise<void> => {
