@@ -56,7 +56,7 @@ const updateTableInitialDataIfNeeded = async (zip: JSZip, cellRangeRef: string, 
             throw new Error(sheetsNotFoundErr);
         }
 
-        const newWorkbook: string = updateWorkbookInitialData(workbookXmlString, tableName + addDollar(cellRangeRef));
+        const newWorkbook: string = updateWorkbookInitialData(workbookXmlString, tableName + GenerateReferenceFromString(cellRangeRef));
         zip.file(workbookXmlPath, newWorkbook);
     }
 
@@ -150,7 +150,7 @@ const updateQueryTablesInitialData = (queryTableXmlString: string, tableData: Ta
  * @returns Serialized XML string of the updated sheet.
  */
 const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData, cellRangeRef: string): string => {
-    let { row, column } = getRowAndColFromRange(cellRangeRef);
+    let { row, column } = GetStartPosition (cellRangeRef);
     const parser: DOMParser = new DOMParser();
     const serializer: XMLSerializer = new XMLSerializer();
     const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, xmlTextResultType);
@@ -189,10 +189,10 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData, 
  * @param cellRangeRef - Range reference string.
  * @returns Object with numeric row and column.
  */
-const getRowAndColFromRange = (cellRangeRef: string): { row: number; column: number } => {
+const GetStartPosition  = (cellRangeRef: string): { row: number; column: number } => {
     const match = cellRangeRef.match(/^([A-Z]+)(\d+):/);
     if (!match) {
-        throw new Error("Invalid range reference format");
+        return { row: 0, column: 0 };
     }
 
     const [, colLetters, rowStr] = match;
@@ -210,7 +210,7 @@ const getRowAndColFromRange = (cellRangeRef: string): { row: number; column: num
  * @param cellRangeRef - Range reference string without dollar signs.
  * @returns Range with dollar signs and prefix.
  */
-const addDollar = (cellRangeRef: string): string => {
+const GenerateReferenceFromString = (cellRangeRef: string): string => {
     return "!" + cellRangeRef.split(":").map(part => {
         const match = part.match(/^([A-Za-z]+)(\d+)$/);
         if (match) {
