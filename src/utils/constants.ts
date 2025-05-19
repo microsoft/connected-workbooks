@@ -40,6 +40,7 @@ export const unexpectedErr = "Unexpected error";
 export const arrayIsntMxNErr = "Array isn't MxN";
 export const relsNotFoundErr = ".rels were not found in template";
 export const columnIndexOutOfRangeErr = "Column index out of range";
+export const invalidCellValueErr = "Cell content exceeds maximum length of 32767 characters";
 
 export const blobFileType = "blob";
 export const uint8ArrayType = "uint8array";
@@ -56,6 +57,7 @@ export const maxQueryLength = 80;
 export const trueStr = "true";
 export const falseStr = "false";
 export const BOM = "\ufeff";
+export const maxCellCharacters = 32767;
 
 export const element = {
     sharedStringTable: "sst",

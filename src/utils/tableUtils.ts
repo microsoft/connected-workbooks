@@ -7,6 +7,8 @@ import {
     defaults,
     element,
     elementAttributes,
+    invalidCellValueErr,
+    maxCellCharacters,
     queryTableNotFoundErr,
     queryTableXmlPath,
     sheetsNotFoundErr,
@@ -134,6 +136,7 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData):
     columnRow.setAttribute(elementAttributes.spans, "1:" + tableData.columnNames.length);
     columnRow.setAttribute(elementAttributes.x14acDyDescent, "0.3");
     tableData.columnNames.forEach((col: string, colIndex: number) => {
+        validateCellContentLength(col);
         columnRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, col));
     });
     sheetData.appendChild(columnRow);
@@ -144,6 +147,7 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData):
         newRow.setAttribute(elementAttributes.spans, "1:" + row.length);
         newRow.setAttribute(elementAttributes.x14acDyDescent, "0.3");
         row.forEach((cellContent, colIndex) => {
+            validateCellContentLength(cellContent);
             newRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, cellContent));
         });
         sheetData.appendChild(newRow);
@@ -155,6 +159,12 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData):
     sheetsDoc.getElementsByTagName(element.selection)[0].setAttribute(elementAttributes.sqref, reference);
     return serializer.serializeToString(sheetsDoc);
 };
+
+const validateCellContentLength = (cellContent: string): void => {
+    if (cellContent.length > maxCellCharacters) {
+        throw new Error(invalidCellValueErr);
+    }
+}
 
 export default {
     updateTableInitialDataIfNeeded,
