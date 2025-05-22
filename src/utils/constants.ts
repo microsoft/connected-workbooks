@@ -1,5 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+export const blobFileType = "blob";
+export const uint8ArrayType = "uint8array";
+export const application = "application/xlsx";
+export const textResultType = "text";
+export const xmlTextResultType = "text/xml";
+export const pivotCachesPathPrefix = "pivotCacheDefinition";
+export const trueValue = "1";
+export const falseValue = "0";
+export const emptyValue = "";
+export const section1PathPrefix = "Section1/";
+export const divider = "/";
+export const maxQueryLength = 80;
+export const trueStr = "true";
+export const falseStr = "false";
+export const BOM = "\ufeff";
+export const maxCellCharacters = 32767;
 
 export const connectionsXmlPath = "xl/connections.xml";
 export const sharedStringsXmlPath = "xl/sharedStrings.xml";
@@ -40,24 +56,7 @@ export const unexpectedErr = "Unexpected error";
 export const arrayIsntMxNErr = "Array isn't MxN";
 export const relsNotFoundErr = ".rels were not found in template";
 export const columnIndexOutOfRangeErr = "Column index out of range";
-export const invalidCellValueErr = "Cell content exceeds maximum length of 32767 characters";
-
-export const blobFileType = "blob";
-export const uint8ArrayType = "uint8array";
-export const application = "application/xlsx";
-export const textResultType = "text";
-export const xmlTextResultType = "text/xml";
-export const pivotCachesPathPrefix = "pivotCacheDefinition";
-export const trueValue = "1";
-export const falseValue = "0";
-export const emptyValue = "";
-export const section1PathPrefix = "Section1/";
-export const divider = "/";
-export const maxQueryLength = 80;
-export const trueStr = "true";
-export const falseStr = "false";
-export const BOM = "\ufeff";
-export const maxCellCharacters = 32767;
+export const invalidCellValueErr = "Cell content exceeds maximum length of "  + maxCellCharacters+ " characters";
 
 export const element = {
     sharedStringTable: "sst",
