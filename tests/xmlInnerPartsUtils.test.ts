@@ -3,6 +3,7 @@
 
 import { sharedStringsXmlMock, existingSharedStringsXmlMock } from "./mocks";
 import { xmlInnerPartsUtils } from "../src/utils";
+import { describe, test, expect } from '@jest/globals';
 
 describe("Workbook Manager tests", () => {
     const mockConnectionString = `<connections xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:xr16="http://schemas.microsoft.com/office/spreadsheetml/2017/revision16" mc:Ignorable="xr16">

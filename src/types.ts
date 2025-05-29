@@ -38,9 +38,13 @@ export interface GridConfig {
 }
 
 export interface FileConfigs {
-    templateFile?: File;
+    templateFile?: TemplateFile;
     docProps?: DocProps;
     hostName?: string;
+}
+
+export interface TemplateFile {
+    file: File;
     tableName?: string;
     sheetName?: string;
 }

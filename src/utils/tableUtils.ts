@@ -150,7 +150,7 @@ const updateQueryTablesInitialData = (queryTableXmlString: string, tableData: Ta
  * @returns Serialized XML string of the updated sheet.
  */
 const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData, cellRangeRef: string): string => {
-    let { row, column } = GetStartPosition (cellRangeRef);
+    let { row, column } = documentUtils.GetStartPosition (cellRangeRef);
     const parser: DOMParser = new DOMParser();
     const serializer: XMLSerializer = new XMLSerializer();
     const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, xmlTextResultType);
@@ -183,26 +183,6 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData, 
     sheetsDoc.getElementsByTagName(element.selection)[0].setAttribute(elementAttributes.sqref, cellRangeRef);
     return serializer.serializeToString(sheetsDoc);
 };
-
-/**
- * Parse an Excel range (e.g. "B2:D10") and return its starting row and column indices.
- * @param cellRangeRef - Range reference string.
- * @returns Object with numeric row and column.
- */
-const GetStartPosition  = (cellRangeRef: string): { row: number; column: number } => {
-    const match = cellRangeRef.match(/^([A-Z]+)(\d+):/);
-    if (!match) {
-        return { row: 0, column: 0 };
-    }
-
-    const [, colLetters, rowStr] = match;
-    const row = parseInt(rowStr, 10);
-    const column = colLetters
-        .split("")
-        .reduce((acc, char) => acc * 26 + (char.charCodeAt(0) - "A".charCodeAt(0) + 1), 0);
-
-    return { row, column };
-}
 
 /**
  * Add Excel-style dollar signs and a '!' prefix to a cell range.

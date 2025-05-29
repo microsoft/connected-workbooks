@@ -76,6 +76,26 @@ const convertToExcelColumn = (index: number): string => {
     return columnStr;
 };
 
+/**
+ * Parse an Excel range (e.g. "B2:D10") and return its starting row and column indices.
+ * @param cellRangeRef - Range reference string.
+ * @returns Object with numeric row and column.
+ */
+const GetStartPosition  = (cellRangeRef: string): { row: number; column: number } => {
+    const match = cellRangeRef.toUpperCase().match(/^([A-Z]+)(\d+):/);
+    if (!match) {
+        return { row: 0, column: 0 };
+    }
+
+    const [, colLetters, rowStr] = match;
+    const row = parseInt(rowStr, 10);
+    const column = colLetters
+        .split("")
+        .reduce((acc, char) => acc * 26 + (char.charCodeAt(0) - "A".charCodeAt(0) + 1), 0);
+
+    return { row, column };
+}
+
 const getTableReference = (numberOfCols: number, numberOfRows: number, startCol: number, startRow: number): string => {
     return `${getCellReferenceRelative(startCol, startRow)}:${getCellReferenceRelative(numberOfCols, numberOfRows)}`;
 };
@@ -135,4 +155,5 @@ export default {
     updateCellData,
     resolveType,
     convertToExcelColumn,
+    GetStartPosition,
 };

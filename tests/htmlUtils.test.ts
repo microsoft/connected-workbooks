@@ -3,6 +3,7 @@
 
 import { htmlUtils } from "../src/utils";
 import { JSDOM } from "jsdom";
+import { describe, test, expect } from '@jest/globals';
 
 // Create a JSDOM instance
 const { window } = new JSDOM("<!DOCTYPE html><html><body></body></html>");

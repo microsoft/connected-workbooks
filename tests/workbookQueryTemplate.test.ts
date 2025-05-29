@@ -7,6 +7,7 @@ import { getPackageComponents } from "../src/utils/mashupDocumentParser";
 import { SIMPLE_QUERY_WORKBOOK_TEMPLATE } from "../src/workbookTemplate";
 import { section1mBlankQueryMock, pqEmptySingleQueryBase64, connectedWorkbookXmlMock, item1Path, item2Path } from "./mocks";
 import JSZip from "jszip";
+import { describe, test, expect,beforeAll } from '@jest/globals';
 
 const getZip = async (template: string) =>
     await JSZip.loadAsync(template, {

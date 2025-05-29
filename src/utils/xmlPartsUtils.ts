@@ -16,7 +16,7 @@ import {
     tablesFolderPath,
 } from "./constants";
 import { replaceSingleQuery } from "./mashupDocumentParser";
-import { FileConfigs, TableData } from "../types";
+import { FileConfigs, TableData, TemplateFile } from "../types";
 import pqUtils from "./pqUtils";
 import tableUtils from "./tableUtils";
 import xmlInnerPartsUtils from "./xmlInnerPartsUtils";
@@ -24,22 +24,23 @@ import documentUtils from "./documentUtils";
 
 const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: FileConfigs, tableData?: TableData, updateQueryTable = false): Promise<void> => {
     let sheetPath: string = sheetsXmlPath;
+    const templateFile: TemplateFile | undefined = fileConfigs?.templateFile;
+    
     // Getting the sheet id based on location in the workbook
-    if (fileConfigs?.sheetName !== undefined) {
-        const sheetId = await xmlInnerPartsUtils.getSheetIdByNameFromZip(zip, fileConfigs.sheetName);
+    if (templateFile?.sheetName !== undefined) {
+        const sheetId = await xmlInnerPartsUtils.getSheetIdByNameFromZip(zip, templateFile.sheetName);
         sheetPath = sheetPath.replace("1", sheetId);
     }
 
     // Getting the table location based on which table has the same name as the one in the fileConfigs
     // If no table name is provided, we will use the default one
+    let tableName: string = defaults.tableName;
     let tablePath: string = tableXmlPath;
-    if (fileConfigs?.tableName !== undefined) {
-        tablePath = tablesFolderPath + await xmlInnerPartsUtils.findTablePathFromZip(zip, fileConfigs.tableName);
-    } else {
-        fileConfigs = fileConfigs ?? {};
-        fileConfigs.tableName = defaults.tableName;
+    if (templateFile?.tableName !== undefined) {
+        tablePath = tablesFolderPath + await xmlInnerPartsUtils.findTablePathFromZip(zip, templateFile?.tableName);
+        tableName = templateFile.tableName;
     }
-
+    
     // Getting the table start and end location string from the table path
     // If no table path is provided, we will consider A1 as the start location
     let cellRangeRef: string = "";
@@ -55,7 +56,7 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
         // If we are using our base template, we need to clear label info
         await xmlInnerPartsUtils.clearLabelInfo(zip);
     }
-    await tableUtils.updateTableInitialDataIfNeeded(zip, cellRangeRef, sheetPath, tablePath, fileConfigs.tableName, tableData, updateQueryTable);
+    await tableUtils.updateTableInitialDataIfNeeded(zip, cellRangeRef, sheetPath, tablePath, tableName, tableData, updateQueryTable);
 };
 
 const updateWorkbookPowerQueryDocument = async (zip: JSZip, queryName: string, queryMashupDoc: string): Promise<void> => {

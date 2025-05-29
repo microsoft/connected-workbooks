@@ -1,5 +1,6 @@
 import { arrayIsntMxNErr, defaults, promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr } from "../src/utils/constants";
 import gridUtils from "../src/utils/gridUtils";
+import { describe, test, expect } from '@jest/globals';
 
 const columnName = (i: number) => `${defaults.columnName} ${i}`;
 
@@ -132,12 +133,12 @@ describe("Grid Utils tests", () => {
                 rows: [["", ""]],
             },
         ],
-    ])("%s:\n\t%j should be parsed to %j", (scenario, input, expected) => {
+    ])("%s:\n\t%j should be parsed to %j", async (scenario, input, expected) => {
         expect(gridUtils.parseToTableData(input)).toEqual(expected);
     });
 
     // promote headers, without adjust column names, errors
-    test.concurrent.each<(string | number | boolean)[][][]>([
+    test.concurrent.each([
         [[[]]],
         [[["A", "B", "A"]]],
         [[["A", 3, "B", 3]]],
@@ -148,14 +149,14 @@ describe("Grid Utils tests", () => {
                 ["1", "2"],
             ],
         ],
-    ])(`parsing %j should throw "${promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr}"`, (input) => {
+    ])(`parsing %j should throw "${promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr}"`, async (input) => {
         expect(() => gridUtils.parseToTableData({ data: input, config: { promoteHeaders: true, adjustColumnNames: false } })).toThrowError(
             promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr
         );
     });
 
     // array isn't MxN
-    test.concurrent.each<(string | number | boolean)[][][]>([
+    test.concurrent.each([
         [
             [
                 ["A", "B", "A"],
@@ -163,7 +164,7 @@ describe("Grid Utils tests", () => {
             ],
         ],
         [[["אבג", "אבג"], ["1", "2"], ["3"]]],
-    ])(`parsing %j should throw "${arrayIsntMxNErr}"`, (input) => {
+    ])(`parsing %j should throw "${arrayIsntMxNErr}"`, async (input) => {
         expect(() => gridUtils.parseToTableData({ data: input, config: { promoteHeaders: true, adjustColumnNames: false } })).toThrowError(arrayIsntMxNErr);
     });
 });
