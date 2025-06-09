@@ -38,13 +38,13 @@ export interface GridConfig {
 }
 
 export interface FileConfigs {
-    templateFile?: TemplateFile;
+    templateFile?: File;
     docProps?: DocProps;
     hostName?: string;
+    TempleteSettings?: TempleteSettings;
 }
 
-export interface TemplateFile {
-    file: File;
+export interface TempleteSettings {
     tableName?: string;
     sheetName?: string;
 }

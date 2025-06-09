@@ -5,7 +5,7 @@ import JSZip from "jszip";
 import { pqUtils, xmlPartsUtils, htmlUtils, gridUtils } from "./utils";
 import { SIMPLE_BLANK_TABLE_TEMPLATE, SIMPLE_QUERY_WORKBOOK_TEMPLATE } from "./workbookTemplate";
 import { defaults, emptyQueryMashupErr, blobFileType, application, templateWithInitialDataErr, tableNotFoundErr, headers, OFU } from "./utils/constants";
-import { QueryInfo, TableData, Grid, FileConfigs, TemplateFile } from "./types";
+import { QueryInfo, TableData, Grid, FileConfigs, TempleteSettings } from "./types";
 import { generateSingleQueryMashup } from "./generators";
 
 export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataGrid?: Grid, fileConfigs?: FileConfigs): Promise<Blob> => {
@@ -17,15 +17,15 @@ export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataG
         query.queryName = defaults.queryName;
     }
 
-    const templateFile: TemplateFile | undefined = fileConfigs?.templateFile;
-    if (templateFile !== undefined && initialDataGrid !== undefined) {
+    const templeteSettings: TempleteSettings | undefined = fileConfigs?.TempleteSettings;
+    if (fileConfigs?.templateFile !== undefined && initialDataGrid !== undefined) {
         throw new Error(templateWithInitialDataErr);
     }
 
     pqUtils.validateQueryName(query.queryName);
 
     const zip: JSZip =
-        templateFile?.file === undefined ? await JSZip.loadAsync(SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true }) : await JSZip.loadAsync(templateFile.file);
+        fileConfigs?.templateFile === undefined ? await JSZip.loadAsync(SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true }) : await JSZip.loadAsync(fileConfigs.templateFile);
 
     const tableData = initialDataGrid ? gridUtils.parseToTableData(initialDataGrid) : undefined;
 
@@ -41,7 +41,7 @@ export const generateTableWorkbookFromGrid = async (grid: Grid, fileConfigs?: Fi
     const zip: JSZip =
         fileConfigs?.templateFile === undefined
             ? await JSZip.loadAsync(SIMPLE_BLANK_TABLE_TEMPLATE, { base64: true })
-            : await JSZip.loadAsync(fileConfigs.templateFile?.file);
+            : await JSZip.loadAsync(fileConfigs.templateFile);
 
     const tableData = gridUtils.parseToTableData(grid);
     if (tableData === undefined) {
@@ -62,7 +62,7 @@ const generateSingleQueryWorkbookFromZip = async (zip: JSZip, query: QueryInfo, 
     }
 
     await xmlPartsUtils.updateWorkbookPowerQueryDocument(zip, query.queryName, generateSingleQueryMashup(query.queryName, query.queryMashup));
-    await xmlPartsUtils.updateWorkbookSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen, fileConfigs?.templateFile?.sheetName);
+    await xmlPartsUtils.updateWorkbookSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen, fileConfigs?.TempleteSettings?.sheetName);
     await xmlPartsUtils.updateWorkbookDataAndConfigurations(zip, fileConfigs, tableData, true /*updateQueryTable*/);
 
     return await zip.generateAsync({
