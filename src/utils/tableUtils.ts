@@ -28,7 +28,7 @@ import { DOMParser, XMLSerializer } from "xmldom-qsa";
  * @param tableData - Optional TableData containing headers and rows.
  * @param updateQueryTable - Whether to update the associated queryTable part.
  */
-const updateTableInitialDataIfNeeded = async (zip: JSZip, cellRangeRef: string, sheetPath: string, tablePath: string, tableName: string, tableData?: TableData, updateQueryTable?: boolean): Promise<void> => {
+const updateTableInitialDataIfNeeded = async (zip: JSZip, cellRangeRef: string, sheetPath: string, tablePath: string, sheetName: string, tableData?: TableData, updateQueryTable?: boolean): Promise<void> => {
     if (!tableData) {
         return;
     }
@@ -56,7 +56,7 @@ const updateTableInitialDataIfNeeded = async (zip: JSZip, cellRangeRef: string, 
             throw new Error(sheetsNotFoundErr);
         }
 
-        const newWorkbook: string = updateWorkbookInitialData(workbookXmlString, tableName + GenerateReferenceFromString(cellRangeRef));
+        const newWorkbook: string = updateWorkbookInitialData(workbookXmlString, sheetName + GenerateReferenceFromString(cellRangeRef));
         zip.file(workbookXmlPath, newWorkbook);
     }
 
@@ -170,7 +170,7 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData, 
     tableData.rows.forEach((_row) => {
         const newRow = sheetsDoc.createElementNS(sheetsDoc.documentElement.namespaceURI, element.row);
         newRow.setAttribute(elementAttributes.row, row.toString());
-        columnRow.setAttribute(elementAttributes.spans, column + ":" + (column + tableData.columnNames.length - 1));
+        newRow.setAttribute(elementAttributes.spans, column + ":" + (column + tableData.columnNames.length - 1));
         newRow.setAttribute(elementAttributes.x14acDyDescent, "0.3");
         _row.forEach((cellContent, colIndex) => {
             newRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex + column - 1, row - 1, cellContent));
@@ -206,4 +206,5 @@ export default {
     updateWorkbookInitialData,
     updateTablesInitialData,
     updateQueryTablesInitialData,
+    GenerateReferenceFromString,
 };

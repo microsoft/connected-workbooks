@@ -23,7 +23,7 @@ import xmlInnerPartsUtils from "./xmlInnerPartsUtils";
 import documentUtils from "./documentUtils";
 
 const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: FileConfigs, tableData?: TableData, updateQueryTable = false): Promise<void> => {
-    let tableName: string = defaults.tableName;
+    let sheetName: string = defaults.sheetName;
     let tablePath: string = tableXmlPath;
     let sheetPath: string = sheetsXmlPath;
 
@@ -33,6 +33,7 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
         // Getting the sheet id based on location in the workbook
         if (templeteSettings?.sheetName !== undefined) {
             const sheetId = await xmlInnerPartsUtils.getSheetIdByNameFromZip(zip, templeteSettings.sheetName);
+            sheetName = templeteSettings.sheetName;
             sheetPath = sheetPath.replace("1", sheetId);
         }
 
@@ -40,7 +41,6 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
         // If no table name is provided, we will use the default one
         if (templeteSettings?.tableName !== undefined) {
             tablePath = tablesFolderPath + await xmlInnerPartsUtils.findTablePathFromZip(zip, templeteSettings?.tableName);
-            tableName = templeteSettings.tableName;
         }
     }
     
@@ -59,7 +59,7 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
         // If we are using our base template, we need to clear label info
         await xmlInnerPartsUtils.clearLabelInfo(zip);
     }
-    await tableUtils.updateTableInitialDataIfNeeded(zip, cellRangeRef, sheetPath, tablePath, tableName, tableData, updateQueryTable);
+    await tableUtils.updateTableInitialDataIfNeeded(zip, cellRangeRef, sheetPath, tablePath, sheetPath, tableData, updateQueryTable);
 };
 
 const updateWorkbookPowerQueryDocument = async (zip: JSZip, queryName: string, queryMashupDoc: string): Promise<void> => {
