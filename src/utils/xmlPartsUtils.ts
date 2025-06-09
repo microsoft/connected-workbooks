@@ -98,8 +98,8 @@ const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string
         const sheetId = await xmlInnerPartsUtils.getSheetIdByNameFromZip(zip, sheetName);
         sheetPath = sheetPath.replace("1", sheetId);
     }
-
-    const sheetsXmlString: string | undefined = await zip.file(sheetPath)?.async(textResultType); // here the correct path sheet
+    
+    const sheetsXmlString: string | undefined = await zip.file(sheetPath)?.async(textResultType);
     if (sheetsXmlString === undefined) {
         throw new Error(sheetsNotFoundErr);
     }
