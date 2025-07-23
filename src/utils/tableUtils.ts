@@ -118,7 +118,7 @@ const updateWorkbookInitialData = (workbookXmlString: string, customDefinedName:
     const newSerializer: XMLSerializer = new XMLSerializer();
     const workbookDoc: Document = newParser.parseFromString(workbookXmlString, xmlTextResultType);
     const definedName: Element = workbookDoc.getElementsByTagName(element.definedName)[0];
-    definedName.textContent = customDefinedName
+    definedName.textContent = customDefinedName;
 
     return newSerializer.serializeToString(workbookDoc);
 };
@@ -150,7 +150,7 @@ const updateQueryTablesInitialData = (queryTableXmlString: string, tableData: Ta
  * @returns Serialized XML string of the updated sheet.
  */
 const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData, cellRangeRef: string): string => {
-    let { row, column } = documentUtils.GetStartPosition (cellRangeRef);
+    let { row, column } = documentUtils.GetStartPosition(cellRangeRef);
     const parser: DOMParser = new DOMParser();
     const serializer: XMLSerializer = new XMLSerializer();
     const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, xmlTextResultType);

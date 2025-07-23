@@ -32,9 +32,9 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
 
         // Getting the sheet id based on location in the workbook
         if (templeteSettings?.sheetName !== undefined) {
-            const sheetId = await xmlInnerPartsUtils.getSheetIdByNameFromZip(zip, templeteSettings.sheetName);
+            const sheetLocation = await xmlInnerPartsUtils.getSheetPathByNameFromZip(zip, templeteSettings.sheetName);
             sheetName = templeteSettings.sheetName;
-            sheetPath = sheetPath.replace("1", sheetId);
+            sheetPath = "xl/" + sheetLocation;
         }
 
         // Getting the table location based on which table has the same name as the one in the fileConfigs
@@ -95,8 +95,8 @@ const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string
     // Update sheet
     let sheetPath: string = sheetsXmlPath;
     if (sheetName !== undefined) {
-        const sheetId = await xmlInnerPartsUtils.getSheetIdByNameFromZip(zip, sheetName);
-        sheetPath = sheetPath.replace("1", sheetId);
+        const sheetLocation = await xmlInnerPartsUtils.getSheetPathByNameFromZip(zip, sheetName);
+            sheetPath = "xl/" + sheetLocation;
     }
     
     const sheetsXmlString: string | undefined = await zip.file(sheetPath)?.async(textResultType);

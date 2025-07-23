@@ -81,7 +81,7 @@ const convertToExcelColumn = (index: number): string => {
  * @param cellRangeRef - Range reference string.
  * @returns Object with numeric row and column.
  */
-const GetStartPosition  = (cellRangeRef: string): { row: number; column: number } => {
+const GetStartPosition = (cellRangeRef: string): { row: number; column: number } => {
     const match = cellRangeRef.toUpperCase().match(/^([A-Z]+)(\d+):/);
     if (!match) {
         return { row: 0, column: 0 };
@@ -95,10 +95,6 @@ const GetStartPosition  = (cellRangeRef: string): { row: number; column: number 
 
     return { row, column };
 }
-
-const getTableReference = (numberOfCols: number, numberOfRows: number, startCol: number, startRow: number): string => {
-    return `${getCellReferenceRelative(startCol, startRow)}:${getCellReferenceRelative(numberOfCols, numberOfRows)}`;
-};
 
 const createCellElement = (doc: Document, colIndex: number, rowIndex: number, data: string): Element => {
     const cell: Element = doc.createElementNS(doc.documentElement.namespaceURI, element.kindCell);
@@ -151,7 +147,6 @@ export default {
     getCellReferenceRelative,
     getCellReferenceAbsolute,
     createCell: createCellElement,
-    getTableReference,
     updateCellData,
     resolveType,
     convertToExcelColumn,

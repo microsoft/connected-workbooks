@@ -15,6 +15,7 @@ export const docPropsCoreXmlPath = "docProps/core.xml";
 export const relsXmlPath = "_rels/.rels";
 export const docMetadataXmlPath = "docMetadata";
 export const docPropsRootElement = "cp:coreProperties";
+export const workbookRelsXmlPath = "xl/_rels/workbook.xml.rels";
 
 export const sharedStringsNotFoundErr = "SharedStrings were not found in template";
 export const connectionsNotFoundErr = "Connections were not found in template";
@@ -42,6 +43,7 @@ export const promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr = "Header
 export const unexpectedErr = "Unexpected error";
 export const arrayIsntMxNErr = "Array isn't MxN";
 export const relsNotFoundErr = ".rels were not found in template";
+export const xlRelsNotFoundErr = "workbook.xml.rels were not found xl";
 export const columnIndexOutOfRangeErr = "Column index out of range";
 
 export const blobFileType = "blob";
@@ -88,6 +90,7 @@ export const element = {
     dimension: "dimension",
     selection: "selection",
     kindCell: "c",
+    sheet: "sheet",
 };
 
 export const elementAttributes = {
@@ -102,6 +105,7 @@ export const elementAttributes = {
     name: "name",
     description: "description",
     id: "id",
+    relationId: "r:id",
     type: "Type",
     value: "Value",
     relationshipInfo: "RelationshipInfoContainer",
@@ -121,6 +125,8 @@ export const elementAttributes = {
     x14acDyDescent: "x14ac:dyDescent",
     xr3uid: "xr3:uid",
     space: "xml:space",
+    target: "Target",
+    refrance: "ref",
 };
 
 export const dataTypeKind = {
