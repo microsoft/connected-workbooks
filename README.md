@@ -1,15 +1,13 @@
-# Open In Excel
 <div align="center">
 
-# 🚀 Microsoft Connected Workbooks
+# Open In Excel
 
 [![License](https://img.shields.io/github/license/microsoft/connected-workbooks)](https://github.com/microsoft/connected-workbooks/blob/master/LICENSE)
 [![npm version](https://img.shields.io/npm/v/@microsoft/connected-workbooks)](https://www.npmjs.com/package/@microsoft/connected-workbooks)
 [![Build Status](https://img.shields.io/github/workflow/status/microsoft/connected-workbooks/CI)](https://github.com/microsoft/connected-workbooks/actions)
 
-**A JavaScript library that converts web tables and data into interactive Excel workbooks with Power Query integration, custom branded templates, and direct Excel for Web access**
+## **Open your data directly in Excel for the Web with zero installation** - A JavaScript library that converts web tables and data into interactive Excel workbooks with Power Query integration and custom branded templates
 
-*A pure JavaScript library that brings Excel's full potential to your web applications*
 <div align="center">
 <img src="./assets/template example.gif" alt="alt text" width="400" height="250">
 </div>
@@ -137,7 +135,7 @@ const blob = await workbookManager.generateSingleQueryWorkbook({
   refreshOnOpen: true
 });
 
-workbookManager.downloadWorkbook(blob, "ConnectedWorkbook.xlsx");
+workbookManager.openInExcelWeb(blob, "MyData.xlsx", true);
 ```
 
 <div align="center">
@@ -148,23 +146,53 @@ workbookManager.downloadWorkbook(blob, "ConnectedWorkbook.xlsx");
 
 Bring your own Excel template with pre-built dashboards:
 
+📁 Template Loading Methods
+
 ```typescript
-const blob = await workbookManager.generateSingleQueryWorkbook(
-  { 
-    queryMashup: myPowerQuery, 
-    refreshOnOpen: true 
-  },
+// Loading files
+// Method 1: File input from user
+const templateFile = document.querySelector('#template-upload').files[0];
+
+// Method 2: Fetch from server
+const templateResponse = await fetch('***.xlsx');
+const templateFile = await templateResponse.blob();
+
+// Method 3: From drag & drop
+function handleTemplateDrop(event: DragEvent) {
+  const templateFile = event.dataTransfer.files[0];
+}
+
+// Choose the data
+const grid = {
+  config: { promoteHeaders: true, adjustColumnNames: true },
+  data: [
+    ["Product", "Price", "InStock", "Category", "Date"],
+    ["Widget A", 19.99, true, "Electronics", "10/26/2024"],
+    ["Gizmo B", 9.99, true, "Accessories", "10/26/2024"],
+    ["Bubala", 14.99, false, "Accessories", "10/22/2023"],
+    ["Thingamajig C", 50, false, "Tools", "5/12/2023"],
+    ["Doohickey D", 50.01, true, "Home", "8/12/2023"]
+  ]
+};
+
+// Generate Workbook
+const blob = await workbookManager.generateTableWorkbookFromGrid(
+  grid,
   undefined, // no initial data grid
   { 
     templateFile: myCustomTemplate,
     TempleteSettings: {
-      sheetName: "Dashboard",
-      tableName: "DataSource"
+      sheetName: "Dashboard", // Optional 
+      tableName: "DataSource" // Optional 
     }
   }
 );
 
+// Download file
 workbookManager.downloadWorkbook(blob, "BrandedReport.xlsx");
+
+//Open in excel web
+workbookManager.openInExcelWeb(blob, "MyData.xlsx", true);
 ```
 
 <div align="center">
