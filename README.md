@@ -1,15 +1,47 @@
 # Open In Excel
+<div align="center">
+
+# 🚀 Microsoft Connected Workbooks
+
 [![License](https://img.shields.io/github/license/microsoft/connected-workbooks)](https://github.com/microsoft/connected-workbooks/blob/master/LICENSE)
+[![npm version](https://img.shields.io/npm/v/@microsoft/connected-workbooks)](https://www.npmjs.com/package/@microsoft/connected-workbooks)
+[![Build Status](https://img.shields.io/github/workflow/status/microsoft/connected-workbooks/CI)](https://github.com/microsoft/connected-workbooks/actions)
 
-A pure JS library, Microsoft backed, that provides xlsx workbook generation capabilities, allowing for:
-1. Fundemental **"Export to Excel"** capabilities for tabular data (landing in a table in Excel).
-2. Advanced capabilities of **"Export a Power Query connected workbook"**:
-    - Can refresh your data on open and/or on demand.
-    - Allows for initial data population.
-    - Supports more advanced scenarios where you provide branded/custom workbooks, and load your data into PivotTables or PivotCharts.
+**Transform your web data into powerful Excel experiences with live connectivity**
 
-Open in Excel allows you to avoid "data dumps" in CSV form, providing a richer experience with Tables and/or connected Queries for when your business application supports it.
+*A pure JavaScript library that brings Excel's full potential to your web applications*
+<div align="center">
+<img src="./assets/template example.gif" alt="alt text" width="400" height="250">
+</div>
+</div>
 
+---
+
+## ✨ What Makes This Special?
+
+🎯 **Beyond Basic Export** - Say goodbye to static CSV dumps! Create rich, interactive Excel workbooks with live data connections.
+
+⚡ **Power Query Integration** - Leverage Excel's advanced data refresh capabilities directly from your web app.
+
+🎨 **Brand Your Experience** - Use custom Excel templates to maintain your brand identity.
+
+🔄 **Real-time Updates** - Data refreshes automatically when users open the workbook.
+
+🌐 **Free Excel Access** - Open your generated workbooks directly in **Excel for the Web for FREE** - no desktop installation required!
+
+---
+
+## 🌟 Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **📊 Smart Tables** | Export HTML tables or raw data to Excel tables with automatic formatting |
+| **🔗 Live Connections** | Create workbooks that refresh data on-demand using Power Query |
+| **🎨 Custom Templates** | Bring your own branded Excel templates with PivotTables and charts |
+| **📱 Web Integration** | Open workbooks directly in Excel for the Web (HTTPS only) |
+| **⚙️ Advanced Config** | Control document properties, sheet names, and table settings |
+
+---
 [Learn about Power Query here](https://powerquery.microsoft.com/en-us/)
 
 ## Where is this library used? here are some examples:
@@ -18,186 +50,282 @@ Open in Excel allows you to avoid "data dumps" in CSV form, providing a richer e
 |---------------------------------	|-------------------	|--------------	|----------------	|
 | **Azure Data Explorer** 	| **Log Analytics** 	| **Datamart** 	| **Viva Sales** 	|
 
-## How do I use it? here are some examples:
 
-### 1. Export a table directly from an Html page:
+---
+
+## 🚀 Quick Start
+
+### Installation
+
+```bash
+npm install @microsoft/connected-workbooks
+```
+
+
+---
+
+## 💡 Usage Examples
+
+### 1. 📋 Export HTML Table (Zero Configuration)
+
 ```typescript
-import workbookManager from '@microsoft/connected-workbooks';
+import { workbookManager } from '@microsoft/connected-workbooks';
 
-const blob = await workbookManager.generateTableWorkbookFromHtml(document.querySelector('table') as HTMLTableElement);    
+const blob = await workbookManager.generateTableWorkbookFromHtml(
+  document.querySelector('table') as HTMLTableElement
+);    
 workbookManager.openInExcelWeb(blob, "MyTable.xlsx", true /*allowTyping*/);
 ```
 
-### 2. Export a table from raw data:
+### 2. 📊 Export Raw Data with Smart Formatting
+
 ```typescript
-import workbookManager from '@microsoft/connected-workbooks';
+import { workbookManager } from '@microsoft/connected-workbooks';
 
 const grid = {
-  config: { promoteHeaders:true, adjustColumnNames:true },
+  config: { promoteHeaders: true, adjustColumnNames: true },
   data: [
-      ["Product", "Price", "InStock", "Category", "Date"],
-      ["Widget A", 19.99, true, "Electronics", "10/26/2024"],
-      ["Gizmo B", 9.99, true, "Accessories", "10/26/2024"],
-      ["Bubala", 14.99, false, "Accessories", "10/22/2023"],
-      ["Thingamajig C", 50, false, "Tools", "5/12/2023"],
-      ["Doohickey D", 50.01, true, "Home", "8/12/2023"]
+    ["Product", "Price", "InStock", "Category", "Date"],
+    ["Widget A", 19.99, true, "Electronics", "10/26/2024"],
+    ["Gizmo B", 9.99, true, "Accessories", "10/26/2024"],
+    ["Bubala", 14.99, false, "Accessories", "10/22/2023"],
+    ["Thingamajig C", 50, false, "Tools", "5/12/2023"],
+    ["Doohickey D", 50.01, true, "Home", "8/12/2023"]
   ]
 };
-const blob = await workbookManager.generateTableWorkbookFromGrid(grid);    
-workbookManager.openInExcelWeb(blob, "MyTable.xlsx", true /*allowTyping*/);
-```
-<img width="281" alt="image" src="https://github.com/microsoft/connected-workbooks/assets/7674478/b91e5d69-8444-4a19-a4b0-3fd721e5576f">
 
-### 3. Control Document Properties:
+const blob = await workbookManager.generateTableWorkbookFromGrid(grid);    
+workbookManager.openInExcelWeb(blob, "MyData.xlsx", true);
+```
+
+<div align="center">
+<img width="350" alt="Generated Excel Table" src="https://github.com/microsoft/connected-workbooks/assets/7674478/b91e5d69-8444-4a19-a4b0-3fd721e5576f">
+</div>
+
+### 3. 📄 Custom Document Properties
+
 ```typescript
 const blob = await workbookManager.generateTableWorkbookFromHtml(
-  document.querySelector('table') as HTMLTableElement, {
+  document.querySelector('table') as HTMLTableElement, 
+  {
     docProps: { 
       createdBy: 'John Doe',
       lastModifiedBy: 'Jane Doe',
-      description: 'This is a sample table'
+      description: 'Sales Report Q4 2024',
+      title: 'Quarterly Sales Data'
     }
   }
 );
-    
-workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
+     
+workbookManager.downloadWorkbook(blob, "SalesReport.xlsx");
 ```
-![image](https://github.com/microsoft/connected-workbooks/assets/7674478/c267c9eb-6367-419d-832d-5a835c7683f9)
 
-### 4. Export a Power Query connected workbook:
+<div align="center">
+<img width="400" alt="Document Properties" src="https://github.com/microsoft/connected-workbooks/assets/7674478/c267c9eb-6367-419d-832d-5a835c7683f9">
+</div>
+
+### 4. 🔄 Power Query Connected Workbook
+
+Create workbooks that refresh data automatically:
+
 ```typescript
-import workbookManager from '@microsoft/connected-workbooks';
+import { workbookManager } from '@microsoft/connected-workbooks';
 
 const blob = await workbookManager.generateSingleQueryWorkbook({
-  queryMashup: 'let \
-                    Source = {1..10} \
-                in \
-                    Source',
+  queryMashup: `let 
+    Source = {1..10} 
+  in 
+    Source`,
   refreshOnOpen: true
 });
 
-workbookManager.downloadWorkbook(blob, "MyConnectedWorkbook.xlsx");
+workbookManager.downloadWorkbook(blob, "ConnectedWorkbook.xlsx");
 ```
-![image](https://github.com/microsoft/connected-workbooks/assets/7674478/57bd986c-6309-4963-8d86-911ccf496c3f)
 
-(after refreshing on open)
-### Advanced Usage - bring your own template:
+<div align="center">
+<img width="100" alt="Power Query Workbook" src="https://github.com/microsoft/connected-workbooks/assets/7674478/57bd986c-6309-4963-8d86-911ccf496c3f">
+</div>
 
-You can use the library with your own workbook as a template!
+### 5. 🎨 Advanced: Custom Branded Templates
+
+Bring your own Excel template with pre-built dashboards:
 
 ```typescript
 const blob = await workbookManager.generateSingleQueryWorkbook(
-  { queryMashup: query, refreshOnOpen: true },
-  undefined /* optional Grid */,
-  templateFile);
-workbookManager.downloadWorkbook(blob, "MyBrandedWorkbook.xlsx");
+  { 
+    queryMashup: myPowerQuery, 
+    refreshOnOpen: true 
+  },
+  undefined, // no initial data grid
+  { 
+    templateFile: myCustomTemplate,
+    TempleteSettings: {
+      sheetName: "Dashboard",
+      tableName: "DataSource"
+    }
+  }
+);
+
+workbookManager.downloadWorkbook(blob, "BrandedReport.xlsx");
 ```
-![image](https://github.com/microsoft/connected-workbooks/assets/7674478/e5377946-4348-4229-9b88-1910ff7ee025)
 
-Template requirements:
+<div align="center">
+<img width="500" alt="Custom Branded Excel Template with Power Query Integration" src="https://github.com/microsoft/connected-workbooks/assets/7674478/e5377946-4348-4229-9b88-1910ff7ee025">
+</div>
 
-Have a single query named **Query1** loaded to a **Query Table**, **Pivot Table**, or a **Pivot Chart**.
+> 💡 **Template Requirements**: Include a query named **"Query1"** connected to a **Table**, **PivotTable**, or **PivotChart**.
 
+## 📚 Complete API Reference
 
-⭐ Recommendation - have your product template baked and tested in your own product code, instead of your user providing it.
+### Core Functions
 
-⭐ For user templates - a common way to get the template workbook with React via user interaction:
+#### 🔗 `generateSingleQueryWorkbook()`
+Create Power Query connected workbooks with live data refresh capabilities.
 
 ```typescript
-const [templateFile, setTemplateFile] = useState<File | null>(null);
-...
-<input type="file" id="file" accept=".xlsx" style={{ display: "none" }} onChange={(e) => {
-  if (e?.target?.files?.item(0) == null) return;
-  setTemplateFile(e!.target!.files!.item(0));
-}}/>
+async function generateSingleQueryWorkbook(
+  query: QueryInfo, 
+  grid?: Grid, 
+  fileConfigs?: FileConfigs
+): Promise<Blob>
 ```
-### API
-The library exposes a workbookManager, which generates a workbook via several APIs:
 
-#### 1. Generate a Power Query connected workbook
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `query` | [`QueryInfo`](#queryinfo) | ✅ **Required** | Power Query configuration |
+| `grid` | [`Grid`](#grid) |  Optional | Pre-populate with data |
+| `fileConfigs` | [`FileConfigs`](#fileconfigs) |  Optional | Customization options |
+
+#### 📋 `generateTableWorkbookFromHtml()`
+Convert HTML tables to Excel workbooks instantly.
+
 ```typescript
- async function `generateSingleQueryWorkbook`: `Promise<Blob>`
+async function generateTableWorkbookFromHtml(
+  htmlTable: HTMLTableElement, 
+  fileConfigs?: FileConfigs
+): Promise<Blob>
 ```
- 
-|Parameter   | Type   | Required   | Description   |
-|---      |---    |---          |---            |
-|query   | [QueryInfo](#queryinfo)   | __required__  | Power Query mashup  | 
-| grid  | [Grid](#grid)   | optional   | Initial grid data  | 
-| fileConfigs  | [FileConfigs](#fileconfigs)   | optional  | Custom file configurations |
 
-#### 2. Generate a table workbook from a Html page
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `htmlTable` | `HTMLTableElement` | ✅ **Required** | Source HTML table |
+| `fileConfigs` | [`FileConfigs`](#fileconfigs) |  Optional | Customization options |
+
+#### 📊 `generateTableWorkbookFromGrid()`
+Transform raw data arrays into formatted Excel tables.
+
 ```typescript
-async function `generateTableWorkbookFromHtml`: `Promise<Blob>`
+async function generateTableWorkbookFromGrid(
+  grid: Grid, 
+  fileConfigs?: FileConfigs
+): Promise<Blob>
 ```
 
-|Parameter   | Type   | Required   | Description   |
-|---      |---    |---          |---            |
-| htmlTable  | HTMLTableElement   | __required__   | Initial data loaded to workbook  | 
-| fileConfigs  | [FileConfigs](#fileconfigs)   | optional  | Custom file configurations |
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `grid` | [`Grid`](#grid) | ✅ **Required** | Data and configuration |
+| `fileConfigs` | [`FileConfigs`](#fileconfigs) |  Optional | Customization options |
 
-#### 3. Generate a table workbook with raw data
+#### 🌐 `openInExcelWeb()`
+Open workbooks directly in Excel for the Web (requires HTTPS).
+
 ```typescript
-async function `generateTableWorkbookFromGrid`: `Promise<Blob>`
+async function openInExcelWeb(
+  blob: Blob, 
+  filename?: string, 
+  allowTyping?: boolean
+): Promise<void>
 ```
 
-|Parameter   | Type   | Required   | Description   |
-|---      |---    |---          |---            |
-| grid  | [Grid](#grid)   | __required__   | Initial data loaded to workbook  | 
-| fileConfigs  | [FileConfigs](#fileconfigs)   | optional  | Custom file configurations |
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `blob` | `Blob` | ✅ **Required** | Generated workbook |
+| `filename` | `string` |  Optional | Custom filename |
+| `allowTyping` | `boolean` |  Optional | Enable editing (default: false) |
 
-#### 3. Open the created workbook in excel for the web
+#### 💾 `downloadWorkbook()`
+Trigger browser download of the workbook.
+
 ```typescript
-async function `openInExcelWeb`: `Promise<void>`
+function downloadWorkbook(file: Blob, filename: string): void
 ```
 
-⭐ This API is supported only for an HTTPS domain.
+#### 🔗 `getExcelForWebWorkbookUrl()` 
+Get the Excel for Web URL without opening (useful for custom integrations).
 
-|Parameter   | Type   | Required   | Description   |
-|---      |---    |---          |---            |
-| blob  | [Blob](https://developer.mozilla.org/docs/Web/API/Blob)   | __required__   | Initial data loaded to workbook  | 
-| filename  |  string  | optional  | Custom the opened file name |
-| allowTyping  |  boolean  | optional  | allow user editing (typing) |
-</br>
+```typescript
+async function getExcelForWebWorkbookUrl(
+  file: Blob, 
+  filename?: string, 
+  allowTyping?: boolean
+): Promise<string>
+```
 
-### Types
+---
 
-#### QueryInfo
-|Parameter   | Type   | Required   | Description   |
-|---|---|---|---|
-| queryMashup | string | __required__ | Mashup string
-| refreshOnOpen | boolean | __required__ | Should workbook data refresh upon open
-| queryName | string | optional | Query name, defaults to "Query1"
+## 🔧 Type Definitions
 
-#### Grid
-|Parameter   | Type   | Required   | Description   |
-|---|---|---|---|
-| data | (string \| number \| boolean)[][] | __required__ | Grid data
-| config | GridConfig | optional | customizations to Grid handling (see GridConfig)
+### QueryInfo
+Power Query configuration for connected workbooks.
 
-#### GridConfig
-|Parameter   | Type   | Required   | Description   |
-|---|---|---|---|
-| promoteHeaders | boolean | optional | Should first row of gridData be used as the header, defaults to false - generating "Column1", "Column2"...
-| adjustColumnNames | boolean | optional | Should column names be adjusted to be valid Excel names (Fix duplicates for example), defaults to true
+```typescript
+interface QueryInfo {
+  queryMashup: string;        // Power Query M language code
+  refreshOnOpen: boolean;     // Auto-refresh when opened
+  queryName?: string;         // Query identifier (default: "Query1")
+}
+```
 
-#### FileConfigs
-|Parameter   | Type   | Required   | Description   |
-|---|---|---|---|
-| templateFile | File | optional   | Custom Excel workbook  |
-| docProps  | [DocProps](#docprops)   | optional  | Custom workbook properties |
-| hostName  | string | optional  | specify the host creator name |
+### Grid
+Data structure for tabular information.
 
-#### DocProps
-|Parameter   | Type   | Required  
-|---|---|---|
-| title | string | optional 
-| subject | string | optional 
-| keywords | string | optional 
-| createdBy | string | optional 
-| description | string | optional 
-| lastModifiedBy | string | optional 
-| category | string | optional 
-| revision | number | optional 
+```typescript
+interface Grid {
+  data: (string | number | boolean)[][];  // Raw data rows
+  config?: GridConfig;                    // Processing options
+}
+
+interface GridConfig {
+  promoteHeaders?: boolean;     // Use first row as headers
+  adjustColumnNames?: boolean;  // Fix duplicate/invalid names
+}
+```
+
+### FileConfigs
+Advanced customization options.
+
+```typescript
+interface FileConfigs {
+  templateFile?: File;              // Custom Excel template
+  docProps?: DocProps;              // Document metadata
+  hostName?: string;                // Creator application name
+  TempleteSettings?: TempleteSettings; // Template-specific settings
+}
+
+interface TempleteSettings {
+  tableName?: string;    // Target table name in template
+  sheetName?: string;    // Target worksheet name
+}
+```
+
+### DocProps
+Document metadata and properties.
+
+```typescript
+interface DocProps {
+  title?: string;           // Document title
+  subject?: string;         // Document subject
+  keywords?: string;        // Search keywords
+  createdBy?: string;       // Author name
+  description?: string;     // Document description
+  lastModifiedBy?: string;  // Last editor
+  category?: string;        // Document category
+  revision?: string;        // Version number
+}
+```
+
+---
+
 
 ## Contributing
 
@@ -213,6 +341,35 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
+### Getting Started
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Submit a pull request
+
+### Development Setup
+```bash
+git clone https://github.com/microsoft/connected-workbooks.git
+cd connected-workbooks
+npm install
+npm run build
+npm test
+```
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🔗 Related Resources
+
+- [📖 Power Query Documentation](https://powerquery.microsoft.com/en-us/)
+- [🏢 Excel for Developers](https://docs.microsoft.com/en-us/office/dev/excel/)
+- [🔧 Microsoft Graph Excel APIs](https://docs.microsoft.com/en-us/graph/api/resources/excel)
+
+---
+
 ## Trademarks
 
 This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft
@@ -220,3 +377,9 @@ trademarks or logos is subject to and must follow
 [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
 Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
 Any use of third-party trademarks or logos are subject to those third-party's policies.
+
+---
+
+## Keywords
+
+Power Query, Excel, Office, Workbook, Refresh, Table, xlsx, export, CSV, data export, HTML table, web to Excel, JavaScript Excel, TypeScript Excel, Excel template, PivotTable, connected data, live data, data refresh, Excel for Web, browser Excel, spreadsheet, data visualization, Microsoft Office, Office 365, Excel API, workbook generation, table export, grid export, Excel automation, data processing, business intelligence
