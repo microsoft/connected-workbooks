@@ -7,7 +7,7 @@
 [![npm version](https://img.shields.io/npm/v/@microsoft/connected-workbooks)](https://www.npmjs.com/package/@microsoft/connected-workbooks)
 [![Build Status](https://img.shields.io/github/workflow/status/microsoft/connected-workbooks/CI)](https://github.com/microsoft/connected-workbooks/actions)
 
-**Transform your web data into powerful Excel experiences with live connectivity**
+**A JavaScript library that converts web tables and data into interactive Excel workbooks with Power Query integration, custom branded templates, and direct Excel for Web access**
 
 *A pure JavaScript library that brings Excel's full potential to your web applications*
 <div align="center">
@@ -19,13 +19,13 @@
 
 ## ✨ What Makes This Special?
 
-🎯 **Beyond Basic Export** - Say goodbye to static CSV dumps! Create rich, interactive Excel workbooks with live data connections.
+🎯 **Interactive Workbooks, Not Static Files** - Generate fully functional Excel workbooks with tables instead of basic CSV exports that lose all structure and functionality.
 
-🎨 **Brand Your Experience** - Use custom Excel templates to maintain your brand identity.
+🎨 **Corporate Branding & Custom Dashboards** - Inject your data into pre-built Excel templates containing your company branding, PivotTables, charts, and business logic while preserving all formatting and calculations.
 
-🔄 **Real-time Updates** - Data refreshes automatically when users open the workbook.
+🔄 **Live Data Connections with Power Query** - Create workbooks that automatically refresh from your web APIs, databases, or data sources using Microsoft's Power Query technology, eliminating manual data updates.
 
-🌐 **Free Excel Access** - Open your generated workbooks directly in **Excel for the Web for FREE** - no desktop installation required!
+🌐 **Zero-Install Excel Experience** - Launch workbooks directly in Excel for the Web through any browser without requiring Excel desktop installation, making your data accessible to any user anywhere.
 
 ---
 
@@ -34,9 +34,9 @@
 | Feature | Description |
 |---------|-------------|
 | **📊 Smart Tables** | Export HTML tables or raw data to Excel tables  |
-| **🔗 Live Connections** | Create workbooks that refresh data on-demand using Power Query |
+| **📱 Web Integration** | Open workbooks directly in Excel for the Web |
 | **🎨 Custom Templates** | Bring your own branded Excel templates with PivotTables and charts |
-| **📱 Web Integration** | Open workbooks directly in Excel for the Web (HTTPS only) |
+| **🔗 Live Connections** | Create workbooks that refresh data on-demand using Power Query |
 | **⚙️ Advanced Config** | Control document properties, sheet names, and table settings |
 
 ---
