@@ -21,8 +21,6 @@
 
 🎯 **Beyond Basic Export** - Say goodbye to static CSV dumps! Create rich, interactive Excel workbooks with live data connections.
 
-⚡ **Power Query Integration** - Leverage Excel's advanced data refresh capabilities directly from your web app.
-
 🎨 **Brand Your Experience** - Use custom Excel templates to maintain your brand identity.
 
 🔄 **Real-time Updates** - Data refreshes automatically when users open the workbook.
@@ -35,7 +33,7 @@
 
 | Feature | Description |
 |---------|-------------|
-| **📊 Smart Tables** | Export HTML tables or raw data to Excel tables with automatic formatting |
+| **📊 Smart Tables** | Export HTML tables or raw data to Excel tables  |
 | **🔗 Live Connections** | Create workbooks that refresh data on-demand using Power Query |
 | **🎨 Custom Templates** | Bring your own branded Excel templates with PivotTables and charts |
 | **📱 Web Integration** | Open workbooks directly in Excel for the Web (HTTPS only) |
