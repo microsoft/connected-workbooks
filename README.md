@@ -6,10 +6,10 @@
 [![npm version](https://img.shields.io/npm/v/@microsoft/connected-workbooks)](https://www.npmjs.com/package/@microsoft/connected-workbooks)
 [![Build Status](https://img.shields.io/github/workflow/status/microsoft/connected-workbooks/CI)](https://github.com/microsoft/connected-workbooks/actions)
 
-## **Open your data directly in Excel for the Web with zero installation** - A JavaScript library that converts web tables and data into interactive Excel workbooks with Power Query integration and custom branded templates
+**Open your data directly in Excel for the Web with zero installation** - A JavaScript library that converts web tables and data into interactive Excel workbooks with Power Query integration and custom branded templates
 
 <div align="center">
-<img src="./assets/template example.gif" alt="alt text" width="400" height="250">
+<img src="./assets/template example.gif" alt="alt text" width="500" height="300">
 </div>
 </div>
 
@@ -19,11 +19,11 @@
 
 🎯 **Interactive Workbooks, Not Static Files** - Generate fully functional Excel workbooks with tables instead of basic CSV exports that lose all structure and functionality.
 
+🌐 **Zero-Install Excel Experience** - Launch workbooks directly in Excel for the Web through any browser without requiring Excel desktop installation, making your data accessible to any user anywhere.
+
 🎨 **Corporate Branding & Custom Dashboards** - Inject your data into pre-built Excel templates containing your company branding, PivotTables, charts, and business logic while preserving all formatting and calculations.
 
 🔄 **Live Data Connections with Power Query** - Create workbooks that automatically refresh from your web APIs, databases, or data sources using Microsoft's Power Query technology, eliminating manual data updates.
-
-🌐 **Zero-Install Excel Experience** - Launch workbooks directly in Excel for the Web through any browser without requiring Excel desktop installation, making your data accessible to any user anywhere.
 
 ---
 
@@ -253,7 +253,7 @@ async function generateTableWorkbookFromGrid(
 | `fileConfigs` | [`FileConfigs`](#fileconfigs) |  Optional | Customization options |
 
 #### 🌐 `openInExcelWeb()`
-Open workbooks directly in Excel for the Web (requires HTTPS).
+Open workbooks directly in Excel for the Web.
 
 ```typescript
 async function openInExcelWeb(
