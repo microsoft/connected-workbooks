@@ -2,6 +2,7 @@
 
 # Open In Excel
 
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/github/license/microsoft/connected-workbooks)](https://github.com/microsoft/connected-workbooks/blob/master/LICENSE)
 [![npm version](https://img.shields.io/npm/v/@microsoft/connected-workbooks)](https://www.npmjs.com/package/@microsoft/connected-workbooks)
 [![Build Status](https://img.shields.io/github/workflow/status/microsoft/connected-workbooks/CI)](https://github.com/microsoft/connected-workbooks/actions)
@@ -9,42 +10,56 @@
 **Open your data directly in Excel for the Web with zero installation** - A JavaScript library that converts web tables and data into interactive Excel workbooks with Power Query integration and custom branded templates
 
 <div align="center">
-<img src="./assets/template example.gif" alt="template gif" width="500" height="300">
+<img src="./assets/template example.gif" alt="Connected Workbooks Demo" width="500" height="300">
 </div>
+
+
 </div>
 
 ---
 
-## ✨ What Makes This Special?
+## ✨ Why Open in Excel?
 
-🎯 **Interactive Workbooks, Not Static Files** - Generate fully functional Excel workbooks with tables instead of basic CSV exports that lose all structure and functionality.
+Transform your web applications with enterprise-grade Excel integration that goes far beyond simple CSV exports.
 
-🌐 **Zero-Install Excel Experience** - Launch workbooks directly in Excel for the Web through any browser without requiring Excel desktop installation, making your data accessible to any user anywhere.
+### 🎯 **Interactive Excel Workbooks, Not Static Files**
+Generate fully functional Excel workbooks with live tables, formulas, and formatting instead of basic CSV exports that lose all structure and functionality.
 
-🎨 **Corporate Branding & Custom Dashboards** - Inject your data into pre-built Excel templates containing your company branding, PivotTables, charts, and business logic while preserving all formatting and calculations.
+### 🌐 **Zero-Installation Excel Experience**
+Launch workbooks directly in Excel for the Web through any browser without requiring Excel desktop installation, making your data accessible to any user anywhere.
 
-🔄 **Live Data Connections with Power Query** - Create workbooks that automatically refresh from your web APIs, databases, or data sources using Microsoft's Power Query technology, eliminating manual data updates.
+### 🎨 **Corporate Branding & Custom Dashboards**
+Inject your data into pre-built Excel templates containing your company branding, PivotTables, charts, and business logic while preserving all formatting and calculations.
+
+### 🔄 **Live Data Connections with Power Query**
+Create workbooks that automatically refresh from your web APIs, databases, or data sources using Microsoft's Power Query technology, eliminating manual data updates.
 
 ---
 
 ## 🌟 Key Features
 
-| Feature | Description |
-|---------|-------------|
-| **📊 Smart Tables** | Export HTML tables or raw data to Excel tables  |
-| **📱 Web Integration** | Open workbooks directly in Excel for the Web |
-| **🎨 Custom Templates** | Bring your own branded Excel templates with PivotTables and charts |
-| **🔗 Live Connections** | Create workbooks that refresh data on-demand using Power Query |
-| **⚙️ Advanced Config** | Control document properties, sheet names, and table settings |
+| Feature | Description | Benefits |
+|---------|-------------|----------|
+| **📊 Table Export** | Convert HTML tables or raw data arrays to Excel tables  | Preserves data types |
+| **📱 Web Integration** | Open workbooks directly in Excel for the Web | No installation required, works on any device |
+| **🎨 Custom Templates** | Use your own branded Excel templates with PivotTables and charts | Maintain corporate identity and pre-built analytics |
+| **🔗 Live Data Connections** | Create workbooks that refresh data on-demand using Power Query | Real-time data updates, automated reporting |
+| **⚙️ Advanced Configuration** | Full control over document properties including title and description | Professional document management |
 
 ---
-[Learn about Power Query here](https://powerquery.microsoft.com/en-us/)
 
-## Where is this library used? here are some examples:
+## 🏢 Where is this library used?
 
-|<img src="https://github.com/microsoft/connected-workbooks/assets/7674478/b7a0c989-7ba4-4da8-851e-04650d8b600e" alt="Kusto" width="32"/>| <img src="https://github.com/microsoft/connected-workbooks/assets/7674478/76d22d23-5f2b-465f-992d-f1c71396904c" alt="LogAnalytics" width="32"/>	| <img src="https://github.com/microsoft/connected-workbooks/assets/7674478/436b4f53-bf25-4c45-aae5-55ee1b1feafc" alt="Datamart" width="32"/>	| <img src="https://github.com/microsoft/connected-workbooks/assets/7674478/3965f684-b461-42fe-9c62-e3059c0286eb" alt="VivaSales" width="32"/>	|
-|---------------------------------	|-------------------	|--------------	|----------------	|
-| **Azure Data Explorer** 	| **Log Analytics** 	| **Datamart** 	| **Viva Sales** 	|
+Open In Excel powers data export functionality across Microsoft's enterprise platforms:
+
+<div align="center">
+
+|<img src="https://github.com/microsoft/connected-workbooks/assets/7674478/b7a0c989-7ba4-4da8-851e-04650d8b600e" alt="Azure Data Explorer" width="48"/>|<img src="https://github.com/microsoft/connected-workbooks/assets/7674478/76d22d23-5f2b-465f-992d-f1c71396904c" alt="Log Analytics" width="48"/>|<img src="https://github.com/microsoft/connected-workbooks/assets/7674478/436b4f53-bf25-4c45-aae5-55ee1b1feafc" alt="Datamart" width="48"/>|<img src="https://github.com/microsoft/connected-workbooks/assets/7674478/3965f684-b461-42fe-9c62-e3059c0286eb" alt="Viva Sales" width="48"/>|
+|:---:|:---:|:---:|:---:|
+|**Azure Data Explorer**|**Log Analytics**|**Datamart**|**Viva Sales**|
+
+</div>
+
 
 
 ---
@@ -57,48 +72,58 @@
 npm install @microsoft/connected-workbooks
 ```
 
-
 ---
 
 ## 💡 Usage Examples
 
-### 1. 📋 Export HTML Table (Zero Configuration)
+### 📋 **HTML Table Export**
+
+Perfect for quick data exports from existing web tables.
 
 ```typescript
 import { workbookManager } from '@microsoft/connected-workbooks';
 
+// One line of code to convert any table
 const blob = await workbookManager.generateTableWorkbookFromHtml(
   document.querySelector('table') as HTMLTableElement
-);    
-workbookManager.openInExcelWeb(blob, "MyTable.xlsx", true /*allowTyping*/);
+);
+
+// Open in Excel for the Web with editing enabled
+workbookManager.openInExcelWeb(blob, "QuickExport.xlsx", true);
 ```
 
-### 2. 📊 Export Raw Data with Smart Formatting
+### 📊 **Smart Data Formatting**
+
+Transform raw data arrays into professionally formatted Excel tables.
 
 ```typescript
 import { workbookManager } from '@microsoft/connected-workbooks';
 
-const grid = {
-  config: { promoteHeaders: true, adjustColumnNames: true },
+const salesData = {
+  config: {
+    promoteHeaders: true,      // First row becomes headers
+    adjustColumnNames: true    // Clean up column names
+  },
   data: [
-    ["Product", "Price", "InStock", "Category", "Date"],
-    ["Widget A", 19.99, true, "Electronics", "10/26/2024"],
-    ["Gizmo B", 9.99, true, "Accessories", "10/26/2024"],
-    ["Bubala", 14.99, false, "Accessories", "10/22/2023"],
-    ["Thingamajig C", 50, false, "Tools", "5/12/2023"],
-    ["Doohickey D", 50.01, true, "Home", "8/12/2023"]
+    ["Product", "Revenue", "InStock", "Category", "LastUpdated"],
+    ["Surface Laptop", 1299.99, true, "Hardware", "2024-10-26"],
+    ["Office 365", 99.99, true, "Software", "2024-10-26"],
+    ["Azure Credits", 500.00, false, "Cloud", "2024-10-25"],
+    ["Teams Premium", 149.99, true, "Software", "2024-10-24"]
   ]
 };
 
-const blob = await workbookManager.generateTableWorkbookFromGrid(grid);    
-workbookManager.openInExcelWeb(blob, "MyData.xlsx", true);
+const blob = await workbookManager.generateTableWorkbookFromGrid(salesData);
+workbookManager.openInExcelWeb(blob, "SalesReport.xlsx", true);
 ```
 
 <div align="center">
-<img width="350" alt="Generated Excel Table" src="https://github.com/microsoft/connected-workbooks/assets/7674478/b91e5d69-8444-4a19-a4b0-3fd721e5576f">
+<img width="450" alt="Smart Formatted Excel Table" src="https://github.com/microsoft/connected-workbooks/assets/7674478/b91e5d69-8444-4a19-a4b0-3fd721e5576f">
 </div>
 
-### 3. 📄 Custom Document Properties
+### 📄 **Professional Document Properties**
+
+Add metadata and professional document properties for enterprise use.
 
 ```typescript
 const blob = await workbookManager.generateTableWorkbookFromHtml(
@@ -112,21 +137,23 @@ const blob = await workbookManager.generateTableWorkbookFromHtml(
     }
   }
 );
-     
-workbookManager.downloadWorkbook(blob, "SalesReport.xlsx");
+
+// Download for offline use
+workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
 ```
 
 <div align="center">
-<img width="400" alt="Document Properties" src="https://github.com/microsoft/connected-workbooks/assets/7674478/c267c9eb-6367-419d-832d-5a835c7683f9">
+<img width="400" alt="Professional Document Properties" src="https://github.com/microsoft/connected-workbooks/assets/7674478/c267c9eb-6367-419d-832d-5a835c7683f9">
 </div>
 
-### 4. 🔄 Power Query Connected Workbook
+### 🔄 **Live Data Connections with Power Query**
 
-Create workbooks that refresh data automatically:
+Create workbooks that automatically refresh from your data sources.
 
 ```typescript
 import { workbookManager } from '@microsoft/connected-workbooks';
 
+// Create a workbook that connects to your API
 const blob = await workbookManager.generateSingleQueryWorkbook({
   queryMashup: `let 
     Source = {1..10} 
@@ -138,68 +165,70 @@ const blob = await workbookManager.generateSingleQueryWorkbook({
 workbookManager.openInExcelWeb(blob, "MyData.xlsx", true);
 ```
 
+> 📚 **Learn Power Query**: New to Power Query? Check out the [official documentation](https://docs.microsoft.com/en-us/power-query/) to unlock the full potential of live data connections.
+
 <div align="center">
-<img width="100" alt="Power Query Workbook" src="https://github.com/microsoft/connected-workbooks/assets/7674478/57bd986c-6309-4963-8d86-911ccf496c3f">
+<img width="120" alt="Live Data Workbook" src="https://github.com/microsoft/connected-workbooks/assets/7674478/57bd986c-6309-4963-8d86-911ccf496c3f">
 </div>
 
-### 5. 🎨 Advanced: Custom Branded Templates
+### 🎨 **Custom Branded Templates**
 
-Bring your own Excel template with pre-built dashboards:
+Transform your data using pre-built Excel templates with your corporate branding.
 
-📁 Template Loading Methods
+#### 📁 **Loading Template Files**
 
 ```typescript
-// Loading files
-// Method 1: File input from user
-const templateFile = document.querySelector('#template-upload').files[0];
+// Method 1: File upload from user
+const templateInput = document.querySelector('#template-upload') as HTMLInputElement;
+const templateFile = templateInput.files[0];
 
-// Method 2: Fetch from server
-const templateResponse = await fetch('***.xlsx');
+// Method 2: Fetch from your server
+const templateResponse = await fetch('/assets/templates/sales-dashboard.xlsx');
 const templateFile = await templateResponse.blob();
 
-// Method 3: From drag & drop
+// Method 3: Drag and drop
 function handleTemplateDrop(event: DragEvent) {
   const templateFile = event.dataTransfer.files[0];
+  // Use templateFile with the library
 }
+```
 
-// Choose the data
-const grid = {
+#### 📊 **Generate Branded Workbook**
+
+```typescript
+const quarterlyData = {
   config: { promoteHeaders: true, adjustColumnNames: true },
   data: [
-    ["Product", "Price", "InStock", "Category", "Date"],
-    ["Widget A", 19.99, true, "Electronics", "10/26/2024"],
-    ["Gizmo B", 9.99, true, "Accessories", "10/26/2024"],
-    ["Bubala", 14.99, false, "Accessories", "10/22/2023"],
-    ["Thingamajig C", 50, false, "Tools", "5/12/2023"],
-    ["Doohickey D", 50.01, true, "Home", "8/12/2023"]
+    ["Region", "Q3_Revenue", "Q4_Revenue", "Growth", "Target_Met"],
+    ["North America", 2500000, 2750000, "10%", true],
+    ["Europe", 1800000, 2100000, "17%", true],
+    ["Asia Pacific", 1200000, 1400000, "17%", true],
+    ["Latin America", 800000, 950000, "19%", true]
   ]
 };
 
-// Generate Workbook
+// Inject data into your branded template
 const blob = await workbookManager.generateTableWorkbookFromGrid(
-  grid,
-  undefined, // no initial data grid
-  { 
-    templateFile: myCustomTemplate,
+  quarterlyData,
+  undefined, // Use template's existing data structure
+  {
+    templateFile: templateFile,
     TempleteSettings: {
-      sheetName: "Dashboard", // Optional 
-      tableName: "DataSource" // Optional 
+      sheetName: "Dashboard",     // Target worksheet
+      tableName: "QuarterlyData"  // Target table name
     }
   }
 );
 
-// Download file
-workbookManager.downloadWorkbook(blob, "BrandedReport.xlsx");
-
-//Open in excel web
-workbookManager.openInExcelWeb(blob, "MyData.xlsx", true);
+// Users get a fully branded report
+workbookManager.openInExcelWeb(blob, "Q4_Executive_Dashboard.xlsx", true);
 ```
 
 <div align="center">
-<img width="500" alt="Custom Branded Excel Template with Power Query Integration" src="https://github.com/microsoft/connected-workbooks/assets/7674478/e5377946-4348-4229-9b88-1910ff7ee025">
+<img width="600" alt="Custom Branded Excel Dashboard" src="https://github.com/microsoft/connected-workbooks/assets/7674478/e5377946-4348-4229-9b88-1910ff7ee025">
 </div>
 
-> 💡 **Template Requirements**: Include a query named **"Query1"** connected to a **Table**, **PivotTable**, or **PivotChart**.
+> 💡 **Template Requirements**: Include a query named **"Query1"** connected to a **Table**.
 
 ## 📚 Complete API Reference
 
@@ -351,7 +380,6 @@ interface DocProps {
 ```
 
 ---
-
 
 ## Contributing
 
