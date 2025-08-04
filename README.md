@@ -18,33 +18,24 @@
 
 ---
 
-## ✨ Why Open in Excel?
+## ✨ Key Features & Benefits
 
 Transform your web applications with enterprise-grade Excel integration that goes far beyond simple CSV exports.
 
 ### 🎯 **Interactive Excel Workbooks, Not Static Files**
-Generate fully functional Excel workbooks with live tables, formulas, and formatting instead of basic CSV exports that lose all structure and functionality.
+Convert raw data or HTML tables arrays to Excel tables while preserving data types, ensuring your data maintains its structure and formatting. instead of basic CSV exports that lose all structure and functionality.
 
 ### 🌐 **Zero-Installation Excel Experience**
-Launch workbooks directly in Excel for the Web through any browser without requiring Excel desktop installation, making your data accessible to any user anywhere.
+Launch workbooks directly in Excel for the Web through any browser without requiring Excel desktop installation, making your data accessible to any user anywhere. No installation required, works on any device.
 
 ### 🎨 **Corporate Branding & Custom Dashboards**
-Inject your data into pre-built Excel templates containing your company branding, PivotTables, charts, and business logic while preserving all formatting and calculations.
+Inject your data into pre-built Excel templates containing your company branding, PivotTables, charts, and business logic while preserving all formatting and calculations. Use your own branded Excel templates with PivotTables and charts to maintain corporate identity and pre-built analytics.
 
 ### 🔄 **Live Data Connections with Power Query**
-Create workbooks that automatically refresh from your web APIs, databases, or data sources using Microsoft's Power Query technology, eliminating manual data updates.
+Create workbooks that automatically refresh from your web APIs, databases, or data sources using Microsoft's Power Query technology, eliminating manual data updates. Create workbooks that refresh data on-demand using Power Query for real-time data updates and automated reporting.
 
----
-
-## 🌟 Key Features
-
-| Feature | Description | Benefits |
-|---------|-------------|----------|
-| **📊 Table Export** | Convert HTML tables or raw data arrays to Excel tables  | Preserves data types |
-| **📱 Web Integration** | Open workbooks directly in Excel for the Web | No installation required, works on any device |
-| **🎨 Custom Templates** | Use your own branded Excel templates with PivotTables and charts | Maintain corporate identity and pre-built analytics |
-| **🔗 Live Data Connections** | Create workbooks that refresh data on-demand using Power Query | Real-time data updates, automated reporting |
-| **⚙️ Advanced Configuration** | Full control over document properties including title and description | Professional document management |
+### ⚙️ **Advanced Configuration**
+Full control over document properties including title and description for professional document management, allowing you to customize metadata and maintain enterprise standards.
 
 ---
 
