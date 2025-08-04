@@ -10,7 +10,7 @@
 **Open your data directly in Excel for the Web with zero installation** - A JavaScript library that converts web tables and data into interactive Excel workbooks with Power Query integration and custom branded templates
 
 <div align="center">
-<img src="./assets/template example.gif" alt="Connected Workbooks Demo" width="500" height="300">
+<img src="./assets/template example.gif" alt="Connected Workbooks Demo" >
 </div>
 
 
