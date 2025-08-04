@@ -46,14 +46,16 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
     
     // Getting the table start and end location string from the table path
     // If no table path is provided, we will consider A1 as the start location
-    let cellRangeRef: string = "";
+    let cellRangeRef: string = "A1";
     if (fileConfigs?.templateFile != null) {
         cellRangeRef = await xmlInnerPartsUtils.getReferenceFromTable(zip, tablePath)
     }
-    else if (tableData) {
-        cellRangeRef = `A1:${documentUtils.getCellReferenceRelative(tableData.columnNames.length - 1, tableData.rows.length + 1)}`;
-    }
 
+   if (tableData) {
+    
+        cellRangeRef += `:${documentUtils.getCellReferenceRelative(tableData.columnNames.length - 1, tableData.rows.length + 1)}`;
+    }
+    
     await xmlInnerPartsUtils.updateDocProps(zip, fileConfigs?.docProps);
     if (fileConfigs?.templateFile === undefined) {
         // If we are using our base template, we need to clear label info

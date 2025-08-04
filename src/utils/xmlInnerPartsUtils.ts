@@ -337,7 +337,7 @@ const getReferenceFromTable = async (zip: JSZip, tablePath: string): Promise<str
         throw new Error(tableReferenceNotFoundErr);
     }
 
-    return reference;
+    return reference.split(":")[0]; // Return the end cell reference (e.g., "A1" from "A1:B10")
 };
 
 const findTablePathFromZip = async (zip: JSZip, targetTableName: string): Promise<string> => {
