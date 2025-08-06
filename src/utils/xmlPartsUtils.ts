@@ -52,7 +52,6 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
     }
 
    if (tableData) {
-    
         cellRangeRef += `:${documentUtils.getCellReferenceRelative(tableData.columnNames.length - 1, tableData.rows.length + 1)}`;
     }
     
