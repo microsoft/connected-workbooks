@@ -112,59 +112,13 @@ workbookManager.openInExcelWeb(blob, "SalesReport.xlsx", true);
 <img width="450" alt="Smart Formatted Excel Table" src="https://github.com/microsoft/connected-workbooks/assets/7674478/b91e5d69-8444-4a19-a4b0-3fd721e5576f">
 </div>
 
-### 📄 **Professional Document Properties**
 
-Add metadata and professional document properties for enterprise use.
-
-```typescript
-const blob = await workbookManager.generateTableWorkbookFromHtml(
-  document.querySelector('table') as HTMLTableElement, 
-  {
-    docProps: { 
-      createdBy: 'John Doe',
-      lastModifiedBy: 'Jane Doe',
-      description: 'Sales Report Q4 2024',
-      title: 'Quarterly Sales Data'
-    }
-  }
-);
-
-// Download for offline use
-workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
-```
-
-<div align="center">
-<img width="400" alt="Professional Document Properties" src="https://github.com/microsoft/connected-workbooks/assets/7674478/c267c9eb-6367-419d-832d-5a835c7683f9">
-</div>
-
-### 🔄 **Live Data Connections with Power Query**
-
-Create workbooks that automatically refresh from your data sources.
-
-```typescript
-import { workbookManager } from '@microsoft/connected-workbooks';
-
-// Create a workbook that connects to your API
-const blob = await workbookManager.generateSingleQueryWorkbook({
-  queryMashup: `let 
-    Source = {1..10} 
-  in 
-    Source`,
-  refreshOnOpen: true
-});
-
-workbookManager.openInExcelWeb(blob, "MyData.xlsx", true);
-```
-
-> 📚 **Learn Power Query**: New to Power Query? Check out the [official documentation](https://docs.microsoft.com/en-us/power-query/) to unlock the full potential of live data connections.
-
-<div align="center">
-<img width="120" alt="Live Data Workbook" src="https://github.com/microsoft/connected-workbooks/assets/7674478/57bd986c-6309-4963-8d86-911ccf496c3f">
-</div>
 
 ### 🎨 **Custom Branded Templates**
 
 Transform your data using pre-built Excel templates with your corporate branding.
+
+To use custom branded templates, you'll need an Excel file. Within this file, designate a specific sheet (the default is "Sheet1" or any name you prefer) and a table within that sheet (the default is "Table1" or any name you prefer). When calling the function to generate the workbook, you can specify these names. The library will then populate the designated table with your data. Any functions, figures, or references linked to this table within the Excel template will automatically reflect the newly exported data.
 
 #### 📁 **Loading Template Files**
 
@@ -216,10 +170,59 @@ workbookManager.openInExcelWeb(blob, "Q4_Executive_Dashboard.xlsx", true);
 ```
 
 <div align="center">
-<img width="600" alt="Custom Branded Excel Dashboard" src="https://github.com/microsoft/connected-workbooks/assets/7674478/e5377946-4348-4229-9b88-1910ff7ee025">
+<img width="600" alt="Custom Branded Excel Dashboard" src="./assets/template_example.png">
 </div>
 
 > 💡 **Template Requirements**: Include a query named **"Query1"** connected to a **Table**.
+
+### 🔄 **Live Data Connections with Power Query**
+
+Create workbooks that automatically refresh from your data sources.
+
+```typescript
+import { workbookManager } from '@microsoft/connected-workbooks';
+
+// Create a workbook that connects to your API
+const blob = await workbookManager.generateSingleQueryWorkbook({
+  queryMashup: `let 
+    Source = {1..10} 
+  in 
+    Source`,
+  refreshOnOpen: true
+});
+
+workbookManager.openInExcelWeb(blob, "MyData.xlsx", true);
+```
+
+> 📚 **Learn Power Query**: New to Power Query? Check out the [official documentation](https://docs.microsoft.com/en-us/power-query/) to unlock the full potential of live data connections.
+
+<div align="center">
+<img width="120" alt="Live Data Workbook" src="https://github.com/microsoft/connected-workbooks/assets/7674478/57bd986c-6309-4963-8d86-911ccf496c3f">
+</div>
+### 📄 **Professional Document Properties**
+
+Add metadata and professional document properties for enterprise use.
+
+```typescript
+const blob = await workbookManager.generateTableWorkbookFromHtml(
+  document.querySelector('table') as HTMLTableElement, 
+  {
+    docProps: { 
+      createdBy: 'John Doe',
+      lastModifiedBy: 'Jane Doe',
+      description: 'Sales Report Q4 2024',
+      title: 'Quarterly Sales Data'
+    }
+  }
+);
+
+// Download for offline use
+workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
+```
+
+<div align="center">
+<img width="400" alt="Professional Document Properties" src="https://github.com/microsoft/connected-workbooks/assets/7674478/c267c9eb-6367-419d-832d-5a835c7683f9">
+</div>
 
 ## 📚 Complete API Reference
 
