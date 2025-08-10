@@ -16,7 +16,7 @@ import {
     tablesFolderPath,
 } from "./constants";
 import { replaceSingleQuery } from "./mashupDocumentParser";
-import { FileConfigs, TableData, TempleteSettings } from "../types";
+import { FileConfigs, TableData, TemplateSettings } from "../types";
 import pqUtils from "./pqUtils";
 import tableUtils from "./tableUtils";
 import xmlInnerPartsUtils from "./xmlInnerPartsUtils";
@@ -28,19 +28,19 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
     let sheetPath: string = sheetsXmlPath;
 
     if (fileConfigs?.templateFile !== undefined) {
-        const templeteSettings: TempleteSettings | undefined = fileConfigs?.TempleteSettings;
+        const templateSettings: TemplateSettings | undefined = fileConfigs?.templateSettings;
 
         // Getting the sheet id based on location in the workbook
-        if (templeteSettings?.sheetName !== undefined) {
-            const sheetLocation = await xmlInnerPartsUtils.getSheetPathByNameFromZip(zip, templeteSettings.sheetName);
-            sheetName = templeteSettings.sheetName;
+        if (templateSettings?.sheetName !== undefined) {
+            const sheetLocation = await xmlInnerPartsUtils.getSheetPathByNameFromZip(zip, templateSettings.sheetName);
+            sheetName = templateSettings.sheetName;
             sheetPath = "xl/" + sheetLocation;
         }
 
         // Getting the table location based on which table has the same name as the one in the fileConfigs
         // If no table name is provided, we will use the default one
-        if (templeteSettings?.tableName !== undefined) {
-            tablePath = tablesFolderPath + await xmlInnerPartsUtils.findTablePathFromZip(zip, templeteSettings?.tableName);
+        if (templateSettings?.tableName !== undefined) {
+            tablePath = tablesFolderPath + await xmlInnerPartsUtils.findTablePathFromZip(zip, templateSettings?.tableName);
         }
     }
     

@@ -41,10 +41,10 @@ export interface FileConfigs {
     templateFile?: File;
     docProps?: DocProps;
     hostName?: string;
-    TempleteSettings?: TempleteSettings;
+    templateSettings?: TemplateSettings;
 }
 
-export interface TempleteSettings {
+export interface TemplateSettings {
     tableName?: string;
     sheetName?: string;
 }

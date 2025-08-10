@@ -5,7 +5,7 @@ import JSZip from "jszip";
 import { pqUtils, xmlPartsUtils, htmlUtils, gridUtils } from "./utils";
 import { SIMPLE_BLANK_TABLE_TEMPLATE, SIMPLE_QUERY_WORKBOOK_TEMPLATE } from "./workbookTemplate";
 import { defaults, emptyQueryMashupErr, blobFileType, application, templateWithInitialDataErr, tableNotFoundErr, headers, OFU } from "./utils/constants";
-import { QueryInfo, TableData, Grid, FileConfigs, TempleteSettings } from "./types";
+import { QueryInfo, TableData, Grid, FileConfigs, TemplateSettings } from "./types";
 import { generateSingleQueryMashup } from "./generators";
 
 export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataGrid?: Grid, fileConfigs?: FileConfigs): Promise<Blob> => {
@@ -17,7 +17,6 @@ export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataG
         query.queryName = defaults.queryName;
     }
 
-    const templeteSettings: TempleteSettings | undefined = fileConfigs?.TempleteSettings;
     if (fileConfigs?.templateFile !== undefined && initialDataGrid !== undefined) {
         throw new Error(templateWithInitialDataErr);
     }
@@ -62,7 +61,7 @@ const generateSingleQueryWorkbookFromZip = async (zip: JSZip, query: QueryInfo, 
     }
 
     await xmlPartsUtils.updateWorkbookPowerQueryDocument(zip, query.queryName, generateSingleQueryMashup(query.queryName, query.queryMashup));
-    await xmlPartsUtils.updateWorkbookSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen, fileConfigs?.TempleteSettings?.sheetName);
+    await xmlPartsUtils.updateWorkbookSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen, fileConfigs?.templateSettings?.sheetName);
     await xmlPartsUtils.updateWorkbookDataAndConfigurations(zip, fileConfigs, tableData, true /*updateQueryTable*/);
 
     return await zip.generateAsync({

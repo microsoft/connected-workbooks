@@ -36,7 +36,7 @@ describe("Single query template tests", () => {
         expect(defaultZipFile).toBeTruthy();
     });
 
-    test("Template with diffrent name is a valid zip file", async () => {
+    test("Template with different name is a valid zip file", async () => {
         expect(zipFileWithSheetName).toBeTruthy();
     });
 
