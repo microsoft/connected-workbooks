@@ -126,7 +126,6 @@ export const elementAttributes = {
     xr3uid: "xr3:uid",
     space: "xml:space",
     target: "Target",
-    refrance: "ref",
 };
 
 export const dataTypeKind = {
