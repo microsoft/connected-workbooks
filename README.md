@@ -118,7 +118,36 @@ workbookManager.openInExcelWeb(blob, "SalesReport.xlsx", true);
 
 Transform your data using pre-built Excel templates with your corporate branding.
 
-To use custom branded templates, you'll need an Excel file. Within this file, designate a specific sheet (the default is "Sheet1" or any name you prefer) and a table within that sheet (the default is "Table1" or any name you prefer). When calling the function to generate the workbook, you can specify these names. The library will then populate the designated table with your data. Any functions, figures, or references linked to this table within the Excel template will automatically reflect the newly exported data.
+
+
+**Steps:**
+
+1.  **Prepare Your Template File**
+
+    Open Excel and create (or open) your branded file.
+2.  **Pick one sheet that will hold your data.**
+
+    The default "Sheet1"(3)
+3.  **Inside that sheet, choose were you want your data to be populated(1) and create a table (Insert → Table).**
+
+    The default table name is Table1(2)  
+    The table need to have the same column structure as your incoming data.
+4.  **Add any charts, formulas, or formatting that reference this table.**
+
+    Example: Pie chart using Gross column(4).
+5.  **Save the Excel file (e.g., my-template.xlsx).**
+6.  **Use the saved file as the template for your incoming data**
+
+The library will then populate the designated table with your data. Any functions, figures, or references linked to this table within the Excel template will automatically reflect the newly exported data.
+
+<div align="center">
+<img  alt="Custom Branded Excel Dashboard" src="./assets/template_before_after.png">
+</div>
+
+<div align="center">
+  <!-- Template example downloads -->
+  <a href="./assets/before.xlsx" download>Download before.xlsx</a> • <a href="./assets/after.xlsx" download>Download after.xlsx</a>
+</div>
 
 #### 📁 **Loading Template Files**
 
@@ -170,7 +199,7 @@ workbookManager.openInExcelWeb(blob, "Q4_Executive_Dashboard.xlsx", true);
 ```
 
 <div align="center">
-<img width="600" alt="Custom Branded Excel Dashboard" src="./assets/template_example.png">
+<img  alt="Custom Branded Excel Dashboard" src="./assets/template_example.png">
 </div>
 
 > 💡 **Template Requirements**: Include a query named **"Query1"** connected to a **Table**.
