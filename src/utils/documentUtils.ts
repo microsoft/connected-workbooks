@@ -69,16 +69,32 @@ const convertToExcelColumn = (index: number): string => {
     const base = 26; // number of letters in the alphabet
     while (index >= 0) {
         const remainder = index % base;
-        columnStr = String.fromCharCode(remainder + 65) + columnStr; // ASCII 'A' is 65
+        columnStr = String.fromCharCode(remainder + 'A'.charCodeAt(0)) + columnStr;
         index = Math.floor(index / base) - 1;
     }
 
     return columnStr;
 };
 
-const getTableReference = (numberOfCols: number, numberOfRows: number): string => {
-    return `A1:${getCellReferenceRelative(numberOfCols, numberOfRows)}`;
-};
+/**
+ * Parse an Excel range (e.g. "B2:D10") and return its starting row and column indices.
+ * @param cellRangeRef - Range reference string.
+ * @returns Object with numeric row and column.
+ */
+const GetStartPosition = (cellRangeRef: string): { row: number; column: number } => {
+    const match = cellRangeRef.toUpperCase().match(/^([A-Z]+)(\d+):/);
+    if (!match) {
+        return { row: 0, column: 0 };
+    }
+
+    const [, colLetters, rowStr] = match;
+    const row = parseInt(rowStr, 10);
+    const column = colLetters
+        .split("")
+        .reduce((acc, char) => acc * 26 + (char.charCodeAt(0) - "A".charCodeAt(0) + 1), 0);
+
+    return { row, column };
+}
 
 const createCellElement = (doc: Document, colIndex: number, rowIndex: number, data: string): Element => {
     const cell: Element = doc.createElementNS(doc.documentElement.namespaceURI, element.kindCell);
@@ -131,8 +147,8 @@ export default {
     getCellReferenceRelative,
     getCellReferenceAbsolute,
     createCell: createCellElement,
-    getTableReference,
     updateCellData,
     resolveType,
     convertToExcelColumn,
+    GetStartPosition,
 };

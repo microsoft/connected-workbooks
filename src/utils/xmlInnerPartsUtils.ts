@@ -23,6 +23,12 @@ import {
     relsXmlPath,
     unexpectedErr,
     relsNotFoundErr,
+    WorkbookNotFoundERR,
+    workbookXmlPath,
+    tableNotFoundErr,
+    tableReferenceNotFoundErr,
+    workbookRelsXmlPath,
+    xlRelsNotFoundErr,
 } from "./constants";
 import documentUtils from "./documentUtils";
 import { DOMParser, XMLSerializer } from "xmldom-qsa";
@@ -269,6 +275,95 @@ const updatePivotTable = (tableXmlString: string, connectionId: string, refreshO
     return { isPivotTableUpdated, newPivotTable };
 };
 
+/**
+ * Retrieves the target path of a sheet from workbook relationships by its relationship ID.
+ */
+async function getSheetPathFromXlRelId(zip: JSZip, rId: string): Promise<string> {
+    const relsFile = zip.file(workbookRelsXmlPath);
+    if (!relsFile) {
+        throw new Error(xlRelsNotFoundErr);
+    }
+
+    const relsString = await relsFile.async(textResultType);
+    const relsDoc = new DOMParser().parseFromString(relsString, xmlTextResultType);
+    const relationship = relsDoc.querySelector(`Relationship[Id="${rId}"]`);
+    if (!relationship) {
+        throw new Error(`Relationship not found for Id: ${rId}`);
+    }
+
+    const target = relationship.getAttribute(elementAttributes.target);
+    if (!target) {
+        throw new Error(`Target not found for Relationship Id: ${rId}`);
+    }
+
+    return target;
+}
+
+// get sheet name from workbook
+const getSheetPathByNameFromZip = async (zip: JSZip, sheetName: string): Promise<string> => {
+    const workbookXmlString: string | undefined = await zip.file(workbookXmlPath)?.async("text");
+    if (!workbookXmlString) {
+        throw new Error(WorkbookNotFoundERR);
+    }
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(workbookXmlString, xmlTextResultType);
+
+    const sheetElements = doc.getElementsByTagName(element.sheet);
+    for (let i = 0; i < sheetElements.length; i++) {
+        if (sheetElements[i].getAttribute(elementAttributes.name) === sheetName) {
+            const rId = sheetElements[i].getAttribute(elementAttributes.relationId);
+            if (rId) {
+                return getSheetPathFromXlRelId(zip, rId);
+            }
+        }
+    }
+
+    throw new Error(`Sheet with name ${sheetName} not found`);
+};
+
+// get definedName
+const getReferenceFromTable = async (zip: JSZip, tablePath: string): Promise<string> => {
+    const tableXmlString: string | undefined = await zip.file(tablePath)?.async("text");
+    if (!tableXmlString) {
+        throw new Error(WorkbookNotFoundERR);
+    }
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(tableXmlString, xmlTextResultType);
+    const tableElements = doc.getElementsByTagName(element.table);
+    const reference = tableElements[0]?.getAttribute(elementAttributes.reference);
+    if (!reference) {
+        throw new Error(tableReferenceNotFoundErr);
+    }
+
+    return reference.split(":")[0]; // Return the start cell reference (e.g., "A1" from "A1:B10")
+};
+
+const findTablePathFromZip = async (zip: JSZip, targetTableName: string): Promise<string> => {
+    const tablesFolder = zip.folder("xl/tables");
+    if (!tablesFolder) return "";
+
+    const tableFilePromises: Promise<{ path: string; content: string }>[] = [];
+    tablesFolder.forEach((relativePath, file) => {
+        tableFilePromises.push(
+            file.async(textResultType).then(content => ({ path: relativePath, content }))
+        );
+    });
+
+    const tableFiles = await Promise.all(tableFilePromises);
+    const parser = new DOMParser();
+    for (const { path, content } of tableFiles) {
+        const doc = parser.parseFromString(content, xmlTextResultType);
+        const tableElem = doc.getElementsByTagName(element.table)[0];
+        if (tableElem && tableElem.getAttribute(elementAttributes.name) === targetTableName) {
+            return path;
+        }
+    }
+
+    throw new Error(tableNotFoundErr);
+};
+
 export default {
     updateDocProps,
     clearLabelInfo,
@@ -278,4 +373,7 @@ export default {
     updatePivotTablesandQueryTables,
     updateQueryTable,
     updatePivotTable,
+    getSheetPathByNameFromZip,
+    getReferenceFromTable,
+    findTablePathFromZip,
 };

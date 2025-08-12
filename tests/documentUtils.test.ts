@@ -4,6 +4,7 @@
 import { DataTypes } from "../src/types";
 import { documentUtils } from "../src/utils";
 import { element } from "../src/utils/constants";
+import { describe, test, expect } from '@jest/globals';
 
 describe("Document Utils tests", () => {
     test("ResolveType date not supported success", () => {
@@ -65,5 +66,11 @@ describe("Document Utils tests", () => {
         } catch (e) {
             expect(e.message).toEqual("Column index out of range");
         }
+    });
+
+    test("Test convert Excel Column To column number", () => {
+        expect(documentUtils.GetStartPosition("A1:B1")).toEqual({ row: 1, column: 1 });
+        expect(documentUtils.GetStartPosition("zz615:zzE755")).toEqual({ row: 615, column: 702 });
+        expect(documentUtils.GetStartPosition("Xfd12:D12")).toEqual({ row: 12, column: 16384 });
     });
 });
