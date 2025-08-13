@@ -76,17 +76,33 @@ const clearLabelInfo = async (zip: JSZip): Promise<void> => {
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(relsString, xmlTextResultType);
-    const relationships = doc.querySelector("Relationships");
-    if (relationships === null) {
+    const relationships = doc.getElementsByTagName("Relationships")[0];
+    if (!relationships) {
         throw new Error(unexpectedErr);
     }
-    const element = relationships.querySelector('Relationship[Target="docMetadata/LabelInfo.xml"]');
-    if (element) {
-        relationships.removeChild(element);
+    
+    // Find and remove LabelInfo.xml relationship
+    const relationshipElements = doc.getElementsByTagName("Relationship");
+    for (let i = 0; i < relationshipElements.length; i++) {
+        const rel = relationshipElements[i];
+        if (rel.getAttribute("Target") === "docMetadata/LabelInfo.xml") {
+            relationships.removeChild(rel);
+            break;
+        }
     }
-    relationships.querySelector('Relationship[Target="xl/workbook.xml"]')?.setAttribute("Id", "rId1");
-    relationships.querySelector('Relationship[Target="docProps/core.xml"]')?.setAttribute("Id", "rId2");
-    relationships.querySelector('Relationship[Target="docProps/app.xml"]')?.setAttribute("Id", "rId3");
+    
+    // Update relationship IDs
+    for (let i = 0; i < relationshipElements.length; i++) {
+        const rel = relationshipElements[i];
+        const target = rel.getAttribute("Target");
+        if (target === "xl/workbook.xml") {
+            rel.setAttribute("Id", "rId1");
+        } else if (target === "docProps/core.xml") {
+            rel.setAttribute("Id", "rId2");
+        } else if (target === "docProps/app.xml") {
+            rel.setAttribute("Id", "rId3");
+        }
+    }
 
     const serializer: XMLSerializer = new XMLSerializer();
     const newDoc: string = serializer.serializeToString(doc);
@@ -286,14 +302,20 @@ async function getSheetPathFromXlRelId(zip: JSZip, rId: string): Promise<string>
 
     const relsString = await relsFile.async(textResultType);
     const relsDoc = new DOMParser().parseFromString(relsString, xmlTextResultType);
-    const relationship = relsDoc.querySelector(`Relationship[Id="${rId}"]`);
-    if (!relationship) {
-        throw new Error(`Relationship not found for Id: ${rId}`);
+
+    // Avoid querySelector due to xmldom-qsa edge cases; iterate elements safely
+    const relationships = relsDoc.getElementsByTagName("Relationship");
+    let target: string | null = null;
+    for (let i = 0; i < relationships.length; i++) {
+        const el = relationships[i];
+        if (el && el.getAttribute && el.getAttribute("Id") === rId) {
+            target = el.getAttribute(elementAttributes.target);
+            break;
+        }
     }
 
-    const target = relationship.getAttribute(elementAttributes.target);
     if (!target) {
-        throw new Error(`Target not found for Relationship Id: ${rId}`);
+        throw new Error(`Relationship not found or missing Target for Id: ${rId}`);
     }
 
     return target;
