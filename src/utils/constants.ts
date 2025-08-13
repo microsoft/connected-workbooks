@@ -130,7 +130,7 @@ export const elementAttributes = {
 
 export const dataTypeKind = {
     string: "str",
-    number: "1",
+    number: "n",
     boolean: "b",
 };
 
