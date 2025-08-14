@@ -52,8 +52,15 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
     }
 
     if (tableData) {
+        // Get the starting position and convert to numeric row/column coordinates
         const { row, column } = documentUtils.GetStartPosition(cellRangeRef);
-        cellRangeRef += `:${documentUtils.getCellReferenceRelative(tableData.columnNames.length - 1 + column - 1, tableData.rows.length + 1 + row - 1)}`;
+        
+        // Calculate the table's end position based on its dimensions with offset of where we start(A1->offset(0,0))
+        const endColumn = column - 1 + tableData.columnNames.length;
+        const endRow = row - 1 + tableData.rows.length;
+
+        // Extend the cell range to include the entire table span
+        cellRangeRef += `:${documentUtils.getCellReferenceRelative(endColumn - 1, endRow + 1)}`;
     }
 
     await xmlInnerPartsUtils.updateDocProps(zip, fileConfigs?.docProps);
