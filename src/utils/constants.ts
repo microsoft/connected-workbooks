@@ -16,6 +16,8 @@ export const relsXmlPath = "_rels/.rels";
 export const docMetadataXmlPath = "docMetadata";
 export const docPropsRootElement = "cp:coreProperties";
 export const workbookRelsXmlPath = "xl/_rels/workbook.xml.rels";
+export const contentTypesXmlPath = "[Content_Types].xml";
+export const customXmlXmlPath = "customXML";
 
 export const sharedStringsNotFoundErr = "SharedStrings were not found in template";
 export const connectionsNotFoundErr = "Connections were not found in template";
@@ -45,6 +47,7 @@ export const arrayIsntMxNErr = "Array isn't MxN";
 export const relsNotFoundErr = ".rels were not found in template";
 export const xlRelsNotFoundErr = "workbook.xml.rels were not found xl";
 export const columnIndexOutOfRangeErr = "Column index out of range";
+export const contentTypesNotFoundERR = "contentTypes was not found in file";
 
 export const blobFileType = "blob";
 export const uint8ArrayType = "uint8array";
@@ -91,6 +94,7 @@ export const element = {
     selection: "selection",
     kindCell: "c",
     sheet: "sheet",
+    override: "Override",
 };
 
 export const elementAttributes = {
@@ -126,6 +130,8 @@ export const elementAttributes = {
     xr3uid: "xr3:uid",
     space: "xml:space",
     target: "Target",
+    partName: "PartName",
+    contentType: "ContentType",
 };
 
 export const dataTypeKind = {
@@ -171,3 +177,26 @@ export const OFU = {
     WdOrigin: "wdOrigin",
     OpenInExcelOririgin: "OpenInExcel",
 };
+
+export const customXML = {
+    customXMLItem: "itemX.xml",
+    customXMLItemProps: "itemPropsX.xml",
+    customXMLItemContent: `<ConnectedWorkbook xmlns="http://schemas.microsoft.com/ConnectedWorkbook" version="1.0.0"/>`,
+    customXMLItemPropsId: "{0B384C3C-E1D4-401B-8CF4-6285949D7671}",
+    customXMLItemPropsContent: `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<ds:datastoreItem ds:itemID="{0B384C3C-E1D4-401B-8CF4-6285949D7671}" xmlns:ds="http://schemas.openxmlformats.org/officeDocument/2006/customXml"><ds:schemaRefs><ds:schemaRef ds:uri="http://schemas.microsoft.com/ConnectedWorkbook"/></ds:schemaRefs></ds:datastoreItem>`,
+    customXMLRelationships: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXmlProps" Target="XXX"/></Relationships>`,
+    folderName: "customXml",
+    itemPrefix: "item",
+    fileExtension: ".xml",
+    itemNumberPattern: /item(\d+)\.xml$/,
+    itemFilePattern: /item\d+\.xml/,
+    itemPropsPartNameTemplate: (itemIndex: string) => `/customXml/itemProps${itemIndex}.xml`,
+    contentType: "application/vnd.openxmlformats-officedocument.customXmlProperties+xml",
+}
+/*
+  zip.file("customXml/item1.xml", customXml);
+  zip.file("customXml/itemProps1.xml", itemProps);
+  zip.file("customXml/_rels/item1.xml.rels", itemRels);
+*/

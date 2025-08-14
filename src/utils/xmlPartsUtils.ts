@@ -14,6 +14,7 @@ import {
     tableXmlPath,
     defaults,
     tablesFolderPath,
+    customXML,
 } from "./constants";
 import { replaceSingleQuery } from "./mashupDocumentParser";
 import { FileConfigs, TableData, TemplateSettings } from "../types";
@@ -21,6 +22,19 @@ import pqUtils from "./pqUtils";
 import tableUtils from "./tableUtils";
 import xmlInnerPartsUtils from "./xmlInnerPartsUtils";
 import documentUtils from "./documentUtils";
+
+const addCustomXMLToWorkbook = async (zip: JSZip): Promise<void> => {
+    // find the customXML item numbers from folder if exists
+    const customXmlItemNumber: number = await xmlInnerPartsUtils.getCustomXmlItemNumber(zip);
+    if (await xmlInnerPartsUtils.isCustomXmlExists(zip)) {
+        return;
+    }
+    xmlInnerPartsUtils.addToContentType(zip, customXmlItemNumber.toString());
+    zip.file("customXml/item"+customXmlItemNumber+".xml", customXML.customXMLItemContent.replace("X", customXmlItemNumber.toString()));
+    zip.file("customXml/itemProps"+customXmlItemNumber+".xml", customXML.customXMLItemPropsContent);
+    zip.file("customXml/_rels/item"+customXmlItemNumber+".xml.rels", customXML.customXMLRelationships.replace("XXX", `itemProps${customXmlItemNumber}.xml`));
+
+}
 
 const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: FileConfigs, tableData?: TableData, updateQueryTable = false): Promise<void> => {
     let sheetName: string = defaults.sheetName;
@@ -43,7 +57,7 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
             tablePath = tablesFolderPath + await xmlInnerPartsUtils.findTablePathFromZip(zip, templateSettings?.tableName);
         }
     }
-    
+
     // Getting the table start and end location string from the table path
     // If no table path is provided, we will consider A1 as the start location
     let cellRangeRef: string = "A1";
@@ -51,10 +65,10 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
         cellRangeRef = await xmlInnerPartsUtils.getReferenceFromTable(zip, tablePath)
     }
 
-   if (tableData) {
+    if (tableData) {
         cellRangeRef += `:${documentUtils.getCellReferenceRelative(tableData.columnNames.length - 1, tableData.rows.length + 1)}`;
     }
-    
+
     await xmlInnerPartsUtils.updateDocProps(zip, fileConfigs?.docProps);
     if (fileConfigs?.templateFile === undefined) {
         // If we are using our base template, we need to clear label info
@@ -97,9 +111,9 @@ const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string
     let sheetPath: string = sheetsXmlPath;
     if (sheetName !== undefined) {
         const sheetLocation = await xmlInnerPartsUtils.getSheetPathByNameFromZip(zip, sheetName);
-            sheetPath = "xl/" + sheetLocation;
+        sheetPath = "xl/" + sheetLocation;
     }
-    
+
     const sheetsXmlString: string | undefined = await zip.file(sheetPath)?.async(textResultType);
     if (sheetsXmlString === undefined) {
         throw new Error(sheetsNotFoundErr);
@@ -116,4 +130,5 @@ export default {
     updateWorkbookDataAndConfigurations,
     updateWorkbookPowerQueryDocument,
     updateWorkbookSingleQueryAttributes,
+    addCustomXMLToWorkbook,
 };

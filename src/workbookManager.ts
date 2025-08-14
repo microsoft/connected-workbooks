@@ -48,6 +48,7 @@ export const generateTableWorkbookFromGrid = async (grid: Grid, fileConfigs?: Fi
     }
 
     await xmlPartsUtils.updateWorkbookDataAndConfigurations(zip, fileConfigs, tableData);
+    await xmlPartsUtils.addCustomXMLToWorkbook(zip);
 
     return await zip.generateAsync({
         type: blobFileType,

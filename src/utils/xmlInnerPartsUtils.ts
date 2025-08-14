@@ -29,6 +29,11 @@ import {
     tableReferenceNotFoundErr,
     workbookRelsXmlPath,
     xlRelsNotFoundErr,
+    customXML,
+    customXmlXmlPath,
+    contentTypesNotFoundERR,
+    contentTypesXmlPath,
+    tablesFolderPath,
 } from "./constants";
 import documentUtils from "./documentUtils";
 import { DOMParser, XMLSerializer } from "xmldom-qsa";
@@ -341,8 +346,8 @@ const getReferenceFromTable = async (zip: JSZip, tablePath: string): Promise<str
 };
 
 const findTablePathFromZip = async (zip: JSZip, targetTableName: string): Promise<string> => {
-    const tablesFolder = zip.folder("xl/tables");
-    if (!tablesFolder) return "";
+    const tablesFolder = zip.folder(tablesFolderPath.slice(0, -1)); // Remove trailing slash
+    if (!tablesFolder) return emptyValue;
 
     const tableFilePromises: Promise<{ path: string; content: string }>[] = [];
     tablesFolder.forEach((relativePath, file) => {
@@ -364,6 +369,79 @@ const findTablePathFromZip = async (zip: JSZip, targetTableName: string): Promis
     throw new Error(tableNotFoundErr);
 };
 
+const getCustomXmlItemNumber = async (zip: JSZip): Promise<number> => {
+    const customXmlFolder = zip.folder(customXmlXmlPath);
+    if (!customXmlFolder) {
+        return 1; // start from 1 if folder doesn't exist
+    }
+
+    const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp(`^${esc(customXmlXmlPath)}/${customXML.itemNumberPattern.source}$`);
+    const matches = zip.file(re);
+
+    let max = 0;
+    for (const f of matches) {
+        const m = f.name.match(customXML.itemNumberPattern);
+        if (m) {
+            const n = parseInt(m[1], 10);
+            if (!Number.isNaN(n) && n > max) {
+                max = n;
+            }
+        }
+    }
+
+    return max + 1;
+};
+
+// Check if custom XML exists in the zip by going over the folder structure
+const isCustomXmlExists = async (zip: JSZip): Promise<boolean> => {
+    const customXmlFolder = zip.folder(customXML.folderName);
+    if (!customXmlFolder) {
+        return false; // customXml folder does not exist
+    }
+
+    // going over all the files in the folder and check if the content equal to customXMLItemContent
+    const customXmlFiles = customXmlFolder.file(customXML.itemFilePattern);
+    for (const file of customXmlFiles) {
+        if (file.name.startsWith(customXML.itemPrefix) && file.name.endsWith(customXML.fileExtension)) {
+            const content = await file.async(textResultType);
+            if (content === customXML.customXMLItemContent) {
+                return true; // custom XML item exists
+            }
+        }
+    }
+    return false; // custom XML item does not exist
+};
+
+const addToContentType = async (zip: JSZip, itemIndex: string) => {
+    const contentTypesXmlString: string | undefined = await zip.file(contentTypesXmlPath)?.async(textResultType);
+    if (!contentTypesXmlString) {
+        throw new Error(contentTypesNotFoundERR);
+    }
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(contentTypesXmlString, xmlTextResultType);
+
+    const partName = customXML.itemPropsPartNameTemplate(itemIndex);
+    const contentTypeValue = customXML.contentType;
+    const typesElement = doc.documentElement;
+    if (!typesElement) {
+        throw new Error(contentTypesNotFoundERR);
+    }
+
+
+    const ns = doc.documentElement.namespaceURI;
+    const overrideEl = ns ? doc.createElementNS(ns, element.override) : doc.createElement(element.override);
+    overrideEl.setAttribute(elementAttributes.partName, partName);
+    overrideEl.setAttribute(elementAttributes.contentType, contentTypeValue);
+    typesElement.appendChild(overrideEl);
+
+    const serializer = new XMLSerializer();
+    const newDoc = serializer.serializeToString(doc);
+    zip.file(contentTypesXmlPath, newDoc);
+
+};
+
 export default {
     updateDocProps,
     clearLabelInfo,
@@ -376,4 +454,7 @@ export default {
     getSheetPathByNameFromZip,
     getReferenceFromTable,
     findTablePathFromZip,
+    getCustomXmlItemNumber,
+    isCustomXmlExists,
+    addToContentType,
 };
