@@ -47,6 +47,7 @@ export const arrayIsntMxNErr = "Array isn't MxN";
 export const relsNotFoundErr = ".rels were not found in template";
 export const xlRelsNotFoundErr = "workbook.xml.rels were not found xl";
 export const columnIndexOutOfRangeErr = "Column index out of range";
+export const relationshipErr = "Relationship not found";
 
 export const blobFileType = "blob";
 export const uint8ArrayType = "uint8array";

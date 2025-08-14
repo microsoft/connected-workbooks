@@ -21,7 +21,6 @@ import {
     emptyValue,
     docMetadataXmlPath,
     relsXmlPath,
-    unexpectedErr,
     relsNotFoundErr,
     WorkbookNotFoundERR,
     workbookXmlPath,
@@ -31,6 +30,7 @@ import {
     xlRelsNotFoundErr,
     labelInfoXmlPath,
     docPropsAppXmlPath,
+    relationshipErr,
 } from "./constants";
 import documentUtils from "./documentUtils";
 import { DOMParser, XMLSerializer } from "xmldom-qsa";
@@ -66,6 +66,34 @@ const updateDocProps = async (zip: JSZip, docProps: DocProps = {}): Promise<void
     zip.file(docPropsCoreXmlPath, newDoc);
 };
 
+const removeLabelInfoRelationship = (doc: Document, relationships: Element) => {
+    // Find and remove LabelInfo.xml relationship
+    const relationshipElements = doc.getElementsByTagName(element.relationship);
+    for (let i = 0; i < relationshipElements.length; i++) {
+        const rel = relationshipElements[i];
+        if (rel.getAttribute(elementAttributes.target) === labelInfoXmlPath) {
+            relationships.removeChild(rel);
+            break;
+        }
+    }
+};
+
+const updateRelationshipIds = (doc: Document) => {
+    // Update relationship IDs
+    const relationshipElements = doc.getElementsByTagName(element.relationship);
+    for (let i = 0; i < relationshipElements.length; i++) {
+        const rel = relationshipElements[i];
+        const target = rel.getAttribute(elementAttributes.target);
+        if (target === workbookXmlPath) {
+            rel.setAttribute(elementAttributes.Id, elementAttributes.relationId1);
+        } else if (target === docPropsCoreXmlPath) {
+            rel.setAttribute(elementAttributes.Id, elementAttributes.relationId2);
+        } else if (target === docPropsAppXmlPath) {
+            rel.setAttribute(elementAttributes.Id, elementAttributes.relationId3);
+        }
+    }
+};
+
 const clearLabelInfo = async (zip: JSZip): Promise<void> => {
     // remove docMetadata folder that contains only LabelInfo.xml in template file.
     zip.remove(docMetadataXmlPath);
@@ -78,33 +106,18 @@ const clearLabelInfo = async (zip: JSZip): Promise<void> => {
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(relsString, xmlTextResultType);
-    const relationships = doc.getElementsByTagName(element.relationships)[0];
+    const relationshipsList = doc.getElementsByTagName(element.relationships);
+    if (!relationshipsList || relationshipsList.length === 0) {
+        throw new Error(relationshipErr);
+    }
+
+    const relationships = relationshipsList[0];
     if (!relationships) {
-        throw new Error(unexpectedErr);
+        throw new Error(relationshipErr);
     }
-    
-    // Find and remove LabelInfo.xml relationship
-    const relationshipElements = doc.getElementsByTagName(element.relationship);
-    for (let i = 0; i < relationshipElements.length; i++) {
-        const rel = relationshipElements[i];
-        if (rel.getAttribute(elementAttributes.target) === labelInfoXmlPath) {
-            relationships.removeChild(rel);
-            break;
-        }
-    }
-    
-    // Update relationship IDs
-    for (let i = 0; i < relationshipElements.length; i++) {
-        const rel = relationshipElements[i];
-        const target = rel.getAttribute(elementAttributes.target);
-        if (target === workbookXmlPath) {
-            rel.setAttribute(elementAttributes.Id, elementAttributes.relationId1);
-        } else if (target === docPropsCoreXmlPath) {
-            rel.setAttribute(elementAttributes.Id, elementAttributes.relationId2);
-        } else if (target === docPropsAppXmlPath) {
-            rel.setAttribute(elementAttributes.Id, elementAttributes.relationId3);
-        }
-    }
+
+    removeLabelInfoRelationship(doc, relationships);
+    updateRelationshipIds(doc);
 
     const serializer: XMLSerializer = new XMLSerializer();
     const newDoc: string = serializer.serializeToString(doc);
