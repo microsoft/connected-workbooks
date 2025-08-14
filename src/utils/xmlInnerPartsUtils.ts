@@ -29,6 +29,8 @@ import {
     tableReferenceNotFoundErr,
     workbookRelsXmlPath,
     xlRelsNotFoundErr,
+    labelInfoXmlPath,
+    docPropsAppXmlPath,
 } from "./constants";
 import documentUtils from "./documentUtils";
 import { DOMParser, XMLSerializer } from "xmldom-qsa";
@@ -76,16 +78,16 @@ const clearLabelInfo = async (zip: JSZip): Promise<void> => {
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(relsString, xmlTextResultType);
-    const relationships = doc.getElementsByTagName("Relationships")[0];
+    const relationships = doc.getElementsByTagName(element.relationships)[0];
     if (!relationships) {
         throw new Error(unexpectedErr);
     }
     
     // Find and remove LabelInfo.xml relationship
-    const relationshipElements = doc.getElementsByTagName("Relationship");
+    const relationshipElements = doc.getElementsByTagName(element.relationship);
     for (let i = 0; i < relationshipElements.length; i++) {
         const rel = relationshipElements[i];
-        if (rel.getAttribute("Target") === "docMetadata/LabelInfo.xml") {
+        if (rel.getAttribute(elementAttributes.target) === labelInfoXmlPath) {
             relationships.removeChild(rel);
             break;
         }
@@ -94,13 +96,13 @@ const clearLabelInfo = async (zip: JSZip): Promise<void> => {
     // Update relationship IDs
     for (let i = 0; i < relationshipElements.length; i++) {
         const rel = relationshipElements[i];
-        const target = rel.getAttribute("Target");
-        if (target === "xl/workbook.xml") {
-            rel.setAttribute("Id", "rId1");
-        } else if (target === "docProps/core.xml") {
-            rel.setAttribute("Id", "rId2");
-        } else if (target === "docProps/app.xml") {
-            rel.setAttribute("Id", "rId3");
+        const target = rel.getAttribute(elementAttributes.target);
+        if (target === workbookXmlPath) {
+            rel.setAttribute(elementAttributes.Id, elementAttributes.relationId1);
+        } else if (target === docPropsCoreXmlPath) {
+            rel.setAttribute(elementAttributes.Id, elementAttributes.relationId2);
+        } else if (target === docPropsAppXmlPath) {
+            rel.setAttribute(elementAttributes.Id, elementAttributes.relationId3);
         }
     }
 

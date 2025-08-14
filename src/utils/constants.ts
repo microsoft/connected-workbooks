@@ -16,6 +16,8 @@ export const relsXmlPath = "_rels/.rels";
 export const docMetadataXmlPath = "docMetadata";
 export const docPropsRootElement = "cp:coreProperties";
 export const workbookRelsXmlPath = "xl/_rels/workbook.xml.rels";
+export const labelInfoXmlPath = "docMetadata/LabelInfo.xml";
+export const docPropsAppXmlPath = "docProps/app.xml";
 
 export const sharedStringsNotFoundErr = "SharedStrings were not found in template";
 export const connectionsNotFoundErr = "Connections were not found in template";
@@ -91,6 +93,8 @@ export const element = {
     selection: "selection",
     kindCell: "c",
     sheet: "sheet",
+    relationships: "Relationships",
+    relationship: "Relationship"
 };
 
 export const elementAttributes = {
@@ -105,7 +109,11 @@ export const elementAttributes = {
     name: "name",
     description: "description",
     id: "id",
+    Id: "Id",
     relationId: "r:id",
+    relationId1: "RId1",
+    relationId2: "RId2",
+    relationId3: "RId3",
     type: "Type",
     value: "Value",
     relationshipInfo: "RelationshipInfoContainer",

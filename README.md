@@ -374,9 +374,9 @@ Advanced customization options.
 
 ```typescript
 interface FileConfigs {
-  templateFile?: File;              // Custom Excel template
-  docProps?: DocProps;              // Document metadata
-  hostName?: string;                // Creator application name
+  templateFile?: File | Buffer;        // Custom Excel template
+  docProps?: DocProps;                 // Document metadata
+  hostName?: string;                   // Creator application name
   TempleteSettings?: TempleteSettings; // Template-specific settings
 }
 
