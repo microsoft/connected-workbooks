@@ -17,7 +17,8 @@ export const docMetadataXmlPath = "docMetadata";
 export const docPropsRootElement = "cp:coreProperties";
 export const workbookRelsXmlPath = "xl/_rels/workbook.xml.rels";
 export const contentTypesXmlPath = "[Content_Types].xml";
-export const customXmlXmlPath = "customXML";
+export const customXmlXmlPath = "customXml";
+export const customXmlFolderName = "customXml";
 
 export const sharedStringsNotFoundErr = "SharedStrings were not found in template";
 export const connectionsNotFoundErr = "Connections were not found in template";
@@ -95,6 +96,8 @@ export const element = {
     kindCell: "c",
     sheet: "sheet",
     override: "Override",
+    relationship: "Relationship",
+    relationships: "Relationships",
 };
 
 export const elementAttributes = {
@@ -109,6 +112,7 @@ export const elementAttributes = {
     name: "name",
     description: "description",
     id: "id",
+    Id: "Id",
     relationId: "r:id",
     type: "Type",
     value: "Value",
@@ -132,6 +136,7 @@ export const elementAttributes = {
     target: "Target",
     partName: "PartName",
     contentType: "ContentType",
+    relationshipIdPrefix: "rId",
 };
 
 export const dataTypeKind = {
@@ -179,24 +184,20 @@ export const OFU = {
 };
 
 export const customXML = {
-    customXMLItem: "itemX.xml",
-    customXMLItemProps: "itemPropsX.xml",
     customXMLItemContent: `<ConnectedWorkbook xmlns="http://schemas.microsoft.com/ConnectedWorkbook" version="1.0.0"/>`,
-    customXMLItemPropsId: "{0B384C3C-E1D4-401B-8CF4-6285949D7671}",
     customXMLItemPropsContent: `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <ds:datastoreItem ds:itemID="{0B384C3C-E1D4-401B-8CF4-6285949D7671}" xmlns:ds="http://schemas.openxmlformats.org/officeDocument/2006/customXml"><ds:schemaRefs><ds:schemaRef ds:uri="http://schemas.microsoft.com/ConnectedWorkbook"/></ds:schemaRefs></ds:datastoreItem>`,
-    customXMLRelationships: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXmlProps" Target="XXX"/></Relationships>`,
-    folderName: "customXml",
     itemPrefix: "item",
     fileExtension: ".xml",
     itemNumberPattern: /item(\d+)\.xml$/,
     itemFilePattern: /item\d+\.xml/,
     itemPropsPartNameTemplate: (itemIndex: string) => `/customXml/itemProps${itemIndex}.xml`,
     contentType: "application/vnd.openxmlformats-officedocument.customXmlProperties+xml",
+    itemPathTemplate: (itemNumber: number | string) => `customXml/item${itemNumber}.xml`,
+    itemPropsPathTemplate: (itemNumber: number | string) => `customXml/itemProps${itemNumber}.xml`,
+    itemRelsPathTemplate: (itemNumber: number | string) => `customXml/_rels/item${itemNumber}.xml.rels`,
+    customXMLRelationships: (itemNumber: number | string) => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXmlProps" Target="itemProps${itemNumber}.xml"/></Relationships>`,
+    relationshipType: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml",
+    relativeItemPathTemplate: (itemNumber: number | string) => `../customXml/item${itemNumber}.xml`,
 }
-/*
-  zip.file("customXml/item1.xml", customXml);
-  zip.file("customXml/itemProps1.xml", itemProps);
-  zip.file("customXml/_rels/item1.xml.rels", itemRels);
-*/

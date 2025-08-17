@@ -29,11 +29,14 @@ const addCustomXMLToWorkbook = async (zip: JSZip): Promise<void> => {
     if (await xmlInnerPartsUtils.isCustomXmlExists(zip)) {
         return;
     }
-    xmlInnerPartsUtils.addToContentType(zip, customXmlItemNumber.toString());
-    zip.file("customXml/item"+customXmlItemNumber+".xml", customXML.customXMLItemContent.replace("X", customXmlItemNumber.toString()));
-    zip.file("customXml/itemProps"+customXmlItemNumber+".xml", customXML.customXMLItemPropsContent);
-    zip.file("customXml/_rels/item"+customXmlItemNumber+".xml.rels", customXML.customXMLRelationships.replace("XXX", `itemProps${customXmlItemNumber}.xml`));
 
+    await xmlInnerPartsUtils.addToContentType(zip, customXmlItemNumber.toString());
+    await xmlInnerPartsUtils.addCustomXmlToRels(zip, customXmlItemNumber.toString());  
+
+    // Adding the custom XML files
+    zip.file(customXML.itemPathTemplate(customXmlItemNumber), customXML.customXMLItemContent);
+    zip.file(customXML.itemPropsPathTemplate(customXmlItemNumber), customXML.customXMLItemPropsContent);
+    zip.file(customXML.itemRelsPathTemplate(customXmlItemNumber), customXML.customXMLRelationships(customXmlItemNumber));
 }
 
 const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: FileConfigs, tableData?: TableData, updateQueryTable = false): Promise<void> => {

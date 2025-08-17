@@ -34,6 +34,7 @@ import {
     contentTypesNotFoundERR,
     contentTypesXmlPath,
     tablesFolderPath,
+    customXmlFolderName,
 } from "./constants";
 import documentUtils from "./documentUtils";
 import { DOMParser, XMLSerializer } from "xmldom-qsa";
@@ -369,50 +370,90 @@ const findTablePathFromZip = async (zip: JSZip, targetTableName: string): Promis
     throw new Error(tableNotFoundErr);
 };
 
+/**
+ * Determines the next available item number for a custom XML item in the Excel workbook.
+ * Scans the customXml folder to find existing item files and returns the next sequential number.
+ * 
+ * @param zip - The JSZip instance containing the Excel workbook structure
+ * @returns Promise resolving to the next available item number (starting from 1 if no items exist)
+ * 
+ * @example
+ * // If customXml folder contains item1.xml, item2.xml, returns 3
+ * const nextNumber = await getCustomXmlItemNumber(zip);
+ */
 const getCustomXmlItemNumber = async (zip: JSZip): Promise<number> => {
     const customXmlFolder = zip.folder(customXmlXmlPath);
     if (!customXmlFolder) {
         return 1; // start from 1 if folder doesn't exist
     }
 
+    // Escape special regex characters in the path for safe pattern matching
     const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    // Build regex to match custom XML item files in the customXml folder
     const re = new RegExp(`^${esc(customXmlXmlPath)}/${customXML.itemNumberPattern.source}$`);
     const matches = zip.file(re);
 
     let max = 0;
+    // Iterate through all matching files to find the highest item number
     for (const f of matches) {
         const m = f.name.match(customXML.itemNumberPattern);
         if (m) {
-            const n = parseInt(m[1], 10);
+            const n = parseInt(m[1], 10); // Extract the number from the filename
             if (!Number.isNaN(n) && n > max) {
                 max = n;
             }
         }
     }
 
-    return max + 1;
+    return max + 1; // Return next available number
 };
 
+/**
+ * Checks if a custom XML item with connected-workbooks already exists in the Excel workbook.
+ * Searches through all custom XML files in the customXml folder to find a match with the expected content.
+ * 
+ * @param zip - The JSZip instance containing the Excel workbook structure
+ * @returns Promise resolving to true if the custom XML item exists, false otherwise
+ * 
+ * @example
+ * const exists = await isCustomXmlExists(zip);
+ * if (!exists) {
+ *   // Add new custom XML item
+ * }
+ */
 // Check if custom XML exists in the zip by going over the folder structure
 const isCustomXmlExists = async (zip: JSZip): Promise<boolean> => {
-    const customXmlFolder = zip.folder(customXML.folderName);
+    const customXmlFolder = zip.folder(customXmlFolderName);
     if (!customXmlFolder) {
         return false; // customXml folder does not exist
     }
 
-    // going over all the files in the folder and check if the content equal to customXMLItemContent
+    // Get all files matching the custom XML item pattern
     const customXmlFiles = customXmlFolder.file(customXML.itemFilePattern);
+
     for (const file of customXmlFiles) {
         if (file.name.startsWith(customXML.itemPrefix) && file.name.endsWith(customXML.fileExtension)) {
             const content = await file.async(textResultType);
             if (content === customXML.customXMLItemContent) {
-                return true; // custom XML item exists
+                return true; // Found matching custom XML item
             }
         }
     }
-    return false; // custom XML item does not exist
+
+    return false; // No matching custom XML item found
 };
 
+/**
+ * Adds a content type override entry to the [Content_Types].xml file for a custom XML item.
+ * This registration is required for Excel to recognize and process the custom XML item.
+ * 
+ * @param zip - The JSZip instance containing the Excel workbook structure
+ * @param itemIndex - The index/number of the custom XML item to register
+ * @throws {Error} When the [Content_Types].xml file is not found or cannot be parsed
+ * 
+ * @example
+ * await addToContentType(zip, "1"); // Registers customXml/item1.xml in content types
+ */
 const addToContentType = async (zip: JSZip, itemIndex: string) => {
     const contentTypesXmlString: string | undefined = await zip.file(contentTypesXmlPath)?.async(textResultType);
     if (!contentTypesXmlString) {
@@ -429,17 +470,78 @@ const addToContentType = async (zip: JSZip, itemIndex: string) => {
         throw new Error(contentTypesNotFoundERR);
     }
 
-
     const ns = doc.documentElement.namespaceURI;
     const overrideEl = ns ? doc.createElementNS(ns, element.override) : doc.createElement(element.override);
     overrideEl.setAttribute(elementAttributes.partName, partName);
     overrideEl.setAttribute(elementAttributes.contentType, contentTypeValue);
     typesElement.appendChild(overrideEl);
-
+    
     const serializer = new XMLSerializer();
     const newDoc = serializer.serializeToString(doc);
     zip.file(contentTypesXmlPath, newDoc);
 
+};
+
+/**
+ * Adds a relationship entry to the workbook relationships file for a custom XML item.
+ * Creates a new relationship that links the workbook to the custom XML item.
+ * 
+ * @param zip - The JSZip instance containing the Excel workbook structure
+ * @param itemIndex - The index/number of the custom XML item to create a relationship for
+ * @throws {Error} When the workbook relationships file is not found or cannot be parsed
+ * 
+ * @example
+ * await addCustomXmlToRels(zip, "1"); // Creates relationship to customXml/item1.xml
+ */
+const addCustomXmlToRels = async (zip: JSZip, itemIndex: string) => {
+    const relsXmlString: string | undefined = await zip.file(workbookRelsXmlPath)?.async(textResultType);
+    if (!relsXmlString) {
+        throw new Error(relsNotFoundErr);
+    }
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(relsXmlString, xmlTextResultType);
+    
+    // Use getElementsByTagName for better cross-platform compatibility
+    const relationshipsElements = doc.getElementsByTagName(element.relationships);
+    if (!relationshipsElements || relationshipsElements.length === 0) {
+        throw new Error(unexpectedErr);
+    }
+    const relationshipsElement = relationshipsElements[0];
+
+    // Scan existing relationships to find the highest rId number
+    const relationships = relationshipsElement.getElementsByTagName(element.relationship);
+    let highestRid = 0;
+    
+    for (let i = 0; i < relationships.length; i++) {
+        const idAttr = relationships[i].getAttribute(elementAttributes.Id);
+        if (idAttr && idAttr.startsWith(elementAttributes.relationshipIdPrefix)) {
+            // Extract numeric part from rId (e.g., "rId5" -> 5)
+            const ridNumber = parseInt(idAttr.substring(3), 10);
+            if (!isNaN(ridNumber) && ridNumber > highestRid) {
+                highestRid = ridNumber;
+            }
+        }
+    }
+
+    // Generate new relationship details
+    const newRid = `${elementAttributes.relationshipIdPrefix}${highestRid + 1}`;
+    const target = customXML.relativeItemPathTemplate(itemIndex);
+    const type = customXML.relationshipType;
+
+    // Create and configure the new relationship element
+    const ns = doc.documentElement.namespaceURI;
+    const relationshipEl = ns ? doc.createElementNS(ns, element.relationship) : doc.createElement(element.relationship);
+    relationshipEl.setAttribute(elementAttributes.Id, newRid);
+    relationshipEl.setAttribute(elementAttributes.type, type);
+    relationshipEl.setAttribute(elementAttributes.target, target);
+    
+    relationshipsElement.appendChild(relationshipEl);
+    
+    // Serialize and save the updated relationships file
+    const serializer = new XMLSerializer();
+    const newDoc = serializer.serializeToString(doc);
+    zip.file(workbookRelsXmlPath, newDoc);
 };
 
 export default {
@@ -457,4 +559,5 @@ export default {
     getCustomXmlItemNumber,
     isCustomXmlExists,
     addToContentType,
+    addCustomXmlToRels,
 };
