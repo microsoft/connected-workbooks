@@ -184,10 +184,10 @@ export const OFU = {
 };
 
 export const customXML = {
-    customXMLItemContent: `<ConnectedWorkbook xmlns="http://schemas.microsoft.com/ConnectedWorkbook" version="1.0.0"/>`,
+    customXMLItemContent: `<?xml version="1.0" encoding="utf-8"?><ConnectedWorkbook xmlns="http://schemas.microsoft.com/ConnectedWorkbook" version="1.0.0"></ConnectedWorkbook>`,
     customXMLItemPropsContent: `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <ds:datastoreItem ds:itemID="{0B384C3C-E1D4-401B-8CF4-6285949D7671}" xmlns:ds="http://schemas.openxmlformats.org/officeDocument/2006/customXml"><ds:schemaRefs><ds:schemaRef ds:uri="http://schemas.microsoft.com/ConnectedWorkbook"/></ds:schemaRefs></ds:datastoreItem>`,
-    itemPrefix: "item",
+    itemPrefix: "customXml/item",
     fileExtension: ".xml",
     itemNumberPattern: /item(\d+)\.xml$/,
     itemFilePattern: /item\d+\.xml/,

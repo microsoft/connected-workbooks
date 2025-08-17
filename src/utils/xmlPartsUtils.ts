@@ -78,6 +78,7 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
         await xmlInnerPartsUtils.clearLabelInfo(zip);
     }
     await tableUtils.updateTableInitialDataIfNeeded(zip, cellRangeRef, sheetPath, tablePath, sheetPath, tableData, updateQueryTable);
+    await addCustomXMLToWorkbook(zip);
 };
 
 const updateWorkbookPowerQueryDocument = async (zip: JSZip, queryName: string, queryMashupDoc: string): Promise<void> => {
@@ -133,5 +134,4 @@ export default {
     updateWorkbookDataAndConfigurations,
     updateWorkbookPowerQueryDocument,
     updateWorkbookSingleQueryAttributes,
-    addCustomXMLToWorkbook,
 };

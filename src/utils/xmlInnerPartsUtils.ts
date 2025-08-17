@@ -430,7 +430,6 @@ const isCustomXmlExists = async (zip: JSZip): Promise<boolean> => {
 
     // Get all files matching the custom XML item pattern
     const customXmlFiles = customXmlFolder.file(customXML.itemFilePattern);
-
     for (const file of customXmlFiles) {
         if (file.name.startsWith(customXML.itemPrefix) && file.name.endsWith(customXML.fileExtension)) {
             const content = await file.async(textResultType);
