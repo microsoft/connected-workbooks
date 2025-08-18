@@ -21,7 +21,6 @@ import {
     emptyValue,
     docMetadataXmlPath,
     relsXmlPath,
-    unexpectedErr,
     relsNotFoundErr,
     WorkbookNotFoundERR,
     workbookXmlPath,
@@ -35,6 +34,9 @@ import {
     contentTypesXmlPath,
     tablesFolderPath,
     customXmlFolderName,
+    labelInfoXmlPath,
+    docPropsAppXmlPath,
+    relationshipErr,
 } from "./constants";
 import documentUtils from "./documentUtils";
 import { DOMParser, XMLSerializer } from "xmldom-qsa";
@@ -70,6 +72,34 @@ const updateDocProps = async (zip: JSZip, docProps: DocProps = {}): Promise<void
     zip.file(docPropsCoreXmlPath, newDoc);
 };
 
+const removeLabelInfoRelationship = (doc: Document, relationships: Element) => {
+    // Find and remove LabelInfo.xml relationship
+    const relationshipElements = doc.getElementsByTagName(element.relationship);
+    for (let i = 0; i < relationshipElements.length; i++) {
+        const rel = relationshipElements[i];
+        if (rel.getAttribute(elementAttributes.target) === labelInfoXmlPath) {
+            relationships.removeChild(rel);
+            break;
+        }
+    }
+};
+
+const updateRelationshipIds = (doc: Document) => {
+    // Update relationship IDs
+    const relationshipElements = doc.getElementsByTagName(element.relationship);
+    for (let i = 0; i < relationshipElements.length; i++) {
+        const rel = relationshipElements[i];
+        const target = rel.getAttribute(elementAttributes.target);
+        if (target === workbookXmlPath) {
+            rel.setAttribute(elementAttributes.Id, elementAttributes.relationId1);
+        } else if (target === docPropsCoreXmlPath) {
+            rel.setAttribute(elementAttributes.Id, elementAttributes.relationId2);
+        } else if (target === docPropsAppXmlPath) {
+            rel.setAttribute(elementAttributes.Id, elementAttributes.relationId3);
+        }
+    }
+};
+
 const clearLabelInfo = async (zip: JSZip): Promise<void> => {
     // remove docMetadata folder that contains only LabelInfo.xml in template file.
     zip.remove(docMetadataXmlPath);
@@ -82,17 +112,18 @@ const clearLabelInfo = async (zip: JSZip): Promise<void> => {
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(relsString, xmlTextResultType);
-    const relationships = doc.querySelector("Relationships");
-    if (relationships === null) {
-        throw new Error(unexpectedErr);
+    const relationshipsList = doc.getElementsByTagName(element.relationships);
+    if (!relationshipsList || relationshipsList.length === 0) {
+        throw new Error(relationshipErr);
     }
-    const element = relationships.querySelector('Relationship[Target="docMetadata/LabelInfo.xml"]');
-    if (element) {
-        relationships.removeChild(element);
+
+    const relationships = relationshipsList[0];
+    if (!relationships) {
+        throw new Error(relationshipErr);
     }
-    relationships.querySelector('Relationship[Target="xl/workbook.xml"]')?.setAttribute("Id", "rId1");
-    relationships.querySelector('Relationship[Target="docProps/core.xml"]')?.setAttribute("Id", "rId2");
-    relationships.querySelector('Relationship[Target="docProps/app.xml"]')?.setAttribute("Id", "rId3");
+
+    removeLabelInfoRelationship(doc, relationships);
+    updateRelationshipIds(doc);
 
     const serializer: XMLSerializer = new XMLSerializer();
     const newDoc: string = serializer.serializeToString(doc);
@@ -292,14 +323,20 @@ async function getSheetPathFromXlRelId(zip: JSZip, rId: string): Promise<string>
 
     const relsString = await relsFile.async(textResultType);
     const relsDoc = new DOMParser().parseFromString(relsString, xmlTextResultType);
-    const relationship = relsDoc.querySelector(`Relationship[Id="${rId}"]`);
-    if (!relationship) {
-        throw new Error(`Relationship not found for Id: ${rId}`);
+
+    // Avoid querySelector due to xmldom-qsa edge cases; iterate elements safely
+    const relationships = relsDoc.getElementsByTagName("Relationship");
+    let target: string | null = null;
+    for (let i = 0; i < relationships.length; i++) {
+        const el = relationships[i];
+        if (el && el.getAttribute && el.getAttribute("Id") === rId) {
+            target = el.getAttribute(elementAttributes.target);
+            break;
+        }
     }
 
-    const target = relationship.getAttribute(elementAttributes.target);
     if (!target) {
-        throw new Error(`Target not found for Relationship Id: ${rId}`);
+        throw new Error(`Relationship not found or missing Target for Id: ${rId}`);
     }
 
     return target;

@@ -16,6 +16,8 @@ export const relsXmlPath = "_rels/.rels";
 export const docMetadataXmlPath = "docMetadata";
 export const docPropsRootElement = "cp:coreProperties";
 export const workbookRelsXmlPath = "xl/_rels/workbook.xml.rels";
+export const labelInfoXmlPath = "docMetadata/LabelInfo.xml";
+export const docPropsAppXmlPath = "docProps/app.xml";
 export const contentTypesXmlPath = "[Content_Types].xml";
 export const customXmlXmlPath = "customXml";
 export const customXmlFolderName = "customXml";
@@ -48,6 +50,7 @@ export const arrayIsntMxNErr = "Array isn't MxN";
 export const relsNotFoundErr = ".rels were not found in template";
 export const xlRelsNotFoundErr = "workbook.xml.rels were not found xl";
 export const columnIndexOutOfRangeErr = "Column index out of range";
+export const relationshipErr = "Relationship not found";
 export const contentTypesNotFoundERR = "contentTypes was not found in file";
 
 export const blobFileType = "blob";
@@ -114,6 +117,9 @@ export const elementAttributes = {
     id: "id",
     Id: "Id",
     relationId: "r:id",
+    relationId1: "RId1",
+    relationId2: "RId2",
+    relationId3: "RId3",
     type: "Type",
     value: "Value",
     relationshipInfo: "RelationshipInfoContainer",
