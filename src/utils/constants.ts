@@ -20,7 +20,6 @@ export const labelInfoXmlPath = "docMetadata/LabelInfo.xml";
 export const docPropsAppXmlPath = "docProps/app.xml";
 export const contentTypesXmlPath = "[Content_Types].xml";
 export const customXmlXmlPath = "customXml";
-export const customXmlFolderName = "customXml";
 
 export const sharedStringsNotFoundErr = "SharedStrings were not found in template";
 export const connectionsNotFoundErr = "Connections were not found in template";

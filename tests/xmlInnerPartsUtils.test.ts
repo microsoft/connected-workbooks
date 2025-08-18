@@ -6,6 +6,7 @@ import { gridUtils, xmlInnerPartsUtils, xmlPartsUtils } from "../src/utils";
 import { describe, test, expect } from '@jest/globals';
 import JSZip from "jszip";
 import { SIMPLE_BLANK_TABLE_TEMPLATE, SIMPLE_QUERY_WORKBOOK_TEMPLATE, WORKBOOK_TEMPLATE_MOVED_TABLE } from "../src/workbookTemplate";
+import { customXML } from "../src/utils/constants";
 
 describe("Workbook Manager tests", () => {
     const mockConnectionString = `<connections xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:xr16="http://schemas.microsoft.com/office/spreadsheetml/2017/revision16" mc:Ignorable="xr16">
@@ -64,7 +65,7 @@ describe("Workbook Manager tests", () => {
         expect(sharedStringIndex).toEqual(2);
         expect(newSharedStrings.replace(/ /g, "")).toContain(sharedStringsXmlMock.replace(/ /g, ""));
     });
-    
+
     test("Table XML contains correct Table reference value with headers included", async () => {
         const singleTableDefaultTemplate = SIMPLE_BLANK_TABLE_TEMPLATE;
 
@@ -128,7 +129,7 @@ describe("Workbook Manager tests", () => {
             base64: true,
         })).not.toThrow();
 
-        const templateMovedZipFile :any = await JSZip.loadAsync(movedTableDefaultTemplate, {
+        const templateMovedZipFile: any = await JSZip.loadAsync(movedTableDefaultTemplate, {
             base64: true,
         });
         const data = [
@@ -146,6 +147,36 @@ describe("Workbook Manager tests", () => {
 
         await xmlPartsUtils.updateWorkbookDataAndConfigurations(templateMovedZipFile, { templateFile: templateMovedZipFile }, tableData);
         expect(await templateMovedZipFile.file("xl/tables/table1.xml")?.async("text")).toContain("B2:F10");
+    });
+
+    test("Adding custom XML to workbook", async () => {
+        const singleTableDefaultTemplate = SIMPLE_BLANK_TABLE_TEMPLATE;
+
+        expect(async () => await JSZip.loadAsync(singleTableDefaultTemplate, {
+            base64: true,
+        })).not.toThrow();
+
+        const defaultZipFile = await JSZip.loadAsync(singleTableDefaultTemplate, {
+            base64: true,
+        });
+
+        await xmlPartsUtils.addCustomXMLToWorkbook(defaultZipFile);
+        expect(await defaultZipFile.file("customXml/item1.xml")?.async("text")).toContain(customXML.customXMLItemContent);
+    });
+
+    test("Not adding custom XML to workbook that already contains it", async () => {
+        const basicQueryTemplate = SIMPLE_QUERY_WORKBOOK_TEMPLATE;
+
+        expect(async () => await JSZip.loadAsync(basicQueryTemplate, {
+            base64: true,
+        })).not.toThrow();
+
+        const queryTemplateZipFile = await JSZip.loadAsync(basicQueryTemplate, {
+            base64: true,
+        });
+
+        await xmlPartsUtils.addCustomXMLToWorkbook(queryTemplateZipFile);
+        expect(queryTemplateZipFile.file("customXml/item3.xml")).toBeNull();
     });
 });
 

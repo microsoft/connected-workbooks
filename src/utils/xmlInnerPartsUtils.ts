@@ -33,7 +33,6 @@ import {
     contentTypesNotFoundERR,
     contentTypesXmlPath,
     tablesFolderPath,
-    customXmlFolderName,
     labelInfoXmlPath,
     docPropsAppXmlPath,
     relationshipErr,
@@ -460,7 +459,7 @@ const getCustomXmlItemNumber = async (zip: JSZip): Promise<number> => {
  */
 // Check if custom XML exists in the zip by going over the folder structure
 const isCustomXmlExists = async (zip: JSZip): Promise<boolean> => {
-    const customXmlFolder = zip.folder(customXmlFolderName);
+    const customXmlFolder = zip.folder(customXmlXmlPath);
     if (!customXmlFolder) {
         return false; // customXml folder does not exist
     }

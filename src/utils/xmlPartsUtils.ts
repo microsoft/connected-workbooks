@@ -143,4 +143,5 @@ export default {
     updateWorkbookDataAndConfigurations,
     updateWorkbookPowerQueryDocument,
     updateWorkbookSingleQueryAttributes,
+    addCustomXMLToWorkbook
 };
