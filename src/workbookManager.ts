@@ -24,7 +24,7 @@ export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataG
     pqUtils.validateQueryName(query.queryName);
 
     const zip: JSZip =
-        fileConfigs?.templateFile === undefined ? await JSZip.loadAsync(SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true }) : await JSZip.loadAsync(fileConfigs.templateFile);
+        fileConfigs?.templateFile === undefined ? await JSZip.loadAsync(SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true }) : await JSZip.loadAsync(fileConfigs.templateFile as Blob);
 
     const tableData = initialDataGrid ? gridUtils.parseToTableData(initialDataGrid) : undefined;
 
@@ -40,7 +40,7 @@ export const generateTableWorkbookFromGrid = async (grid: Grid, fileConfigs?: Fi
     const zip: JSZip =
         fileConfigs?.templateFile === undefined
             ? await JSZip.loadAsync(SIMPLE_BLANK_TABLE_TEMPLATE, { base64: true })
-            : await JSZip.loadAsync(fileConfigs.templateFile);
+            : await JSZip.loadAsync(fileConfigs.templateFile as Blob);
 
     const tableData = gridUtils.parseToTableData(grid);
     if (tableData === undefined) {
@@ -130,4 +130,6 @@ export const getExcelForWebWorkbookUrl = async (file: Blob, filename?: string, a
     } catch (error) {
         throw new Error(`An error occurred: ${error}`);
     }
+    
 };
+

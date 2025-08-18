@@ -540,7 +540,7 @@ const addCustomXmlToRels = async (zip: JSZip, itemIndex: string) => {
     // Use getElementsByTagName for better cross-platform compatibility
     const relationshipsElements = doc.getElementsByTagName(element.relationships);
     if (!relationshipsElements || relationshipsElements.length === 0) {
-        throw new Error(unexpectedErr);
+        throw new Error(relationshipErr);
     }
     const relationshipsElement = relationshipsElements[0];
 
