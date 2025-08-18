@@ -61,17 +61,26 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
         }
     }
 
+
     // Getting the table start and end location string from the table path
     // If no table path is provided, we will consider A1 as the start location
     let cellRangeRef: string = "A1";
-    if (fileConfigs?.templateFile != null) {
+    if (fileConfigs?.templateFile !== undefined) {
         cellRangeRef = await xmlInnerPartsUtils.getReferenceFromTable(zip, tablePath)
     }
 
     if (tableData) {
-        cellRangeRef += `:${documentUtils.getCellReferenceRelative(tableData.columnNames.length - 1, tableData.rows.length + 1)}`;
-    }
+        // Get the starting position and convert to numeric row/column coordinates
+        const { row, column } = documentUtils.GetStartPosition(cellRangeRef);
+        
+        // Calculate the table's end position based on its dimensions with offset of where we start(A1->offset(0,0))
+        const endColumn = column - 1 + tableData.columnNames.length;
+        const endRow = row - 1 + tableData.rows.length;
 
+        // Extend the cell range to include the entire table span
+        cellRangeRef += `:${documentUtils.getCellReferenceRelative(endColumn - 1, endRow + 1)}`;
+    }
+    
     await xmlInnerPartsUtils.updateDocProps(zip, fileConfigs?.docProps);
     if (fileConfigs?.templateFile === undefined) {
         // If we are using our base template, we need to clear label info

@@ -82,7 +82,7 @@ const convertToExcelColumn = (index: number): string => {
  * @returns Object with numeric row and column.
  */
 const GetStartPosition = (cellRangeRef: string): { row: number; column: number } => {
-    const match = cellRangeRef.toUpperCase().match(/^([A-Z]+)(\d+):/);
+    const match = cellRangeRef.toUpperCase().match(/^([A-Z]+)(\d+)/);
     if (!match) {
         return { row: 0, column: 0 };
     }
