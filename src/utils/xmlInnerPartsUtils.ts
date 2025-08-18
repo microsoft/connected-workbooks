@@ -478,7 +478,6 @@ const addToContentType = async (zip: JSZip, itemIndex: string) => {
     const serializer = new XMLSerializer();
     const newDoc = serializer.serializeToString(doc);
     zip.file(contentTypesXmlPath, newDoc);
-
 };
 
 /**
