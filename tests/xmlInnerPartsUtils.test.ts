@@ -64,9 +64,7 @@ describe("Workbook Manager tests", () => {
         expect(sharedStringIndex).toEqual(2);
         expect(newSharedStrings.replace(/ /g, "")).toContain(sharedStringsXmlMock.replace(/ /g, ""));
     });
-
-    // const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: FileConfigs, tableData?: TableData, updateQueryTable = false): Promise<void> => {
-
+    
     test("Table XML contains correct Table reference value with headers included", async () => {
         const singleTableDefaultTemplate = SIMPLE_BLANK_TABLE_TEMPLATE;
 
