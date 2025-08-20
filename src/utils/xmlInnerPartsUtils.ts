@@ -383,7 +383,7 @@ const getReferenceFromTable = async (zip: JSZip, tablePath: string): Promise<str
 };
 
 const findTablePathFromZip = async (zip: JSZip, targetTableName: string): Promise<string> => {
-    const tablesFolder = zip.folder(tablesFolderPath.slice(0, -1)); // Remove trailing slash
+    const tablesFolder = zip.folder(tablesFolderPath); 
     if (!tablesFolder) return emptyValue;
 
     const tableFilePromises: Promise<{ path: string; content: string }>[] = [];
@@ -424,9 +424,9 @@ const getCustomXmlItemNumber = async (zip: JSZip): Promise<number> => {
     }
 
     // Escape special regex characters in the path for safe pattern matching
-    const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    //const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     // Build regex to match custom XML item files in the customXml folder
-    const re = new RegExp(`^${esc(customXmlXmlPath)}/${customXML.itemNumberPattern.source}$`);
+    const re = new RegExp(`^${customXmlXmlPath}/${customXML.itemNumberPattern.source}$`);
     const matches = zip.file(re);
 
     let max = 0;
@@ -457,7 +457,6 @@ const getCustomXmlItemNumber = async (zip: JSZip): Promise<number> => {
  *   // Add new custom XML item
  * }
  */
-// Check if custom XML exists in the zip by going over the folder structure
 const isCustomXmlExists = async (zip: JSZip): Promise<boolean> => {
     const customXmlFolder = zip.folder(customXmlXmlPath);
     if (!customXmlFolder) {
