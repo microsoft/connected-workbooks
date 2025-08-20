@@ -6,7 +6,8 @@ import { gridUtils, xmlInnerPartsUtils, xmlPartsUtils } from "../src/utils";
 import { describe, test, expect } from '@jest/globals';
 import JSZip from "jszip";
 import { SIMPLE_BLANK_TABLE_TEMPLATE, SIMPLE_QUERY_WORKBOOK_TEMPLATE, WORKBOOK_TEMPLATE_MOVED_TABLE } from "../src/workbookTemplate";
-import { customXML } from "../src/utils/constants";
+import { customXML, Errors } from "../src/utils/constants";
+import { DOMParser } from "xmldom-qsa";
 
 describe("Workbook Manager tests", () => {
     const mockConnectionString = `<connections xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:xr16="http://schemas.microsoft.com/office/spreadsheetml/2017/revision16" mc:Ignorable="xr16">
@@ -177,6 +178,81 @@ describe("Workbook Manager tests", () => {
 
         await xmlPartsUtils.addCustomXMLToWorkbook(queryTemplateZipFile);
         expect(queryTemplateZipFile.file("customXml/item3.xml")).toBeNull();
+    });
+
+    describe("checkParserError function", () => {
+        test("should not throw when parsing valid XML", () => {
+            const validXml = '<?xml version="1.0" encoding="UTF-8"?><root><child>test</child></root>';
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(validXml, "text/xml");
+            
+            expect(() => {
+                xmlInnerPartsUtils.checkParserError(doc, "Test context");
+            }).not.toThrow();
+        });
+
+        test("should throw when document is null or undefined", () => {
+            expect(() => {
+                xmlInnerPartsUtils.checkParserError(null as any, "Test context");
+            }).toThrow(`Test context: ${Errors.xmlParse}`);
+
+            expect(() => {
+                xmlInnerPartsUtils.checkParserError(undefined as any, "Test context");
+            }).toThrow(`Test context: ${Errors.xmlParse}`);
+        });
+
+        test("should throw when document has no documentElement", () => {
+            const mockDoc = {
+                documentElement: null,
+                getElementsByTagName: () => []
+            } as any;
+
+            expect(() => {
+                xmlInnerPartsUtils.checkParserError(mockDoc, "Test context");
+            }).toThrow(`Test context: ${Errors.xmlParse}`);
+        });
+
+        test("should throw when XML document contains parsererror elements", () => {
+            // Create a mock document that simulates having parsererror elements
+            const mockParserErrorElement = {
+                textContent: "Mock parser error message"
+            };
+            
+            const mockDoc = {
+                documentElement: { namespaceURI: "http://example.com" },
+                getElementsByTagName: (tagName: string) => {
+                    if (tagName === "parsererror") {
+                        return [mockParserErrorElement]; // Return array with one error element
+                    }
+                    return [];
+                }
+            } as any;
+            
+            expect(() => {
+                xmlInnerPartsUtils.checkParserError(mockDoc, "Test context");
+            }).toThrow("Test context: Mock parser error message");
+        });
+
+        test("should throw when XML document contains empty parsererror elements", () => {
+            // Create a mock document that simulates having parsererror elements with no text
+            const mockParserErrorElement = {
+                textContent: ""
+            };
+            
+            const mockDoc = {
+                documentElement: { namespaceURI: "http://example.com" },
+                getElementsByTagName: (tagName: string) => {
+                    if (tagName === "parsererror") {
+                        return [mockParserErrorElement]; // Return array with one error element
+                    }
+                    return [];
+                }
+            } as any;
+            
+            expect(() => {
+                xmlInnerPartsUtils.checkParserError(mockDoc, "Test context");
+            }).toThrow("Test context: Unknown parser error");
+        });
     });
 });
 

@@ -629,4 +629,5 @@ export default {
     isCustomXmlExists,
     addToContentType,
     addCustomXmlToRels,
+    checkParserError,
 };
