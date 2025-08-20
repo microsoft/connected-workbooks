@@ -1,4 +1,4 @@
-import { arrayIsntMxNErr, defaults, promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr } from "../src/utils/constants";
+import { defaults, Errors } from "../src/utils/constants";
 import gridUtils from "../src/utils/gridUtils";
 import { describe, test, expect } from '@jest/globals';
 
@@ -149,9 +149,9 @@ describe("Grid Utils tests", () => {
                 ["1", "2"],
             ],
         ],
-    ])(`parsing %j should throw "${promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr}"`, async (input) => {
+    ])(`parsing %j should throw "${Errors.promotedHeadersCannotBeUsedWithoutAdjustingColumnNames}"`, async (input) => {
         expect(() => gridUtils.parseToTableData({ data: input, config: { promoteHeaders: true, adjustColumnNames: false } })).toThrowError(
-            promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr
+            Errors.promotedHeadersCannotBeUsedWithoutAdjustingColumnNames
         );
     });
 
@@ -164,7 +164,7 @@ describe("Grid Utils tests", () => {
             ],
         ],
         [[["אבג", "אבג"], ["1", "2"], ["3"]]],
-    ])(`parsing %j should throw "${arrayIsntMxNErr}"`, async (input) => {
-        expect(() => gridUtils.parseToTableData({ data: input, config: { promoteHeaders: true, adjustColumnNames: false } })).toThrowError(arrayIsntMxNErr);
+    ])(`parsing %j should throw "${Errors.arrayIsntMxN}"`, async (input) => {
+        expect(() => gridUtils.parseToTableData({ data: input, config: { promoteHeaders: true, adjustColumnNames: false } })).toThrowError(Errors.arrayIsntMxN);
     });
 });

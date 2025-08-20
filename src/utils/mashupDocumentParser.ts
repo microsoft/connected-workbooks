@@ -9,13 +9,13 @@ import {
     uint8ArrayType,
     emptyValue,
     textResultType,
-    formulaSectionNotFoundErr,
     xmlTextResultType,
     element,
     section1PathPrefix,
     divider,
     elementAttributes,
     elementAttributesValues,
+    Errors,
 } from "./constants";
 import { arrayUtils } from ".";
 import { Metadata } from "../types";
@@ -83,7 +83,7 @@ const editSingleQueryPackage = async (packageOPC: ArrayBuffer, queryMashupDoc: s
 
 const setSection1m = (queryMashupDoc: string, zip: JSZip): void => {
     if (!zip.file(section1mPath)?.async(textResultType)) {
-        throw new Error(formulaSectionNotFoundErr);
+        throw new Error(Errors.formulaSectionNotFound);
     }
     const newSection1m: string = queryMashupDoc;
 

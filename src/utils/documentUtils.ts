@@ -3,7 +3,6 @@
 
 import JSZip from "jszip";
 import {
-    columnIndexOutOfRangeErr,
     dataTypeKind,
     docPropsCoreXmlPath,
     docPropsRootElement,
@@ -13,6 +12,7 @@ import {
     textResultType,
     trueStr,
     xmlTextResultType,
+    Errors,
 } from "./constants";
 import { DataTypes } from "../types";
 import { DOMParser } from "xmldom-qsa";
@@ -62,7 +62,7 @@ const getCellReferenceRelative = (col: number, row: number): string => {
 
 const convertToExcelColumn = (index: number): string => {
     if (index >= 16384) {
-        throw new Error(columnIndexOutOfRangeErr);
+        throw new Error(Errors.columnIndexOutOfRange);
     }
 
     let columnStr = "";

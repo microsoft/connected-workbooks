@@ -3,17 +3,15 @@
 
 import JSZip from "jszip";
 import {
-    base64NotFoundErr,
     connectionsXmlPath,
     textResultType,
-    connectionsNotFoundErr,
     sharedStringsXmlPath,
-    sharedStringsNotFoundErr,
     sheetsXmlPath,
-    sheetsNotFoundErr,
     tableXmlPath,
     defaults,
     tablesFolderPath,
+    customXML,
+    Errors,
 } from "./constants";
 import { replaceSingleQuery } from "./mashupDocumentParser";
 import { FileConfigs, TableData, TemplateSettings } from "../types";
@@ -21,6 +19,54 @@ import pqUtils from "./pqUtils";
 import tableUtils from "./tableUtils";
 import xmlInnerPartsUtils from "./xmlInnerPartsUtils";
 import documentUtils from "./documentUtils";
+
+const addCustomXMLToWorkbook = async (zip: JSZip): Promise<boolean> => {
+    if (await xmlInnerPartsUtils.isCustomXmlExists(zip)) {
+        return true;
+    }
+    
+    // find the customXML item numbers from folder if exists
+    const customXmlItemNumber: number = await xmlInnerPartsUtils.getCustomXmlItemNumber(zip);
+
+    // Create backup of files we're about to modify for rollback capability
+    const backupData: { [key: string]: string | null } = {};
+    const contentTypesPath = "[Content_Types].xml";
+    const workbookRelsPath = "xl/_rels/workbook.xml.rels";
+    
+    try {
+        // Backup existing files
+        backupData[contentTypesPath] = await zip.file(contentTypesPath)?.async("text") || null;
+        backupData[workbookRelsPath] = await zip.file(workbookRelsPath)?.async("text") || null;
+
+        // Perform modifications
+        await xmlInnerPartsUtils.addToContentType(zip, customXmlItemNumber.toString());
+        await xmlInnerPartsUtils.addCustomXmlToRels(zip, customXmlItemNumber.toString());  
+
+        // Adding the custom XML files
+        zip.file(customXML.itemPathTemplate(customXmlItemNumber), customXML.customXMLItemContent);
+        zip.file(customXML.itemPropsPathTemplate(customXmlItemNumber), customXML.customXMLItemPropsContent);
+        zip.file(customXML.itemRelsPathTemplate(customXmlItemNumber), customXML.customXMLRelationships(customXmlItemNumber));
+        
+    } catch (error) {
+        // Rollback: restore backed up files
+        for (const [filePath, content] of Object.entries(backupData)) {
+            if (content !== null) {
+                zip.file(filePath, content);
+            } else {
+                // If file didn't exist before, remove it
+                zip.remove(filePath);
+            }
+        }
+        
+        // Remove any custom XML files that might have been added
+        zip.remove(customXML.itemPathTemplate(customXmlItemNumber));
+        zip.remove(customXML.itemPropsPathTemplate(customXmlItemNumber));
+        zip.remove(customXML.itemRelsPathTemplate(customXmlItemNumber));
+        return false;
+    }
+
+    return true;
+}
 
 const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: FileConfigs, tableData?: TableData, updateQueryTable = false): Promise<void> => {
     let sheetName: string = defaults.sheetName;
@@ -62,20 +108,21 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
         // Extend the cell range to include the entire table span
         cellRangeRef += `:${documentUtils.getCellReferenceRelative(endColumn - 1, endRow + 1)}`;
     }
-
+    
     await xmlInnerPartsUtils.updateDocProps(zip, fileConfigs?.docProps);
     if (fileConfigs?.templateFile === undefined) {
         // If we are using our base template, we need to clear label info
         await xmlInnerPartsUtils.clearLabelInfo(zip);
     }
     await tableUtils.updateTableInitialDataIfNeeded(zip, cellRangeRef, sheetPath, tablePath, sheetPath, tableData, updateQueryTable);
+    await addCustomXMLToWorkbook(zip);
 };
 
 const updateWorkbookPowerQueryDocument = async (zip: JSZip, queryName: string, queryMashupDoc: string): Promise<void> => {
     const old_base64: string | null = await pqUtils.getBase64(zip);
 
     if (!old_base64) {
-        throw new Error(base64NotFoundErr);
+        throw new Error(Errors.base64NotFound);
     }
 
     const new_base64: string = await replaceSingleQuery(old_base64, queryName, queryMashupDoc);
@@ -86,7 +133,7 @@ const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string
     // Update connections
     const connectionsXmlString: string | undefined = await zip.file(connectionsXmlPath)?.async(textResultType);
     if (connectionsXmlString === undefined) {
-        throw new Error(connectionsNotFoundErr);
+        throw new Error(Errors.connectionsNotFound);
     }
 
     const { connectionId, connectionXmlFileString } = xmlInnerPartsUtils.updateConnections(connectionsXmlString, queryName, refreshOnOpen);
@@ -95,7 +142,7 @@ const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string
     // Update sharedStrings
     const sharedStringsXmlString: string | undefined = await zip.file(sharedStringsXmlPath)?.async(textResultType);
     if (sharedStringsXmlString === undefined) {
-        throw new Error(sharedStringsNotFoundErr);
+        throw new Error(Errors.sharedStringsNotFound);
     }
 
     const { sharedStringIndex, newSharedStrings } = xmlInnerPartsUtils.updateSharedStrings(sharedStringsXmlString, queryName);
@@ -110,7 +157,7 @@ const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string
 
     const sheetsXmlString: string | undefined = await zip.file(sheetPath)?.async(textResultType);
     if (sheetsXmlString === undefined) {
-        throw new Error(sheetsNotFoundErr);
+        throw new Error(Errors.sheetsNotFound);
     }
 
     const worksheetString: string = xmlInnerPartsUtils.updateWorksheet(sheetsXmlString, sharedStringIndex.toString());
@@ -124,4 +171,5 @@ export default {
     updateWorkbookDataAndConfigurations,
     updateWorkbookPowerQueryDocument,
     updateWorkbookSingleQueryAttributes,
+    addCustomXMLToWorkbook
 };
