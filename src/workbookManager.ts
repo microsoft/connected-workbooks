@@ -130,6 +130,4 @@ export const getExcelForWebWorkbookUrl = async (file: Blob, filename?: string, a
     } catch (error) {
         throw new Error(`An error occurred: ${error}`);
     }
-    
 };
-

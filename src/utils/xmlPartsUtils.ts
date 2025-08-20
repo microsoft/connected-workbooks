@@ -23,20 +23,52 @@ import tableUtils from "./tableUtils";
 import xmlInnerPartsUtils from "./xmlInnerPartsUtils";
 import documentUtils from "./documentUtils";
 
-const addCustomXMLToWorkbook = async (zip: JSZip): Promise<void> => {
+const addCustomXMLToWorkbook = async (zip: JSZip): Promise<boolean> => {
+    if (await xmlInnerPartsUtils.isCustomXmlExists(zip)) {
+        return true;
+    }
+    
     // find the customXML item numbers from folder if exists
     const customXmlItemNumber: number = await xmlInnerPartsUtils.getCustomXmlItemNumber(zip);
-    if (await xmlInnerPartsUtils.isCustomXmlExists(zip)) {
-        return;
+
+    // Create backup of files we're about to modify for rollback capability
+    const backupData: { [key: string]: string | null } = {};
+    const contentTypesPath = "[Content_Types].xml";
+    const workbookRelsPath = "xl/_rels/workbook.xml.rels";
+    
+    try {
+        // Backup existing files
+        backupData[contentTypesPath] = await zip.file(contentTypesPath)?.async("text") || null;
+        backupData[workbookRelsPath] = await zip.file(workbookRelsPath)?.async("text") || null;
+
+        // Perform modifications
+        await xmlInnerPartsUtils.addToContentType(zip, customXmlItemNumber.toString());
+        await xmlInnerPartsUtils.addCustomXmlToRels(zip, customXmlItemNumber.toString());  
+
+        // Adding the custom XML files
+        zip.file(customXML.itemPathTemplate(customXmlItemNumber), customXML.customXMLItemContent);
+        zip.file(customXML.itemPropsPathTemplate(customXmlItemNumber), customXML.customXMLItemPropsContent);
+        zip.file(customXML.itemRelsPathTemplate(customXmlItemNumber), customXML.customXMLRelationships(customXmlItemNumber));
+        
+    } catch (error) {
+        // Rollback: restore backed up files
+        for (const [filePath, content] of Object.entries(backupData)) {
+            if (content !== null) {
+                zip.file(filePath, content);
+            } else {
+                // If file didn't exist before, remove it
+                zip.remove(filePath);
+            }
+        }
+        
+        // Remove any custom XML files that might have been added
+        zip.remove(customXML.itemPathTemplate(customXmlItemNumber));
+        zip.remove(customXML.itemPropsPathTemplate(customXmlItemNumber));
+        zip.remove(customXML.itemRelsPathTemplate(customXmlItemNumber));
+        return false;
     }
 
-    await xmlInnerPartsUtils.addToContentType(zip, customXmlItemNumber.toString());
-    await xmlInnerPartsUtils.addCustomXmlToRels(zip, customXmlItemNumber.toString());  
-
-    // Adding the custom XML files
-    zip.file(customXML.itemPathTemplate(customXmlItemNumber), customXML.customXMLItemContent);
-    zip.file(customXML.itemPropsPathTemplate(customXmlItemNumber), customXML.customXMLItemPropsContent);
-    zip.file(customXML.itemRelsPathTemplate(customXmlItemNumber), customXML.customXMLRelationships(customXmlItemNumber));
+    return true;
 }
 
 const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: FileConfigs, tableData?: TableData, updateQueryTable = false): Promise<void> => {
@@ -60,7 +92,6 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
             tablePath = tablesFolderPath + await xmlInnerPartsUtils.findTablePathFromZip(zip, templateSettings?.tableName);
         }
     }
-
 
     // Getting the table start and end location string from the table path
     // If no table path is provided, we will consider A1 as the start location

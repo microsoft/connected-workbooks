@@ -51,6 +51,9 @@ export const xlRelsNotFoundErr = "workbook.xml.rels were not found xl";
 export const columnIndexOutOfRangeErr = "Column index out of range";
 export const relationshipErr = "Relationship not found";
 export const contentTypesNotFoundERR = "contentTypes was not found in file";
+export const contentTypesParseErr = "Failed to parse [Content_Types].xml: Invalid XML structure";
+export const contentTypesElementNotFoundERR = "contentTypes element was not found in parsed document";
+export const workbookRelsParseErr = "Failed to parse workbook relationships XML: Invalid XML structure";
 
 export const blobFileType = "blob";
 export const uint8ArrayType = "uint8array";
@@ -192,10 +195,9 @@ export const customXML = {
     customXMLItemContent: `<?xml version="1.0" encoding="utf-8"?><ConnectedWorkbook xmlns="http://schemas.microsoft.com/ConnectedWorkbook" version="1.0.0"></ConnectedWorkbook>`,
     customXMLItemPropsContent: `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <ds:datastoreItem ds:itemID="{0B384C3C-E1D4-401B-8CF4-6285949D7671}" xmlns:ds="http://schemas.openxmlformats.org/officeDocument/2006/customXml"><ds:schemaRefs><ds:schemaRef ds:uri="http://schemas.microsoft.com/ConnectedWorkbook"/></ds:schemaRefs></ds:datastoreItem>`,
-    itemPrefix: "customXml/item",
-    fileExtension: ".xml",
+    connectedWorkbookTag: '<ConnectedWorkbook',
     itemNumberPattern: /item(\d+)\.xml$/,
-    itemFilePattern: /item\d+\.xml/,
+    itemFilePattern: /^item\d+\.xml$/,
     itemPropsPartNameTemplate: (itemIndex: string) => `/customXml/itemProps${itemIndex}.xml`,
     contentType: "application/vnd.openxmlformats-officedocument.customXmlProperties+xml",
     itemPathTemplate: (itemNumber: number | string) => `customXml/item${itemNumber}.xml`,

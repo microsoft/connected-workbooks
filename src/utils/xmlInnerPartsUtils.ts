@@ -36,6 +36,9 @@ import {
     labelInfoXmlPath,
     docPropsAppXmlPath,
     relationshipErr,
+    contentTypesParseErr,
+    contentTypesElementNotFoundERR,
+    workbookRelsParseErr,
 } from "./constants";
 import documentUtils from "./documentUtils";
 import { DOMParser, XMLSerializer } from "xmldom-qsa";
@@ -423,8 +426,6 @@ const getCustomXmlItemNumber = async (zip: JSZip): Promise<number> => {
         return 1; // start from 1 if folder doesn't exist
     }
 
-    // Escape special regex characters in the path for safe pattern matching
-    //const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     // Build regex to match custom XML item files in the customXml folder
     const re = new RegExp(`^${customXmlXmlPath}/${customXML.itemNumberPattern.source}$`);
     const matches = zip.file(re);
@@ -466,11 +467,14 @@ const isCustomXmlExists = async (zip: JSZip): Promise<boolean> => {
     // Get all files matching the custom XML item pattern
     const customXmlFiles = customXmlFolder.file(customXML.itemFilePattern);
     for (const file of customXmlFiles) {
-        if (file.name.startsWith(customXML.itemPrefix) && file.name.endsWith(customXML.fileExtension)) {
+        try {
             const content = await file.async(textResultType);
-            if (content === customXML.customXMLItemContent) {
+            if (content.includes(customXML.connectedWorkbookTag)) {
                 return true; // Found matching custom XML item
             }
+        } catch (error) {
+            // Skip files that can't be read and continue with the next file
+            continue;
         }
     }
 
@@ -497,11 +501,16 @@ const addToContentType = async (zip: JSZip, itemIndex: string) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(contentTypesXmlString, xmlTextResultType);
 
+    // Check if parsing was successful by verifying we have a valid document
+    if (!doc || !doc.documentElement) {
+        throw new Error(contentTypesParseErr);
+    }
+
     const partName = customXML.itemPropsPartNameTemplate(itemIndex);
     const contentTypeValue = customXML.contentType;
     const typesElement = doc.documentElement;
     if (!typesElement) {
-        throw new Error(contentTypesNotFoundERR);
+        throw new Error(contentTypesElementNotFoundERR);
     }
 
     const ns = doc.documentElement.namespaceURI;
@@ -535,27 +544,19 @@ const addCustomXmlToRels = async (zip: JSZip, itemIndex: string) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(relsXmlString, xmlTextResultType);
     
+    // Check if parsing was successful by verifying we have a valid document
+    if (!doc || !doc.documentElement) {
+        throw new Error(workbookRelsParseErr);
+    }
+    
     // Use getElementsByTagName for better cross-platform compatibility
     const relationshipsElements = doc.getElementsByTagName(element.relationships);
     if (!relationshipsElements || relationshipsElements.length === 0) {
         throw new Error(relationshipErr);
     }
-    const relationshipsElement = relationshipsElements[0];
 
-    // Scan existing relationships to find the highest rId number
-    const relationships = relationshipsElement.getElementsByTagName(element.relationship);
-    let highestRid = 0;
-    
-    for (let i = 0; i < relationships.length; i++) {
-        const idAttr = relationships[i].getAttribute(elementAttributes.Id);
-        if (idAttr && idAttr.startsWith(elementAttributes.relationshipIdPrefix)) {
-            // Extract numeric part from rId (e.g., "rId5" -> 5)
-            const ridNumber = parseInt(idAttr.substring(3), 10);
-            if (!isNaN(ridNumber) && ridNumber > highestRid) {
-                highestRid = ridNumber;
-            }
-        }
-    }
+    const relationshipsElement = relationshipsElements[0];
+    const highestRid = getHighestRelationshipId(relationshipsElement);
 
     // Generate new relationship details
     const newRid = `${elementAttributes.relationshipIdPrefix}${highestRid + 1}`;
@@ -568,13 +569,41 @@ const addCustomXmlToRels = async (zip: JSZip, itemIndex: string) => {
     relationshipEl.setAttribute(elementAttributes.Id, newRid);
     relationshipEl.setAttribute(elementAttributes.type, type);
     relationshipEl.setAttribute(elementAttributes.target, target);
-    
     relationshipsElement.appendChild(relationshipEl);
     
     // Serialize and save the updated relationships file
     const serializer = new XMLSerializer();
     const newDoc = serializer.serializeToString(doc);
     zip.file(workbookRelsXmlPath, newDoc);
+};
+
+/**
+ * Finds the highest relationship ID number from existing relationships in a relationships element.
+ * Scans all relationship elements and extracts the numeric part from rId attributes.
+ * 
+ * @param relationshipsElement - The relationships XML element containing relationship elements
+ * @returns The highest relationship ID number found, or 0 if none exist
+ * 
+ * @example
+ * // If relationships contain rId1, rId3, rId7, returns 7
+ * const highestRid = getHighestRelationshipId(relationshipsElement);
+ */
+const getHighestRelationshipId = (relationshipsElement: Element): number => {
+    const relationships = relationshipsElement.getElementsByTagName(element.relationship);
+    let highestRid = 0;
+    
+    for (let i = 0; i < relationships.length; i++) {
+        const idAttr = relationships[i].getAttribute(elementAttributes.Id);
+        if (idAttr && idAttr.startsWith(elementAttributes.relationshipIdPrefix)) {
+            // Extract numeric part from rId (e.g., "rId5" -> 5, "rId123" -> 123)
+            const ridNumber = parseInt(idAttr.substring(elementAttributes.relationshipIdPrefix.length), 10);
+            if (!isNaN(ridNumber) && ridNumber > highestRid) {
+                highestRid = ridNumber;
+            }
+        }
+    }
+    
+    return highestRid;
 };
 
 export default {
