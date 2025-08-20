@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import JSZip from "jszip";
-import { EmptyQueryNameErr, QueryNameMaxLengthErr, maxQueryLength, URLS, BOM, QueryNameInvalidCharsErr } from "./constants";
+import { maxQueryLength, URLS, BOM, Errors } from "./constants";
 import { generateMashupXMLTemplate, generateCustomXmlFilePath } from "../generators";
 import { Buffer } from "buffer";
 import { DOMParser } from "xmldom-qsa";
@@ -105,16 +105,16 @@ const queryNameHasInvalidChars = (queryName: string) => {
 const validateQueryName = (queryName: string): void => {
     if (queryName) {
         if (queryName.length > maxQueryLength) {
-            throw new Error(QueryNameMaxLengthErr);
+            throw new Error(Errors.queryNameMaxLength);
         }
 
         if (queryNameHasInvalidChars(queryName)) {
-            throw new Error(QueryNameInvalidCharsErr);
+            throw new Error(Errors.queryNameInvalidChars);
         }
     }
 
     if (!queryName.trim()) {
-        throw new Error(EmptyQueryNameErr);
+        throw new Error(Errors.emptyQueryName);
     }
 };
 

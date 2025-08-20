@@ -3,18 +3,15 @@
 
 import JSZip from "jszip";
 import {
-    base64NotFoundErr,
     connectionsXmlPath,
     textResultType,
-    connectionsNotFoundErr,
     sharedStringsXmlPath,
-    sharedStringsNotFoundErr,
     sheetsXmlPath,
-    sheetsNotFoundErr,
     tableXmlPath,
     defaults,
     tablesFolderPath,
     customXML,
+    Errors,
 } from "./constants";
 import { replaceSingleQuery } from "./mashupDocumentParser";
 import { FileConfigs, TableData, TemplateSettings } from "../types";
@@ -125,7 +122,7 @@ const updateWorkbookPowerQueryDocument = async (zip: JSZip, queryName: string, q
     const old_base64: string | null = await pqUtils.getBase64(zip);
 
     if (!old_base64) {
-        throw new Error(base64NotFoundErr);
+        throw new Error(Errors.base64NotFound);
     }
 
     const new_base64: string = await replaceSingleQuery(old_base64, queryName, queryMashupDoc);
@@ -136,7 +133,7 @@ const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string
     // Update connections
     const connectionsXmlString: string | undefined = await zip.file(connectionsXmlPath)?.async(textResultType);
     if (connectionsXmlString === undefined) {
-        throw new Error(connectionsNotFoundErr);
+        throw new Error(Errors.connectionsNotFound);
     }
 
     const { connectionId, connectionXmlFileString } = xmlInnerPartsUtils.updateConnections(connectionsXmlString, queryName, refreshOnOpen);
@@ -145,7 +142,7 @@ const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string
     // Update sharedStrings
     const sharedStringsXmlString: string | undefined = await zip.file(sharedStringsXmlPath)?.async(textResultType);
     if (sharedStringsXmlString === undefined) {
-        throw new Error(sharedStringsNotFoundErr);
+        throw new Error(Errors.sharedStringsNotFound);
     }
 
     const { sharedStringIndex, newSharedStrings } = xmlInnerPartsUtils.updateSharedStrings(sharedStringsXmlString, queryName);
@@ -160,7 +157,7 @@ const updateWorkbookSingleQueryAttributes = async (zip: JSZip, queryName: string
 
     const sheetsXmlString: string | undefined = await zip.file(sheetPath)?.async(textResultType);
     if (sheetsXmlString === undefined) {
-        throw new Error(sheetsNotFoundErr);
+        throw new Error(Errors.sheetsNotFound);
     }
 
     const worksheetString: string = xmlInnerPartsUtils.updateWorksheet(sheetsXmlString, sharedStringIndex.toString());

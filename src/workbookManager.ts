@@ -4,13 +4,13 @@
 import JSZip from "jszip";
 import { pqUtils, xmlPartsUtils, htmlUtils, gridUtils } from "./utils";
 import { SIMPLE_BLANK_TABLE_TEMPLATE, SIMPLE_QUERY_WORKBOOK_TEMPLATE } from "./workbookTemplate";
-import { defaults, emptyQueryMashupErr, blobFileType, application, templateWithInitialDataErr, tableNotFoundErr, headers, OFU } from "./utils/constants";
-import { QueryInfo, TableData, Grid, FileConfigs, TemplateSettings } from "./types";
+import { defaults, blobFileType, application, headers, OFU, Errors } from "./utils/constants";
+import { QueryInfo, TableData, Grid, FileConfigs } from "./types";
 import { generateSingleQueryMashup } from "./generators";
 
 export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataGrid?: Grid, fileConfigs?: FileConfigs): Promise<Blob> => {
     if (!query.queryMashup) {
-        throw new Error(emptyQueryMashupErr);
+        throw new Error(Errors.emptyQueryMashup);
     }
 
     if (!query.queryName) {
@@ -18,7 +18,7 @@ export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataG
     }
 
     if (fileConfigs?.templateFile !== undefined && initialDataGrid !== undefined) {
-        throw new Error(templateWithInitialDataErr);
+        throw new Error(Errors.templateWithInitialData);
     }
 
     pqUtils.validateQueryName(query.queryName);
@@ -44,7 +44,7 @@ export const generateTableWorkbookFromGrid = async (grid: Grid, fileConfigs?: Fi
 
     const tableData = gridUtils.parseToTableData(grid);
     if (tableData === undefined) {
-        throw new Error(tableNotFoundErr);
+        throw new Error(Errors.tableNotFound);
     }
 
     await xmlPartsUtils.updateWorkbookDataAndConfigurations(zip, fileConfigs, tableData);

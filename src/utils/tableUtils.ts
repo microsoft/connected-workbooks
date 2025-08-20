@@ -6,10 +6,8 @@ import { TableData } from "../types";
 import {
     element,
     elementAttributes,
-    queryTableNotFoundErr,
+    Errors,
     queryTableXmlPath,
-    sheetsNotFoundErr,
-    tableNotFoundErr,
     textResultType,
     workbookXmlPath,
     xmlTextResultType,
@@ -35,7 +33,7 @@ const updateTableInitialDataIfNeeded = async (zip: JSZip, cellRangeRef: string, 
 
     const sheetsXmlString: string | undefined = await zip.file(sheetPath)?.async(textResultType);
     if (sheetsXmlString === undefined) {
-        throw new Error(sheetsNotFoundErr);
+        throw new Error(Errors.sheetsNotFound);
     }
 
     const newSheet: string = updateSheetsInitialData(sheetsXmlString, tableData, cellRangeRef);
@@ -44,7 +42,7 @@ const updateTableInitialDataIfNeeded = async (zip: JSZip, cellRangeRef: string, 
     if (updateQueryTable) {
         const queryTableXmlString: string | undefined = await zip.file(queryTableXmlPath)?.async(textResultType);
         if (queryTableXmlString === undefined) {
-            throw new Error(queryTableNotFoundErr);
+            throw new Error(Errors.queryTableNotFound);
         }
 
         const newQueryTable: string = await updateQueryTablesInitialData(queryTableXmlString, tableData);
@@ -53,7 +51,7 @@ const updateTableInitialDataIfNeeded = async (zip: JSZip, cellRangeRef: string, 
         // update defined name
         const workbookXmlString: string | undefined = await zip.file(workbookXmlPath)?.async(textResultType);
         if (workbookXmlString === undefined) {
-            throw new Error(sheetsNotFoundErr);
+            throw new Error(Errors.workbookNotFound);
         }
 
         const newWorkbook: string = updateWorkbookInitialData(workbookXmlString, sheetName + GenerateReferenceFromString(cellRangeRef));
@@ -62,7 +60,7 @@ const updateTableInitialDataIfNeeded = async (zip: JSZip, cellRangeRef: string, 
 
     const tableXmlString: string | undefined = await zip.file(tablePath)?.async(textResultType);
     if (tableXmlString === undefined) {
-        throw new Error(tableNotFoundErr);
+        throw new Error(Errors.tableNotFound);
     }
 
     const newTable: string = updateTablesInitialData(tableXmlString, tableData, cellRangeRef, updateQueryTable);
