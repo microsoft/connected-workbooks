@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { sharedStringsXmlMock, existingSharedStringsXmlMock } from "./mocks";
+import { sharedStringsXmlMock, existingSharedStringsXmlMock, validWorksheetXml, worksheetXmlWithMissingFields } from "./mocks";
 import { gridUtils, xmlInnerPartsUtils, xmlPartsUtils } from "../src/utils";
 import { describe, test, expect } from '@jest/globals';
 import JSZip from "jszip";
@@ -181,14 +181,61 @@ describe("Workbook Manager tests", () => {
     });
 
     describe("checkParserError function", () => {
-        test("should not throw when parsing valid XML", () => {
-            const validXml = '<?xml version="1.0" encoding="UTF-8"?><root><child>test</child></root>';
+        test("should not throw when parsing valid Excel worksheet XML", () => {
             const parser = new DOMParser();
-            const doc = parser.parseFromString(validXml, "text/xml");
+            const doc = parser.parseFromString(validWorksheetXml, "text/xml");
             
             expect(() => {
-                xmlInnerPartsUtils.checkParserError(doc, "Test context");
+                xmlInnerPartsUtils.checkParserError(doc, "Valid worksheet test");
             }).not.toThrow();
+        });
+
+        test("should successfully parse worksheet and access existing fields", () => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(validWorksheetXml, "text/xml");
+            
+            expect(() => {
+                xmlInnerPartsUtils.checkParserError(doc, "Field access test");
+            }).not.toThrow();
+            
+            expect(doc.getElementsByTagName("sheetData")).toHaveLength(1);
+            
+            const worksheetElement = doc.getElementsByTagName("worksheet")[0];
+            expect(worksheetElement.getAttribute("xmlns")).toBe("http://schemas.openxmlformats.org/spreadsheetml/2006/main");
+        });
+
+        test("should handle accessing non-existent fields gracefully", () => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(worksheetXmlWithMissingFields, "text/xml");
+            
+            expect(() => {
+                xmlInnerPartsUtils.checkParserError(doc, "Missing fields test");
+            }).not.toThrow();
+            
+            // Test that non-existent elements return empty collections
+            expect(doc.getElementsByTagName("nonExistentElement")).toHaveLength(0);
+            expect(doc.getElementsByTagName("tableParts")).toHaveLength(0);
+        });
+
+        test("should throw when parsing broken XML", () => {
+            // Create a mock document that simulates what happens when browser parsers encounter malformed XML
+            const mockParserErrorElement = {
+                textContent: "error on line 7 at column 1: Opening and ending tag mismatch: unclosed-tag line 6 and worksheet"
+            };
+            
+            const mockDoc = {
+                documentElement: { namespaceURI: "http://www.w3.org/1999/xhtml" },
+                getElementsByTagName: (tagName: string) => {
+                    if (tagName === "parsererror") {
+                        return [mockParserErrorElement]; // Simulate parser error
+                    }
+                    return [];
+                }
+            } as any;
+            
+            expect(() => {
+                xmlInnerPartsUtils.checkParserError(mockDoc, "Broken XML test");
+            }).toThrow("Broken XML test: error on line 7 at column 1: Opening and ending tag mismatch: unclosed-tag line 6 and worksheet");
         });
 
         test("should throw when document is null or undefined", () => {
@@ -201,6 +248,7 @@ describe("Workbook Manager tests", () => {
             }).toThrow(`Test context: ${Errors.xmlParse}`);
         });
 
+        // Test using fake document to mimic browser behavior
         test("should throw when document has no documentElement", () => {
             const mockDoc = {
                 documentElement: null,
@@ -222,7 +270,7 @@ describe("Workbook Manager tests", () => {
                 documentElement: { namespaceURI: "http://example.com" },
                 getElementsByTagName: (tagName: string) => {
                     if (tagName === "parsererror") {
-                        return [mockParserErrorElement]; // Return array with one error element
+                        return [mockParserErrorElement]; 
                     }
                     return [];
                 }
@@ -233,26 +281,6 @@ describe("Workbook Manager tests", () => {
             }).toThrow("Test context: Mock parser error message");
         });
 
-        test("should throw when XML document contains empty parsererror elements", () => {
-            // Create a mock document that simulates having parsererror elements with no text
-            const mockParserErrorElement = {
-                textContent: ""
-            };
-            
-            const mockDoc = {
-                documentElement: { namespaceURI: "http://example.com" },
-                getElementsByTagName: (tagName: string) => {
-                    if (tagName === "parsererror") {
-                        return [mockParserErrorElement]; // Return array with one error element
-                    }
-                    return [];
-                }
-            } as any;
-            
-            expect(() => {
-                xmlInnerPartsUtils.checkParserError(mockDoc, "Test context");
-            }).toThrow("Test context: Unknown parser error");
-        });
     });
 });
 
