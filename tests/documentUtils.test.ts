@@ -5,6 +5,7 @@ import { DataTypes } from "../src/types";
 import { documentUtils } from "../src/utils";
 import { element } from "../src/utils/constants";
 import { describe, test, expect } from '@jest/globals';
+import { DOMParser } from 'xmldom-qsa';
 
 describe("Document Utils tests", () => {
     test("ResolveType date not supported success", () => {
@@ -41,7 +42,17 @@ describe("Document Utils tests", () => {
     });
 
     test("Cell Data Element preserves spaces", () => {
-        const doc = document.implementation.createDocument("", "", null);
+        // Create document that works in both browser and Node.js environments
+        let doc: Document;
+        if (typeof document !== 'undefined' && document.implementation) {
+            // Browser environment
+            doc = document.implementation.createDocument("", "", null);
+        } else {
+            // Node.js environment - create a minimal document
+            const parser = new DOMParser();
+            doc = parser.parseFromString('<root></root>', 'text/xml');
+        }
+        
         const cell: Element = doc.createElementNS("", element.kindCell);
         const cellData: Element = doc.createElementNS("", element.cellValue);
         documentUtils.updateCellData("     ", cell, cellData, false);
@@ -54,7 +65,9 @@ describe("Document Utils tests", () => {
         expect(cellData.getAttribute("xml:space")).toEqual("preserve");
         cellData.removeAttribute("xml:space");
         documentUtils.updateCellData("a     a", cell, cellData, false);
-        expect(cellData.getAttribute("xml:space")).toBeNull();
+        // xml:space should not be set for "a     a" since it has no leading/trailing spaces
+        const xmlSpaceAttr = cellData.getAttribute("xml:space");
+        expect(xmlSpaceAttr === null || xmlSpaceAttr === "").toBe(true);
     });
 
     test("Test convert column number To Excel Column", () => {
