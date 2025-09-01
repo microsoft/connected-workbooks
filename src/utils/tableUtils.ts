@@ -179,9 +179,10 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData, 
         _row.forEach((cellContent, colIndex) => {
             validateCellContentLength(cellContent);
             newRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex + column - 1, row - 1, cellContent));
-            sheetData.appendChild(newRow);
-            row++;
         });
+        sheetData.appendChild(newRow);
+        row++;
+
     });
 
     sheetsDoc.getElementsByTagName(element.dimension)[0].setAttribute(elementAttributes.reference, cellRangeRef);
