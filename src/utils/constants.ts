@@ -24,15 +24,20 @@ export const tableXmlPath = "xl/tables/table1.xml";
 export const queryTableXmlPath = "xl/queryTables/queryTable1.xml";
 export const workbookXmlPath = "xl/workbook.xml";
 export const queryTablesPath = "xl/queryTables/";
+export const tablesFolderPath = "xl/tables/";
 export const pivotCachesPath = "xl/pivotCache/";
 export const section1mPath = "Formulas/Section1.m";
 export const docPropsCoreXmlPath = "docProps/core.xml";
 export const relsXmlPath = "_rels/.rels";
 export const docMetadataXmlPath = "docMetadata";
 export const docPropsRootElement = "cp:coreProperties";
+export const workbookRelsXmlPath = "xl/_rels/workbook.xml.rels";
+export const labelInfoXmlPath = "docMetadata/LabelInfo.xml";
+export const docPropsAppXmlPath = "docProps/app.xml";
 
 export const sharedStringsNotFoundErr = "SharedStrings were not found in template";
 export const connectionsNotFoundErr = "Connections were not found in template";
+export const WorkbookNotFoundERR = "workbook was not found in template";
 export const sheetsNotFoundErr = "Sheets were not found in template";
 export const base64NotFoundErr = "Base64 was not found in template";
 export const emptyQueryMashupErr = "Query mashup is empty";
@@ -43,6 +48,7 @@ export const formulaSectionNotFoundErr = "Formula section wasn't found in templa
 export const templateWithInitialDataErr = "Cannot use a template file with initial data";
 export const queryTableNotFoundErr = "Query table wasn't found in template";
 export const tableNotFoundErr = "Table wasn't found in template";
+export const tableReferenceNotFoundErr = "Reference not found in the table XML.";
 export const invalidValueInColumnErr = "Invalid cell value in column";
 export const headerNotFoundErr = "Invalid JSON file, header is missing";
 export const invalidDataTypeErr = "Invalid JSON file, invalid data type";
@@ -55,8 +61,29 @@ export const promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr = "Header
 export const unexpectedErr = "Unexpected error";
 export const arrayIsntMxNErr = "Array isn't MxN";
 export const relsNotFoundErr = ".rels were not found in template";
+export const xlRelsNotFoundErr = "workbook.xml.rels were not found xl";
 export const columnIndexOutOfRangeErr = "Column index out of range";
+<<<<<<< HEAD
 export const invalidCellValueErr = "Cell content exceeds maximum length of "  + maxCellCharacters+ " characters";
+=======
+export const relationshipErr = "Relationship not found";
+
+export const blobFileType = "blob";
+export const uint8ArrayType = "uint8array";
+export const application = "application/xlsx";
+export const textResultType = "text";
+export const xmlTextResultType = "text/xml";
+export const pivotCachesPathPrefix = "pivotCacheDefinition";
+export const trueValue = "1";
+export const falseValue = "0";
+export const emptyValue = "";
+export const section1PathPrefix = "Section1/";
+export const divider = "/";
+export const maxQueryLength = 80;
+export const trueStr = "true";
+export const falseStr = "false";
+export const BOM = "\ufeff";
+>>>>>>> main
 
 export const element = {
     sharedStringTable: "sst",
@@ -86,6 +113,9 @@ export const element = {
     dimension: "dimension",
     selection: "selection",
     kindCell: "c",
+    sheet: "sheet",
+    relationships: "Relationships",
+    relationship: "Relationship"
 };
 
 export const elementAttributes = {
@@ -100,6 +130,11 @@ export const elementAttributes = {
     name: "name",
     description: "description",
     id: "id",
+    Id: "Id",
+    relationId: "r:id",
+    relationId1: "RId1",
+    relationId2: "RId2",
+    relationId3: "RId3",
     type: "Type",
     value: "Value",
     relationshipInfo: "RelationshipInfoContainer",
@@ -119,6 +154,7 @@ export const elementAttributes = {
     x14acDyDescent: "x14ac:dyDescent",
     xr3uid: "xr3:uid",
     space: "xml:space",
+    target: "Target",
 };
 
 export const dataTypeKind = {
@@ -139,6 +175,7 @@ export const defaults = {
     queryName: "Query1",
     sheetName: "Sheet1",
     columnName: "Column",
+    tableName: "Table1",
 };
 
 export const URLS = {

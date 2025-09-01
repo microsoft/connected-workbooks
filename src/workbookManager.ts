@@ -5,7 +5,7 @@ import JSZip from "jszip";
 import { pqUtils, xmlPartsUtils, htmlUtils, gridUtils } from "./utils";
 import { SIMPLE_BLANK_TABLE_TEMPLATE, SIMPLE_QUERY_WORKBOOK_TEMPLATE } from "./workbookTemplate";
 import { defaults, emptyQueryMashupErr, blobFileType, application, templateWithInitialDataErr, tableNotFoundErr, headers, OFU } from "./utils/constants";
-import { QueryInfo, TableData, Grid, FileConfigs } from "./types";
+import { QueryInfo, TableData, Grid, FileConfigs, TemplateSettings } from "./types";
 import { generateSingleQueryMashup } from "./generators";
 
 export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataGrid?: Grid, fileConfigs?: FileConfigs): Promise<Blob> => {
@@ -17,15 +17,14 @@ export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataG
         query.queryName = defaults.queryName;
     }
 
-    const templateFile: File | undefined = fileConfigs?.templateFile;
-    if (templateFile !== undefined && initialDataGrid !== undefined) {
+    if (fileConfigs?.templateFile !== undefined && initialDataGrid !== undefined) {
         throw new Error(templateWithInitialDataErr);
     }
 
     pqUtils.validateQueryName(query.queryName);
 
     const zip: JSZip =
-        templateFile === undefined ? await JSZip.loadAsync(SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true }) : await JSZip.loadAsync(templateFile);
+        fileConfigs?.templateFile === undefined ? await JSZip.loadAsync(SIMPLE_QUERY_WORKBOOK_TEMPLATE, { base64: true }) : await JSZip.loadAsync(fileConfigs.templateFile);
 
     const tableData = initialDataGrid ? gridUtils.parseToTableData(initialDataGrid) : undefined;
 
@@ -62,7 +61,7 @@ const generateSingleQueryWorkbookFromZip = async (zip: JSZip, query: QueryInfo, 
     }
 
     await xmlPartsUtils.updateWorkbookPowerQueryDocument(zip, query.queryName, generateSingleQueryMashup(query.queryName, query.queryMashup));
-    await xmlPartsUtils.updateWorkbookSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen);
+    await xmlPartsUtils.updateWorkbookSingleQueryAttributes(zip, query.queryName, query.refreshOnOpen, fileConfigs?.templateSettings?.sheetName);
     await xmlPartsUtils.updateWorkbookDataAndConfigurations(zip, fileConfigs, tableData, true /*updateQueryTable*/);
 
     return await zip.generateAsync({

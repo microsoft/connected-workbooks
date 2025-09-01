@@ -38,9 +38,15 @@ export interface GridConfig {
 }
 
 export interface FileConfigs {
-    templateFile?: File;
+    templateFile?: File | Buffer;
     docProps?: DocProps;
     hostName?: string;
+    templateSettings?: TemplateSettings;
+}
+
+export interface TemplateSettings {
+    tableName?: string;
+    sheetName?: string;
 }
 
 export enum DataTypes {
