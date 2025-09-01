@@ -148,7 +148,7 @@ export const elementAttributesValues = {
     connectionName: (queryName: string) => `Query - ${queryName}`,
     connectionDescription: (queryName: string) => `Connection to the '${queryName}' query in the workbook.`,
     connection: (queryName: string) => `Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location="${queryName}";`,
-    connectionCommand: (queryName: string) => `SELECT * FROM [${queryName}]`,
+    connectionCommand: (queryName: string) => `SELECT * FROM [${queryName.replace(/]/g, ']]')}]`,
     tableResultType: () => "sTable",
 };
 
