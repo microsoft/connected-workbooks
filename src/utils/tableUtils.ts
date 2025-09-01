@@ -6,6 +6,8 @@ import { TableData } from "../types";
 import {
     element,
     elementAttributes,
+    invalidCellValueErr,
+    maxCellCharacters,
     Errors,
     queryTableXmlPath,
     textResultType,
@@ -160,6 +162,7 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData, 
     columnRow.setAttribute(elementAttributes.spans, column + ":" + (column + tableData.columnNames.length - 1));
     columnRow.setAttribute(elementAttributes.x14acDyDescent, "0.3");
     tableData.columnNames.forEach((col: string, colIndex: number) => {
+        validateCellContentLength(col);
         columnRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex + column - 1, row - 1, col));
     });
     sheetData.appendChild(columnRow);
@@ -170,7 +173,9 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData, 
         newRow.setAttribute(elementAttributes.row, row.toString());
         newRow.setAttribute(elementAttributes.spans, column + ":" + (column + tableData.columnNames.length - 1));
         newRow.setAttribute(elementAttributes.x14acDyDescent, "0.3");
+
         _row.forEach((cellContent, colIndex) => {
+            validateCellContentLength(cellContent);
             newRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex + column - 1, row - 1, cellContent));
         });
         sheetData.appendChild(newRow);
@@ -181,6 +186,12 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData, 
     sheetsDoc.getElementsByTagName(element.selection)[0].setAttribute(elementAttributes.sqref, cellRangeRef);
     return serializer.serializeToString(sheetsDoc);
 };
+
+const validateCellContentLength = (cellContent: string): void => {
+    if (cellContent.length > maxCellCharacters) {
+        throw new Error(invalidCellValueErr);
+    }
+}
 
 /**
  * Add Excel-style dollar signs and a '!' prefix to a cell range.

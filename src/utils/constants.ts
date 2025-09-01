@@ -1,5 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+export const blobFileType = "blob";
+export const uint8ArrayType = "uint8array";
+export const application = "application/xlsx";
+export const textResultType = "text";
+export const xmlTextResultType = "text/xml";
+export const pivotCachesPathPrefix = "pivotCacheDefinition";
+export const trueValue = "1";
+export const falseValue = "0";
+export const emptyValue = "";
+export const section1PathPrefix = "Section1/";
+export const divider = "/";
+export const maxQueryLength = 80;
+export const trueStr = "true";
+export const falseStr = "false";
+export const BOM = "\ufeff";
+export const maxCellCharacters = 32767;
 
 export const connectionsXmlPath = "xl/connections.xml";
 export const sharedStringsXmlPath = "xl/sharedStrings.xml";
@@ -66,22 +82,7 @@ export const Errors = {
     tableParse: "Failed to parse table XML",
     tablePathParse: "Failed to parse table XML for",
 };
-
-export const blobFileType = "blob";
-export const uint8ArrayType = "uint8array";
-export const application = "application/xlsx";
-export const textResultType = "text";
-export const xmlTextResultType = "text/xml";
-export const pivotCachesPathPrefix = "pivotCacheDefinition";
-export const trueValue = "1";
-export const falseValue = "0";
-export const emptyValue = "";
-export const section1PathPrefix = "Section1/";
-export const divider = "/";
-export const maxQueryLength = 80;
-export const trueStr = "true";
-export const falseStr = "false";
-export const BOM = "\ufeff";
+export const invalidCellValueErr = "Cell content exceeds maximum length of "  + maxCellCharacters+ " characters";
 
 export const element = {
     sharedStringTable: "sst",
@@ -169,7 +170,7 @@ export const elementAttributesValues = {
     connectionName: (queryName: string) => `Query - ${queryName}`,
     connectionDescription: (queryName: string) => `Connection to the '${queryName}' query in the workbook.`,
     connection: (queryName: string) => `Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location="${queryName}";`,
-    connectionCommand: (queryName: string) => `SELECT * FROM [${queryName}]`,
+    connectionCommand: (queryName: string) => `SELECT * FROM [${queryName.replace(/]/g, ']]')}]`,
     tableResultType: () => "sTable",
 };
 
