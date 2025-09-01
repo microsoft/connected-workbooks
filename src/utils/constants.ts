@@ -81,8 +81,8 @@ export const Errors = {
     workbookParse: "Failed to parse workbook XML",
     tableParse: "Failed to parse table XML",
     tablePathParse: "Failed to parse table XML for",
+    invalidCellValueErr: "Cell content exceeds maximum length of "  + maxCellCharacters+ " characters",
 };
-export const invalidCellValueErr = "Cell content exceeds maximum length of "  + maxCellCharacters+ " characters";
 
 export const element = {
     sharedStringTable: "sst",

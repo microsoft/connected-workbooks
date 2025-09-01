@@ -6,7 +6,6 @@ import { TableData } from "../types";
 import {
     element,
     elementAttributes,
-    invalidCellValueErr,
     maxCellCharacters,
     Errors,
     queryTableXmlPath,
@@ -189,7 +188,7 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData, 
 
 const validateCellContentLength = (cellContent: string): void => {
     if (cellContent.length > maxCellCharacters) {
-        throw new Error(invalidCellValueErr);
+        throw new Error(Errors.invalidCellValueErr);
     }
 }
 
