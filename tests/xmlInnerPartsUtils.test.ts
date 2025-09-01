@@ -24,6 +24,21 @@ describe("Workbook Manager tests", () => {
         expect(connectionXmlFileString.replace(/ /g, "")).toContain('refreshOnLoad="1"');
     });
 
+    test("Connection XML attributes query name with ]", async () => {
+        const { connectionXmlFileString } = await xmlInnerPartsUtils.updateConnections(mockConnectionString, "[[name]]]", true);
+        expect(connectionXmlFileString.replace(/ /g, "")).toContain("command=\"SELECT*FROM[[[name]]]]]]]\"");
+    });
+
+    test("Connection XML attributes query name with no ]", async () => {
+        const { connectionXmlFileString } = await xmlInnerPartsUtils.updateConnections(mockConnectionString, "name", true);
+        expect(connectionXmlFileString.replace(/ /g, "")).toContain("command=\"SELECT*FROM[name]\"");
+    });
+
+    test("Connection XML attributes query name with ] in the middle", async () => {
+        const { connectionXmlFileString } = await xmlInnerPartsUtils.updateConnections(mockConnectionString, "[na]me]", true);
+        expect(connectionXmlFileString.replace(/ /g, "")).toContain("command=\"SELECT*FROM[[na]]me]]]\"");
+    });
+
     test("SharedStrings XML contains new query name", async () => {
         const { newSharedStrings } = await xmlInnerPartsUtils.updateSharedStrings(
             '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="1" uniqueCount="1"><si><t>Query1</t></si><si><t/></si></sst>',
