@@ -164,12 +164,8 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData, 
     columnRow.setAttribute(elementAttributes.spans, column + ":" + (column + tableData.columnNames.length - 1));
     columnRow.setAttribute(elementAttributes.x14acDyDescent, "0.3");
     tableData.columnNames.forEach((col: string, colIndex: number) => {
-<<<<<<< HEAD
         validateCellContentLength(col);
-        columnRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, col));
-=======
         columnRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex + column - 1, row - 1, col));
->>>>>>> main
     });
     sheetData.appendChild(columnRow);
     row++;
@@ -179,17 +175,13 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData, 
         newRow.setAttribute(elementAttributes.row, row.toString());
         newRow.setAttribute(elementAttributes.spans, column + ":" + (column + tableData.columnNames.length - 1));
         newRow.setAttribute(elementAttributes.x14acDyDescent, "0.3");
-<<<<<<< HEAD
-        row.forEach((cellContent, colIndex) => {
-            validateCellContentLength(cellContent);
-            newRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex, rowIndex, cellContent));
-=======
+
         _row.forEach((cellContent, colIndex) => {
+            validateCellContentLength(cellContent);
             newRow.appendChild(documentUtils.createCell(sheetsDoc, colIndex + column - 1, row - 1, cellContent));
->>>>>>> main
+            sheetData.appendChild(newRow);
+            row++;
         });
-        sheetData.appendChild(newRow);
-        row++;
     });
 
     sheetsDoc.getElementsByTagName(element.dimension)[0].setAttribute(elementAttributes.reference, cellRangeRef);
@@ -197,12 +189,12 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData, 
     return serializer.serializeToString(sheetsDoc);
 };
 
-<<<<<<< HEAD
 const validateCellContentLength = (cellContent: string): void => {
     if (cellContent.length > maxCellCharacters) {
         throw new Error(invalidCellValueErr);
     }
-=======
+}
+
 /**
  * Add Excel-style dollar signs and a '!' prefix to a cell range.
  * Converts "A1:B2" into "!$A$1:$B$2".
@@ -217,7 +209,6 @@ const GenerateReferenceFromString = (cellRangeRef: string): string => {
             return `$${col.toUpperCase()}$${row}`;
         }
     }).join(":");
->>>>>>> main
 }
 
 export default {
