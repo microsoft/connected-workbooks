@@ -182,7 +182,6 @@ const updateSheetsInitialData = (sheetsXmlString: string, tableData: TableData, 
         });
         sheetData.appendChild(newRow);
         row++;
-
     });
 
     sheetsDoc.getElementsByTagName(element.dimension)[0].setAttribute(elementAttributes.reference, cellRangeRef);
