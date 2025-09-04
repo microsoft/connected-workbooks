@@ -16,4 +16,6 @@ export {
     workbookXmlMock,
     queryTableMock,
     addZeroSheetsXmlMock,
+    validWorksheetXml,
+    worksheetXmlWithMissingFields,
 } from "./xmlMocks";

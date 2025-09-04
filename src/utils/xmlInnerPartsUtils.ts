@@ -11,29 +11,44 @@ import {
     element,
     elementAttributes,
     elementAttributesValues,
-    connectionsNotFoundErr,
-    sharedStringsNotFoundErr,
     queryTablesPath,
     textResultType,
     pivotCachesPath,
     pivotCachesPathPrefix,
-    queryAndPivotTableNotFoundErr,
     emptyValue,
     docMetadataXmlPath,
     relsXmlPath,
-    relsNotFoundErr,
-    WorkbookNotFoundERR,
     workbookXmlPath,
-    tableNotFoundErr,
-    tableReferenceNotFoundErr,
     workbookRelsXmlPath,
-    xlRelsNotFoundErr,
+    customXML,
+    customXmlXmlPath,
+    contentTypesXmlPath,
+    tablesFolderPath,
     labelInfoXmlPath,
     docPropsAppXmlPath,
-    relationshipErr,
+    Errors,
 } from "./constants";
 import documentUtils from "./documentUtils";
 import { DOMParser, XMLSerializer } from "xmldom-qsa";
+
+/**
+ * Helper function to check for XML parser errors without using querySelector
+ * @param doc - The parsed XML document
+ * @param context - Context string for error message
+ * @throws {Error} If parser error is detected
+ */
+const checkParserError = (doc: Document, context: string): void => {
+    if (!doc || !doc.documentElement) {
+        throw new Error(`${context}: ${Errors.xmlParse}`);
+    }
+    
+    // Check for parsererror elements using getElementsByTagName
+    const errorElements = doc.getElementsByTagName("parsererror");
+    if (errorElements && errorElements.length > 0) {
+        const errorText = errorElements[0].textContent || "Unknown parser error";
+        throw new Error(`${context}: ${errorText}`);
+    }
+};
 
 const updateDocProps = async (zip: JSZip, docProps: DocProps = {}): Promise<void> => {
     const { doc, properties } = await documentUtils.getDocPropsProperties(zip);
@@ -101,19 +116,20 @@ const clearLabelInfo = async (zip: JSZip): Promise<void> => {
     // fix rels
     const relsString = await zip.file(relsXmlPath)?.async(textResultType);
     if (relsString === undefined) {
-        throw new Error(relsNotFoundErr);
+        throw new Error(Errors.relsNotFound);
     }
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(relsString, xmlTextResultType);
+    checkParserError(doc, Errors.relsParse);
     const relationshipsList = doc.getElementsByTagName(element.relationships);
     if (!relationshipsList || relationshipsList.length === 0) {
-        throw new Error(relationshipErr);
+        throw new Error(Errors.relationship);
     }
 
     const relationships = relationshipsList[0];
     if (!relationships) {
-        throw new Error(relationshipErr);
+        throw new Error(Errors.relationship);
     }
 
     removeLabelInfoRelationship(doc, relationships);
@@ -133,6 +149,7 @@ const updateConnections = (
     const serializer: XMLSerializer = new XMLSerializer();
     const refreshOnLoadValue: string = refreshOnOpen ? trueValue : falseValue;
     const connectionsDoc: Document = parser.parseFromString(connectionsXmlString, xmlTextResultType);
+    checkParserError(connectionsDoc, Errors.connectionsParse);
     const connectionsProperties: HTMLCollectionOf<Element> = connectionsDoc.getElementsByTagName(element.databaseProperties);
     const dbPr: Element = connectionsProperties[0];
     dbPr.setAttribute(elementAttributes.refreshOnLoad, refreshOnLoadValue);
@@ -146,7 +163,7 @@ const updateConnections = (
     const connectionXmlFileString: string = serializer.serializeToString(connectionsDoc);
 
     if (connectionId === null) {
-        throw new Error(connectionsNotFoundErr);
+        throw new Error(Errors.connectionsNotFound);
     }
 
     return { connectionId, connectionXmlFileString };
@@ -156,9 +173,10 @@ const updateSharedStrings = (sharedStringsXmlString: string, queryName: string):
     const parser: DOMParser = new DOMParser();
     const serializer: XMLSerializer = new XMLSerializer();
     const sharedStringsDoc: Document = parser.parseFromString(sharedStringsXmlString, xmlTextResultType);
+    checkParserError(sharedStringsDoc, Errors.sharedStringsParse);
     const sharedStringsTable: Element = sharedStringsDoc.getElementsByTagName(element.sharedStringTable)[0];
     if (!sharedStringsTable) {
-        throw new Error(sharedStringsNotFoundErr);
+        throw new Error(Errors.sharedStringsNotFound);
     }
 
     const textElementCollection: HTMLCollectionOf<Element> = sharedStringsDoc.getElementsByTagName(element.text);
@@ -202,6 +220,7 @@ const updateWorksheet = (sheetsXmlString: string, sharedStringIndex: string): st
     const parser: DOMParser = new DOMParser();
     const serializer: XMLSerializer = new XMLSerializer();
     const sheetsDoc: Document = parser.parseFromString(sheetsXmlString, xmlTextResultType);
+    checkParserError(sheetsDoc, Errors.worksheetParse);
     sheetsDoc.getElementsByTagName(element.cellValue)[0].innerHTML = sharedStringIndex.toString();
     const newSheet: string = serializer.serializeToString(sheetsDoc);
 
@@ -267,7 +286,7 @@ const updatePivotTablesandQueryTables = async (zip: JSZip, queryName: string, re
         }
     });
     if (!found) {
-        throw new Error(queryAndPivotTableNotFoundErr);
+        throw new Error(Errors.queryAndPivotTableNotFound);
     }
 };
 
@@ -277,6 +296,7 @@ const updateQueryTable = (tableXmlString: string, connectionId: string, refreshO
     const parser: DOMParser = new DOMParser();
     const serializer: XMLSerializer = new XMLSerializer();
     const queryTableDoc: Document = parser.parseFromString(tableXmlString, xmlTextResultType);
+    checkParserError(queryTableDoc, Errors.queryTableParse);
     const queryTable: Element = queryTableDoc.getElementsByTagName(element.queryTable)[0];
     let newQueryTable: string = emptyValue;
     if (queryTable.getAttribute(elementAttributes.connectionId) == connectionId) {
@@ -294,6 +314,7 @@ const updatePivotTable = (tableXmlString: string, connectionId: string, refreshO
     const parser: DOMParser = new DOMParser();
     const serializer: XMLSerializer = new XMLSerializer();
     const pivotCacheDoc: Document = parser.parseFromString(tableXmlString, xmlTextResultType);
+    checkParserError(pivotCacheDoc, Errors.pivotTableParse);
     let cacheSource: Element = pivotCacheDoc.getElementsByTagName(element.cacheSource)[0];
     let newPivotTable: string = emptyValue;
     if (cacheSource.getAttribute(elementAttributes.connectionId) == connectionId) {
@@ -312,11 +333,12 @@ const updatePivotTable = (tableXmlString: string, connectionId: string, refreshO
 async function getSheetPathFromXlRelId(zip: JSZip, rId: string): Promise<string> {
     const relsFile = zip.file(workbookRelsXmlPath);
     if (!relsFile) {
-        throw new Error(xlRelsNotFoundErr);
+        throw new Error(Errors.xlRelsNotFound);
     }
 
     const relsString = await relsFile.async(textResultType);
     const relsDoc = new DOMParser().parseFromString(relsString, xmlTextResultType);
+    checkParserError(relsDoc, Errors.workbookRelsParse);
 
     // Avoid querySelector due to xmldom-qsa edge cases; iterate elements safely
     const relationships = relsDoc.getElementsByTagName("Relationship");
@@ -340,12 +362,12 @@ async function getSheetPathFromXlRelId(zip: JSZip, rId: string): Promise<string>
 const getSheetPathByNameFromZip = async (zip: JSZip, sheetName: string): Promise<string> => {
     const workbookXmlString: string | undefined = await zip.file(workbookXmlPath)?.async("text");
     if (!workbookXmlString) {
-        throw new Error(WorkbookNotFoundERR);
+        throw new Error(Errors.workbookNotFound);
     }
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(workbookXmlString, xmlTextResultType);
-
+    checkParserError(doc, Errors.workbookParse);
     const sheetElements = doc.getElementsByTagName(element.sheet);
     for (let i = 0; i < sheetElements.length; i++) {
         if (sheetElements[i].getAttribute(elementAttributes.name) === sheetName) {
@@ -363,23 +385,24 @@ const getSheetPathByNameFromZip = async (zip: JSZip, sheetName: string): Promise
 const getReferenceFromTable = async (zip: JSZip, tablePath: string): Promise<string> => {
     const tableXmlString: string | undefined = await zip.file(tablePath)?.async("text");
     if (!tableXmlString) {
-        throw new Error(WorkbookNotFoundERR);
+        throw new Error(Errors.workbookNotFound);
     }
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(tableXmlString, xmlTextResultType);
+    checkParserError(doc, Errors.tableParse);
     const tableElements = doc.getElementsByTagName(element.table);
     const reference = tableElements[0]?.getAttribute(elementAttributes.reference);
     if (!reference) {
-        throw new Error(tableReferenceNotFoundErr);
+        throw new Error(Errors.tableReferenceNotFound);
     }
 
     return reference.split(":")[0]; // Return the start cell reference (e.g., "A1" from "A1:B10")
 };
 
 const findTablePathFromZip = async (zip: JSZip, targetTableName: string): Promise<string> => {
-    const tablesFolder = zip.folder("xl/tables");
-    if (!tablesFolder) return "";
+    const tablesFolder = zip.folder(tablesFolderPath); 
+    if (!tablesFolder) return emptyValue;
 
     const tableFilePromises: Promise<{ path: string; content: string }>[] = [];
     tablesFolder.forEach((relativePath, file) => {
@@ -392,13 +415,202 @@ const findTablePathFromZip = async (zip: JSZip, targetTableName: string): Promis
     const parser = new DOMParser();
     for (const { path, content } of tableFiles) {
         const doc = parser.parseFromString(content, xmlTextResultType);
+        checkParserError(doc, `${Errors.tablePathParse} ${path}`);
         const tableElem = doc.getElementsByTagName(element.table)[0];
         if (tableElem && tableElem.getAttribute(elementAttributes.name) === targetTableName) {
             return path;
         }
     }
 
-    throw new Error(tableNotFoundErr);
+    throw new Error(Errors.tableNotFound);
+};
+
+/**
+ * Determines the next available item number for a custom XML item in the Excel workbook.
+ * Scans the customXml folder to find existing item files and returns the next sequential number.
+ * 
+ * @param zip - The JSZip instance containing the Excel workbook structure
+ * @returns Promise resolving to the next available item number (starting from 1 if no items exist)
+ * 
+ * @example
+ * // If customXml folder contains item1.xml, item2.xml, returns 3
+ * const nextNumber = await getCustomXmlItemNumber(zip);
+ */
+const getCustomXmlItemNumber = async (zip: JSZip): Promise<number> => {
+    const customXmlFolder = zip.folder(customXmlXmlPath);
+    if (!customXmlFolder) {
+        return 1; // start from 1 if folder doesn't exist
+    }
+
+    // Build regex to match custom XML item files in the customXml folder
+    const re = new RegExp(`^${customXmlXmlPath}/${customXML.itemNumberPattern.source}$`);
+    const matches = zip.file(re);
+
+    let max = 0;
+    // Iterate through all matching files to find the highest item number
+    for (const f of matches) {
+        const m = f.name.match(customXML.itemNumberPattern);
+        if (m) {
+            const n = parseInt(m[1], 10); // Extract the number from the filename
+            if (!Number.isNaN(n) && n > max) {
+                max = n;
+            }
+        }
+    }
+
+    return max + 1; // Return next available number
+};
+
+/**
+ * Checks if a custom XML item with connected-workbooks already exists in the Excel workbook.
+ * Searches through all custom XML files in the customXml folder to find a match with the expected content.
+ * 
+ * @param zip - The JSZip instance containing the Excel workbook structure
+ * @returns Promise resolving to true if the custom XML item exists, false otherwise
+ * 
+ * @example
+ * const exists = await isCustomXmlExists(zip);
+ * if (!exists) {
+ *   // Add new custom XML item
+ * }
+ */
+const isCustomXmlExists = async (zip: JSZip): Promise<boolean> => {
+    const customXmlFolder = zip.folder(customXmlXmlPath);
+    if (!customXmlFolder) {
+        return false; // customXml folder does not exist
+    }
+
+    // Get all files matching the custom XML item pattern
+    const customXmlFiles = customXmlFolder.file(customXML.itemFilePattern);
+    for (const file of customXmlFiles) {
+        try {
+            const content = await file.async(textResultType);
+            if (content.includes(customXML.connectedWorkbookTag)) {
+                return true; // Found matching custom XML item
+            }
+        } catch (error) {
+            // Skip files that can't be read and continue with the next file
+            continue;
+        }
+    }
+
+    return false; // No matching custom XML item found
+};
+
+/**
+ * Adds a content type override entry to the [Content_Types].xml file for a custom XML item.
+ * This registration is required for Excel to recognize and process the custom XML item.
+ * 
+ * @param zip - The JSZip instance containing the Excel workbook structure
+ * @param itemIndex - The index/number of the custom XML item to register
+ * @throws {Error} When the [Content_Types].xml file is not found or cannot be parsed
+ * 
+ * @example
+ * await addToContentType(zip, "1"); // Registers customXml/item1.xml in content types
+ */
+const addToContentType = async (zip: JSZip, itemIndex: string) => {
+    const contentTypesXmlString: string | undefined = await zip.file(contentTypesXmlPath)?.async(textResultType);
+    if (!contentTypesXmlString) {
+        throw new Error(Errors.contentTypesNotFound);
+    }
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(contentTypesXmlString, xmlTextResultType);
+    checkParserError(doc, Errors.contentTypesParse);
+    const partName = customXML.itemPropsPartNameTemplate(itemIndex);
+    const contentTypeValue = customXML.contentType;
+    const typesElement = doc.documentElement;
+    if (!typesElement) {
+        throw new Error(Errors.contentTypesElementNotFound);
+    }
+
+    const ns = doc.documentElement.namespaceURI;
+    const overrideEl = ns ? doc.createElementNS(ns, element.override) : doc.createElement(element.override);
+    overrideEl.setAttribute(elementAttributes.partName, partName);
+    overrideEl.setAttribute(elementAttributes.contentType, contentTypeValue);
+    typesElement.appendChild(overrideEl);
+    
+    const serializer = new XMLSerializer();
+    const newDoc = serializer.serializeToString(doc);
+    zip.file(contentTypesXmlPath, newDoc);
+};
+
+/**
+ * Adds a relationship entry to the workbook relationships file for a custom XML item.
+ * Creates a new relationship that links the workbook to the custom XML item.
+ * 
+ * @param zip - The JSZip instance containing the Excel workbook structure
+ * @param itemIndex - The index/number of the custom XML item to create a relationship for
+ * @throws {Error} When the workbook relationships file is not found or cannot be parsed
+ * 
+ * @example
+ * await addCustomXmlToRels(zip, "1"); // Creates relationship to customXml/item1.xml
+ */
+const addCustomXmlToRels = async (zip: JSZip, itemIndex: string) => {
+    const relsXmlString: string | undefined = await zip.file(workbookRelsXmlPath)?.async(textResultType);
+    if (!relsXmlString) {
+        throw new Error(Errors.relsNotFound);
+    }
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(relsXmlString, xmlTextResultType);
+    checkParserError(doc, Errors.workbookRelsParse);
+    
+    // Use getElementsByTagName for better cross-platform compatibility
+    const relationshipsElements = doc.getElementsByTagName(element.relationships);
+    if (!relationshipsElements || relationshipsElements.length === 0) {
+        throw new Error(Errors.relationship);
+    }
+
+    const relationshipsElement = relationshipsElements[0];
+    const highestRid = getHighestRelationshipId(relationshipsElement);
+
+    // Generate new relationship details
+    const newRid = `${elementAttributes.relationshipIdPrefix}${highestRid + 1}`;
+    const target = customXML.relativeItemPathTemplate(itemIndex);
+    const type = customXML.relationshipType;
+
+    // Create and configure the new relationship element
+    const ns = doc.documentElement.namespaceURI;
+    const relationshipEl = ns ? doc.createElementNS(ns, element.relationship) : doc.createElement(element.relationship);
+    relationshipEl.setAttribute(elementAttributes.Id, newRid);
+    relationshipEl.setAttribute(elementAttributes.type, type);
+    relationshipEl.setAttribute(elementAttributes.target, target);
+    relationshipsElement.appendChild(relationshipEl);
+    
+    // Serialize and save the updated relationships file
+    const serializer = new XMLSerializer();
+    const newDoc = serializer.serializeToString(doc);
+    zip.file(workbookRelsXmlPath, newDoc);
+};
+
+/**
+ * Finds the highest relationship ID number from existing relationships in a relationships element.
+ * Scans all relationship elements and extracts the numeric part from rId attributes.
+ * 
+ * @param relationshipsElement - The relationships XML element containing relationship elements
+ * @returns The highest relationship ID number found, or 0 if none exist
+ * 
+ * @example
+ * // If relationships contain rId1, rId3, rId7, returns 7
+ * const highestRid = getHighestRelationshipId(relationshipsElement);
+ */
+const getHighestRelationshipId = (relationshipsElement: Element): number => {
+    const relationships = relationshipsElement.getElementsByTagName(element.relationship);
+    let highestRid = 0;
+    
+    for (let i = 0; i < relationships.length; i++) {
+        const idAttr = relationships[i].getAttribute(elementAttributes.Id);
+        if (idAttr && idAttr.startsWith(elementAttributes.relationshipIdPrefix)) {
+            // Extract numeric part from rId (e.g., "rId5" -> 5, "rId123" -> 123)
+            const ridNumber = parseInt(idAttr.substring(elementAttributes.relationshipIdPrefix.length), 10);
+            if (!isNaN(ridNumber) && ridNumber > highestRid) {
+                highestRid = ridNumber;
+            }
+        }
+    }
+    
+    return highestRid;
 };
 
 export default {
@@ -413,4 +625,9 @@ export default {
     getSheetPathByNameFromZip,
     getReferenceFromTable,
     findTablePathFromZip,
+    getCustomXmlItemNumber,
+    isCustomXmlExists,
+    addToContentType,
+    addCustomXmlToRels,
+    checkParserError,
 };

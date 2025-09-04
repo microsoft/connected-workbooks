@@ -34,37 +34,55 @@ export const docPropsRootElement = "cp:coreProperties";
 export const workbookRelsXmlPath = "xl/_rels/workbook.xml.rels";
 export const labelInfoXmlPath = "docMetadata/LabelInfo.xml";
 export const docPropsAppXmlPath = "docProps/app.xml";
+export const contentTypesXmlPath = "[Content_Types].xml";
+export const customXmlXmlPath = "customXml";
 
-export const sharedStringsNotFoundErr = "SharedStrings were not found in template";
-export const connectionsNotFoundErr = "Connections were not found in template";
-export const WorkbookNotFoundERR = "workbook was not found in template";
-export const sheetsNotFoundErr = "Sheets were not found in template";
-export const base64NotFoundErr = "Base64 was not found in template";
-export const emptyQueryMashupErr = "Query mashup is empty";
-export const queryNameNotFoundErr = "Query name was not found";
-export const queryAndPivotTableNotFoundErr = "No such query found in Query Table or Pivot Table found in given template";
-export const queryConnectionNotFoundErr = "No connection found for query";
-export const formulaSectionNotFoundErr = "Formula section wasn't found in template";
-export const templateWithInitialDataErr = "Cannot use a template file with initial data";
-export const queryTableNotFoundErr = "Query table wasn't found in template";
-export const tableNotFoundErr = "Table wasn't found in template";
-export const tableReferenceNotFoundErr = "Reference not found in the table XML.";
-export const invalidValueInColumnErr = "Invalid cell value in column";
-export const headerNotFoundErr = "Invalid JSON file, header is missing";
-export const invalidDataTypeErr = "Invalid JSON file, invalid data type";
-export const QueryNameMaxLengthErr = "Query names are limited to 80 characters";
-export const QueryNameInvalidCharsErr = 'Query names cannot contain periods or quotation marks. (. ")';
-export const EmptyQueryNameErr = "Query name cannot be empty";
-export const stylesNotFoundErr = "Styles were not found in template";
-export const InvalidColumnNameErr = "Invalid column name";
-export const promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr = "Headers cannot be promoted without adjusting column names";
-export const unexpectedErr = "Unexpected error";
-export const arrayIsntMxNErr = "Array isn't MxN";
-export const relsNotFoundErr = ".rels were not found in template";
-export const xlRelsNotFoundErr = "workbook.xml.rels were not found xl";
-export const columnIndexOutOfRangeErr = "Column index out of range";
-export const relationshipErr = "Relationship not found";
-export const invalidCellValueErr = "Cell content exceeds maximum length of "  + maxCellCharacters+ " characters";
+export const Errors = {
+    sharedStringsNotFound: "SharedStrings were not found in template",
+    connectionsNotFound: "Connections were not found in template",
+    workbookNotFound: "workbook was not found in template",
+    sheetsNotFound: "Sheets were not found in template",
+    base64NotFound: "Base64 was not found in template",
+    emptyQueryMashup: "Query mashup is empty",
+    queryNameNotFound: "Query name was not found",
+    queryAndPivotTableNotFound: "No such query found in Query Table or Pivot Table found in given template",
+    queryConnectionNotFound: "No connection found for query",
+    formulaSectionNotFound: "Formula section wasn't found in template",
+    templateWithInitialData: "Cannot use a template file with initial data",
+    queryTableNotFound: "Query table wasn't found in template",
+    tableNotFound: "Table wasn't found in template",
+    tableReferenceNotFound: "Reference not found in the table XML.",
+    invalidValueInColumn: "Invalid cell value in column",
+    headerNotFound: "Invalid JSON file, header is missing",
+    invalidDataType: "Invalid JSON file, invalid data type",
+    queryNameMaxLength: "Query names are limited to 80 characters",
+    queryNameInvalidChars: 'Query names cannot contain periods or quotation marks. (. ")',
+    emptyQueryName: "Query name cannot be empty",
+    stylesNotFound: "Styles were not found in template",
+    invalidColumnName: "Invalid column name",
+    promotedHeadersCannotBeUsedWithoutAdjustingColumnNames: "Headers cannot be promoted without adjusting column names",
+    unexpected: "Unexpected error",
+    arrayIsntMxN: "Array isn't MxN",
+    relsNotFound: ".rels were not found in template",
+    xlRelsNotFound: "workbook.xml.rels were not found xl",
+    columnIndexOutOfRange: "Column index out of range",
+    relationship: "Relationship not found",
+    contentTypesNotFound: "contentTypes was not found in file",
+    contentTypesParse: "Failed to parse [Content_Types].xml: Invalid XML structure",
+    contentTypesElementNotFound: "contentTypes element was not found in parsed document",
+    workbookRelsParse: "Failed to parse workbook relationships XML: Invalid XML structure",
+    xmlParse: "Failed to parse XML: Parser error detected",
+    relsParse: "Failed to parse .rels XML",
+    connectionsParse: "Failed to parse connections XML",
+    sharedStringsParse: "Failed to parse shared strings XML",
+    worksheetParse: "Failed to parse worksheet XML",
+    queryTableParse: "Failed to parse query table XML",
+    pivotTableParse: "Failed to parse pivot table XML",
+    workbookParse: "Failed to parse workbook XML",
+    tableParse: "Failed to parse table XML",
+    tablePathParse: "Failed to parse table XML for",
+    invalidCellValueErr: "Cell content exceeds maximum length of "  + maxCellCharacters+ " characters",
+};
 
 export const element = {
     sharedStringTable: "sst",
@@ -95,8 +113,9 @@ export const element = {
     selection: "selection",
     kindCell: "c",
     sheet: "sheet",
+    override: "Override",
+    relationship: "Relationship",
     relationships: "Relationships",
-    relationship: "Relationship"
 };
 
 export const elementAttributes = {
@@ -136,6 +155,9 @@ export const elementAttributes = {
     xr3uid: "xr3:uid",
     space: "xml:space",
     target: "Target",
+    partName: "PartName",
+    contentType: "ContentType",
+    relationshipIdPrefix: "rId",
 };
 
 export const dataTypeKind = {
@@ -181,3 +203,21 @@ export const OFU = {
     WdOrigin: "wdOrigin",
     OpenInExcelOririgin: "OpenInExcel",
 };
+
+export const customXML = {
+    customXMLItemContent: `<?xml version="1.0" encoding="utf-8"?><ConnectedWorkbook xmlns="http://schemas.microsoft.com/ConnectedWorkbook" version="1.0.0"></ConnectedWorkbook>`,
+    customXMLItemPropsContent: `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<ds:datastoreItem ds:itemID="{0B384C3C-E1D4-401B-8CF4-6285949D7671}" xmlns:ds="http://schemas.openxmlformats.org/officeDocument/2006/customXml"><ds:schemaRefs><ds:schemaRef ds:uri="http://schemas.microsoft.com/ConnectedWorkbook"/></ds:schemaRefs></ds:datastoreItem>`,
+    connectedWorkbookTag: '<ConnectedWorkbook',
+    itemNumberPattern: /item(\d+)\.xml$/,
+    itemFilePattern: /^item\d+\.xml$/,
+    itemPropsPartNameTemplate: (itemIndex: string) => `/customXml/itemProps${itemIndex}.xml`,
+    contentType: "application/vnd.openxmlformats-officedocument.customXmlProperties+xml",
+    itemPathTemplate: (itemNumber: number | string) => `customXml/item${itemNumber}.xml`,
+    itemPropsPathTemplate: (itemNumber: number | string) => `customXml/itemProps${itemNumber}.xml`,
+    itemRelsPathTemplate: (itemNumber: number | string) => `customXml/_rels/item${itemNumber}.xml.rels`,
+    customXMLRelationships: (itemNumber: number | string) => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXmlProps" Target="itemProps${itemNumber}.xml"/></Relationships>`,
+    relationshipType: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml",
+    relativeItemPathTemplate: (itemNumber: number | string) => `../customXml/item${itemNumber}.xml`,
+}

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { arrayIsntMxNErr, defaults, promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr, unexpectedErr } from "../utils/constants";
+import { defaults, Errors } from "../utils/constants";
 import { Grid, TableData } from "../types";
 
 interface MergedGridConfig {
@@ -78,17 +78,17 @@ const validateGrid = (grid: MergedGrid): void => {
     validateDataArrayDimensions(grid.data);
 
     if (grid.config.promoteHeaders && grid.config.adjustColumnNames === false && !validateUniqueAndValidDataArray(grid.data[0])) {
-        throw new Error(promotedHeadersCannotBeUsedWithoutAdjustingColumnNamesErr);
+        throw new Error(Errors.promotedHeadersCannotBeUsedWithoutAdjustingColumnNames);
     }
 };
 
 const validateDataArrayDimensions = (arr: unknown[][]): void => {
     if (arr.length === 0 || arr[0].length === 0) {
-        throw new Error(unexpectedErr);
+        throw new Error(Errors.unexpected);
     }
 
     if (!arr.every((innerArr) => innerArr.length === arr[0].length)) {
-        throw new Error(arrayIsntMxNErr);
+        throw new Error(Errors.arrayIsntMxN);
     }
 };
 
@@ -103,7 +103,7 @@ const validateUniqueAndValidDataArray = (arr: string[]): boolean => {
 
 const getAdjustedColumnNames = (columnNames: string[] | undefined): string[] => {
     if (columnNames === undefined) {
-        throw new Error(unexpectedErr);
+        throw new Error(Errors.unexpected);
     }
     let i = 1;
     // replace empty column names with default names, can still conflict if columns exist, but we handle that later
