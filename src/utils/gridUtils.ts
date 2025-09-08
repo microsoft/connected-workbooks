@@ -97,7 +97,7 @@ const validateUniqueAndValidDataArray = (arr: string[]): boolean => {
         return false; // Array contains empty elements
     }
 
-    const uniqueSet = new Set(arr);
+    const uniqueSet = new Set(arr.map(item => item.toLowerCase()));
     return uniqueSet.size === arr.length;
 };
 
@@ -112,10 +112,10 @@ const getAdjustedColumnNames = (columnNames: string[] | undefined): string[] => 
     return columnNames.map((name) => {
         let uniqueName = name;
         i = 1;
-        while (uniqueNames.has(uniqueName)) {
+        while (uniqueNames.has(uniqueName.toLowerCase())) {
             uniqueName = `${name} (${i++})`;
         }
-        uniqueNames.add(uniqueName);
+        uniqueNames.add(uniqueName.toLowerCase());
         return uniqueName;
     });
 };
