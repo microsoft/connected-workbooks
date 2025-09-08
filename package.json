@@ -14,7 +14,9 @@
     "build": "tsc",
     "build-webpack-prod": "webpack --mode=production --node-env=production",
     "build-webpack-dev": "webpack --mode=development --node-env=development",
+    "clean": "jest --clearCache",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" --config .prettierrc",
+    "test:clean": "npm run clean && npm run test",
     "test:node": "tsc && jest --config jest.config.node.js",
     "test:jsdom": "tsc && jest --config jest.config.jsdom.js",
     "test": "npm run test:jsdom && npm run test:node"
