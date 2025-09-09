@@ -120,4 +120,4 @@ const getAdjustedColumnNames = (columnNames: string[] | undefined): string[] => 
     });
 };
 
-export default { parseToTableData };
+export default { parseToTableData, validateUniqueAndValidDataArray };
