@@ -167,4 +167,26 @@ describe("Grid Utils tests", () => {
     ])(`parsing %j should throw "${Errors.arrayIsntMxN}"`, async (input) => {
         expect(() => gridUtils.parseToTableData({ data: input, config: { promoteHeaders: true, adjustColumnNames: false } })).toThrowError(Errors.arrayIsntMxN);
     });
+
+    describe("validateUniqueAndValidDataArray", () => {
+        test.concurrent.each([
+            ["valid unique array", ["A", "B", "C"], true],
+            ["valid unique array with mixed case", ["A", "b", "C"], true],
+            ["invalid array with duplicates (same case)", ["A", "B", "A"], false],
+            ["invalid array with duplicates (different case)", ["A", "B", "a"], false],
+            ["invalid array with duplicates (mixed case)", ["Name", "Age", "name"], false],
+            ["invalid array with empty string", ["A", "", "C"], false],
+            ["invalid array with empty string and duplicates", ["A", "", ""], false],
+            ["single element array", ["A"], true],
+            ["array with numbers as strings", ["1", "2", "3"], true],
+            ["array with duplicate numbers as strings", ["1", "2", "1"], false],
+            ["case insensitive duplicates with special chars", ["Test_1", "test_2", "TEST_1"], false],
+        ])("%s: %j should return %s", async (scenario, input, expected) => {
+            const originalInput = [...input]; // Create a copy to verify original isn't modified
+            const result = gridUtils.validateUniqueAndValidDataArray(input);
+
+            expect(result).toBe(expected);
+            expect(input).toEqual(originalInput); // Verify original array is not modified
+        });
+    });
 });
