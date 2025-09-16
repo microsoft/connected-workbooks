@@ -14,7 +14,7 @@ import {
     xmlTextResultType,
 } from "./constants";
 import documentUtils from "./documentUtils";
-import { v4 } from "uuid";
+import { generateUUID } from "./uuid";
 import { DOMParser, XMLSerializer } from "xmldom-qsa";
 
 /**
@@ -87,7 +87,7 @@ const updateTablesInitialData = (tableXmlString: string, tableData: TableData, c
         tableColumn.setAttribute(elementAttributes.id, (columnIndex + 1).toString());
         tableColumn.setAttribute(elementAttributes.name, column);
         tableColumns.appendChild(tableColumn);
-        tableColumn.setAttribute(elementAttributes.xr3uid, "{" + v4().toUpperCase() + "}");
+        tableColumn.setAttribute(elementAttributes.xr3uid, "{" + generateUUID().toUpperCase() + "}");
 
         if (updateQueryTable) {
             tableColumn.setAttribute(elementAttributes.uniqueName, (columnIndex + 1).toString());
