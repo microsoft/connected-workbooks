@@ -83,8 +83,13 @@
     }
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=14.17.0"
   },
+  "browserslist": [
+    "Chrome >= 92",
+    "Firefox >= 95",
+    "Safari >= 15.4"
+  ],
   "overrides": {
     "@octokit/request": "^8.4.1",
     "@octokit/plugin-paginate-rest": "^9.2.2",
