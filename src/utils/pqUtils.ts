@@ -4,7 +4,7 @@
 import JSZip from "jszip";
 import { maxQueryLength, URLS, BOM, Errors } from "./constants";
 import { generateMashupXMLTemplate, generateCustomXmlFilePath } from "../generators";
-import { DOMParser } from "xmldom-qsa";
+import { DOMParser } from "./domUtils";
 import arrayUtils from "./arrayUtils";
 
 type CustomXmlFile = {

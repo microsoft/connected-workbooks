@@ -5,7 +5,7 @@ import { DataTypes } from "../src/types";
 import { documentUtils } from "../src/utils";
 import { element } from "../src/utils/constants";
 import { describe, test, expect } from '@jest/globals';
-import { DOMParser } from 'xmldom-qsa';
+import { DOMParser } from '../src/utils/domUtils';
 
 describe("Document Utils tests", () => {
     test("ResolveType date not supported success", () => {
