@@ -15,7 +15,7 @@ import {
 } from "./constants";
 import documentUtils from "./documentUtils";
 import { generateUUID } from "./uuid";
-import { DOMParser, XMLSerializer } from "xmldom-qsa";
+import { DOMParser, XMLSerializer } from "./domUtils";
 
 /**
  * Update initial data for a table, its sheet, query table, and defined name if provided.

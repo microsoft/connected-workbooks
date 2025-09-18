@@ -17,7 +17,7 @@ import {
 } from "./constants";
 import { arrayUtils } from ".";
 import { Metadata } from "../types";
-import { DOMParser, XMLSerializer } from "xmldom-qsa";
+import { DOMParser, XMLSerializer } from "./domUtils";
 
 export const replaceSingleQuery = async (base64Str: string, queryName: string, queryMashupDoc: string): Promise<string> => {
     const { version, packageOPC, permissionsSize, permissions, metadata, endBuffer } = getPackageComponents(base64Str);
