@@ -29,7 +29,7 @@ import {
     Errors,
 } from "./constants";
 import documentUtils from "./documentUtils";
-import { DOMParser, XMLSerializer } from "xmldom-qsa";
+import { DOMParser, XMLSerializer } from "./domUtils";
 
 /**
  * Helper function to check for XML parser errors without using querySelector
