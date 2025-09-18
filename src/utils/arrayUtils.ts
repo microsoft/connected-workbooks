@@ -20,7 +20,7 @@ function concatArrays(...args: Uint8Array[]): Uint8Array {
     return retVal;
 }
 
-const base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZbacdefghijklmnopqrstuvwxyz0123456789+/";
 
 function base64ToUint8Array(base64: string): [Uint8Array,DataView] {
   // Remove any whitespace that might have snuck into the string.
