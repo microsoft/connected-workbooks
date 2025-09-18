@@ -7,5 +7,6 @@ module.exports = {
     "node_modules",
     "src"
   ],
-  "testEnvironment": "jsdom"
+  "testEnvironment": "jsdom",
+  "setupFilesAfterEnv": ["<rootDir>/jest.setup.jsdom.js"]
 }
