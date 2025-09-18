@@ -5,24 +5,74 @@
  * Cross-platform DOM utilities that work in both Node.js and browser environments
  */
 
-let DOMParserImpl: typeof DOMParser;
-let XMLSerializerImpl: typeof XMLSerializer;
+// TypeScript types for DOMParser and XMLSerializer constructors
+type DOMParserConstructor = new () => DOMParser;
+type XMLSerializerConstructor = new () => XMLSerializer;
 
-// Check if we're in a browser environment
-if (typeof window !== 'undefined' && window.DOMParser && window.XMLSerializer) {
-    // Browser environment - use native implementations
-    DOMParserImpl = window.DOMParser;
-    XMLSerializerImpl = window.XMLSerializer;
-} else {
-    // Node.js environment - use @xmldom/xmldom
+let domParserCache: DOMParserConstructor | undefined;
+let xmlSerializerCache: XMLSerializerConstructor | undefined;
+
+/**
+ * Gets a DOMParser implementation that works in both browser and Node.js environments
+ * In browsers, uses the native DOMParser
+ * In Node.js, requires the optional @xmldom/xmldom dependency
+ */
+export function getDOMParser(): DOMParserConstructor {
+    if (domParserCache) {
+        return domParserCache;
+    }
+
+    // Browser environment - use native implementation
+    if (typeof window !== 'undefined' && window.DOMParser) {
+        domParserCache = window.DOMParser;
+        return window.DOMParser;
+    }
+
+    // Node.js environment - try to load @xmldom/xmldom
     try {
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const xmldom = require('@xmldom/xmldom');
-        DOMParserImpl = xmldom.DOMParser;
-        XMLSerializerImpl = xmldom.XMLSerializer;
+        domParserCache = xmldom.DOMParser;
+        return xmldom.DOMParser;
     } catch (error) {
-        throw new Error('DOM implementation not found. Please ensure @xmldom/xmldom is installed for Node.js environments.');
+        throw new Error(
+            'DOM implementation not available in Node.js environment. ' +
+            'Please install the optional dependency: npm install @xmldom/xmldom'
+        );
     }
 }
 
-export { DOMParserImpl as DOMParser, XMLSerializerImpl as XMLSerializer };
+/**
+ * Gets an XMLSerializer implementation that works in both browser and Node.js environments
+ * In browsers, uses the native XMLSerializer
+ * In Node.js, requires the optional @xmldom/xmldom dependency
+ */
+export function getXMLSerializer(): XMLSerializerConstructor {
+    if (xmlSerializerCache) {
+        return xmlSerializerCache;
+    }
+
+    // Browser environment - use native implementation
+    if (typeof window !== 'undefined' && window.XMLSerializer) {
+        xmlSerializerCache = window.XMLSerializer;
+        return window.XMLSerializer;
+    }
+
+    // Node.js environment - try to load @xmldom/xmldom
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const xmldom = require('@xmldom/xmldom');
+        xmlSerializerCache = xmldom.XMLSerializer;
+        return xmldom.XMLSerializer;
+    } catch (error) {
+        throw new Error(
+            'DOM implementation not available in Node.js environment. ' +
+            'Please install the optional dependency: npm install @xmldom/xmldom'
+        );
+    }
+}
+
+// For backward compatibility, export the classes directly
+// These will throw helpful error messages if @xmldom/xmldom is not available in Node.js
+export const DOMParser: DOMParserConstructor = getDOMParser();
+export const XMLSerializer: XMLSerializerConstructor = getXMLSerializer();

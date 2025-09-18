@@ -41,8 +41,10 @@
   },
   "homepage": "https://github.com/microsoft/connected-workbooks#readme",
   "dependencies": {
-    "@xmldom/xmldom": "~0.8.4",
     "jszip": "^3.5.0"
+  },
+  "optionalDependencies": {
+    "@xmldom/xmldom": "~0.8.4"
   },
   "devDependencies": {
     "@babel/core": "^7.14.6",
