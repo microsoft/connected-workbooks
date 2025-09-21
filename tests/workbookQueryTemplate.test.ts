@@ -4,11 +4,12 @@
 import { pqUtils, xmlPartsUtils } from "../src/utils";
 import { connectionsXmlPath, defaults, section1mPath, textResultType, URLS } from "../src/utils/constants";
 import { getPackageComponents } from "../src/utils/mashupDocumentParser";
-import { SIMPLE_QUERY_WORKBOOK_TEMPLATE, QUERY_WORKBOOK_TEMPLATE_DIFFRENT_SHEET_NAME } from "../src/workbookTemplate";
+import { SIMPLE_QUERY_WORKBOOK_TEMPLATE } from "../src/workbookTemplate";
 import { section1mBlankQueryMock, pqEmptySingleQueryBase64, connectedWorkbookXmlMock, item1Path, item2Path } from "./mocks";
 import JSZip from "jszip";
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import { pqConnectionWithrefreshOnLoadDisable, pqConnectionWithrefreshOnLoadEnable } from "./mocks/xmlMocks";
+import { QUERY_WORKBOOK_TEMPLATE_DIFFRENT_SHEET_NAME } from "./mocks/workbookMocks";
 
 const getZip = async (template: string) =>
     await JSZip.loadAsync(template, {
