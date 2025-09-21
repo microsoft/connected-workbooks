@@ -5,9 +5,10 @@ import { sharedStringsXmlMock, existingSharedStringsXmlMock, validWorksheetXml, 
 import { gridUtils, xmlInnerPartsUtils, xmlPartsUtils } from "../src/utils";
 import { describe, test, expect } from '@jest/globals';
 import JSZip from "jszip";
-import { SIMPLE_BLANK_TABLE_TEMPLATE, SIMPLE_QUERY_WORKBOOK_TEMPLATE, WORKBOOK_TEMPLATE_MOVED_TABLE } from "../src/workbookTemplate";
+import { SIMPLE_BLANK_TABLE_TEMPLATE, SIMPLE_QUERY_WORKBOOK_TEMPLATE } from "../src/workbookTemplate";
 import { customXML, Errors } from "../src/utils/constants";
 import { DOMParser } from "xmldom-qsa";
+import { WORKBOOK_TEMPLATE_MOVED_TABLE } from "./mocks/workbookMocks";
 
 describe("Workbook Manager tests", () => {
     const mockConnectionString = `<connections xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:xr16="http://schemas.microsoft.com/office/spreadsheetml/2017/revision16" mc:Ignorable="xr16">
