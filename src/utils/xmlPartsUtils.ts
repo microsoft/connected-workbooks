@@ -114,7 +114,7 @@ const updateWorkbookDataAndConfigurations = async (zip: JSZip, fileConfigs?: Fil
         // If we are using our base template, we need to clear label info
         await xmlInnerPartsUtils.clearLabelInfo(zip);
     }
-    await tableUtils.updateTableInitialDataIfNeeded(zip, cellRangeRef, sheetPath, tablePath, sheetPath, tableData, updateQueryTable);
+    await tableUtils.updateTableInitialDataIfNeeded(zip, cellRangeRef, sheetPath, tablePath, sheetName, tableData, updateQueryTable);
     await addCustomXMLToWorkbook(zip);
 };
 
