@@ -48,7 +48,6 @@ export const Errors = {
     queryAndPivotTableNotFound: "No such query found in Query Table or Pivot Table found in given template",
     queryConnectionNotFound: "No connection found for query",
     formulaSectionNotFound: "Formula section wasn't found in template",
-    templateWithInitialData: "Cannot use a template file with initial data",
     queryTableNotFound: "Query table wasn't found in template",
     tableNotFound: "Table wasn't found in template",
     tableReferenceNotFound: "Reference not found in the table XML.",
