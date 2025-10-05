@@ -17,10 +17,6 @@ export const generateSingleQueryWorkbook = async (query: QueryInfo, initialDataG
         query.queryName = defaults.queryName;
     }
 
-    if (fileConfigs?.templateFile !== undefined && initialDataGrid !== undefined) {
-        throw new Error(Errors.templateWithInitialData);
-    }
-
     pqUtils.validateQueryName(query.queryName);
 
     const zip: JSZip =
