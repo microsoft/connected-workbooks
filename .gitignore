@@ -13,6 +13,10 @@ PublishScripts/
 
 node_modules/
 
+# TypeScript artifacts
+typescript/node_modules/
+typescript/dist/
+
 # Build files
 dist/
 
@@ -21,3 +25,15 @@ coverage/
 
 # bundles
 *.tgz
+
+# .NET artifacts
+dotnet/**/bin/
+dotnet/**/obj/
+
+# Python artifacts
+python/.venv/
+python/**/__pycache__/
+
+# Test files
+**/WeatherSample.xlsx
+**/WeatherSample.ts.xlsx

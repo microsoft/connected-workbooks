@@ -63,13 +63,41 @@ Open In Excel powers data export functionality across Microsoft's enterprise pla
 npm install @microsoft/connected-workbooks
 ```
 
+#### .NET Consumers
+
+```bash
+dotnet add package Microsoft.ConnectedWorkbooks --prerelease
+```
+
+```csharp
+using System.Collections.Generic;
+using Microsoft.ConnectedWorkbooks;
+using Microsoft.ConnectedWorkbooks.Models;
+
+var manager = new WorkbookManager();
+var grid = new Grid(new List<IReadOnlyList<object?>>
+{
+  new List<object?> { "Product", "Revenue" },
+  new List<object?> { "Surface Laptop", 1299.99 },
+  new List<object?> { "Office 365", 99.99 }
+});
+
+var workbook = manager.GenerateTableWorkbookFromGrid(grid);
+await File.WriteAllBytesAsync("Workbook.xlsx", workbook);
+```
+
 ---
 
 ## 💡 Usage Examples
 
+Each scenario lists both TypeScript and .NET code. GitHub Markdown does not support interactive tabs, so we use collapsible `<details>` sections—expand the platform you care about and keep scrolling.
+
 ### 📋 **HTML Table Export**
 
 Perfect for quick data exports from existing web tables.
+
+<details open>
+<summary><strong>TypeScript</strong></summary>
 
 ```typescript
 import { workbookManager } from '@microsoft/connected-workbooks';
@@ -83,9 +111,36 @@ const blob = await workbookManager.generateTableWorkbookFromHtml(
 workbookManager.openInExcelWeb(blob, "QuickExport.xlsx", true);
 ```
 
+</details>
+
+<details>
+<summary><strong>.NET</strong></summary>
+
+```csharp
+using System.Collections.Generic;
+using Microsoft.ConnectedWorkbooks;
+using Microsoft.ConnectedWorkbooks.Models;
+
+var manager = new WorkbookManager();
+var grid = new Grid(new List<IReadOnlyList<object?>>
+{
+    new List<object?> { "Product", "Revenue", "InStock", "Category" },
+    new List<object?> { "Surface Laptop", 1299.99, true, "Hardware" },
+    new List<object?> { "Azure Credits", 500.00, false, "Cloud" }
+});
+
+var workbook = manager.GenerateTableWorkbookFromGrid(grid);
+await File.WriteAllBytesAsync("QuickExport.xlsx", workbook);
+```
+
+</details>
+
 ### 📊 **Smart Data Formatting**
 
 Transform raw data arrays into professionally formatted Excel tables.
+
+<details open>
+<summary><strong>TypeScript</strong></summary>
 
 ```typescript
 import { workbookManager } from '@microsoft/connected-workbooks';
@@ -107,6 +162,37 @@ const salesData = {
 const blob = await workbookManager.generateTableWorkbookFromGrid(salesData);
 workbookManager.openInExcelWeb(blob, "SalesReport.xlsx", true);
 ```
+
+</details>
+
+<details>
+<summary><strong>.NET</strong></summary>
+
+```csharp
+using System.Collections.Generic;
+using Microsoft.ConnectedWorkbooks;
+using Microsoft.ConnectedWorkbooks.Models;
+
+var manager = new WorkbookManager();
+var grid = new Grid(
+    new List<IReadOnlyList<object?>>
+    {
+        new List<object?> { "Product", "Revenue", "InStock", "Category" },
+        new List<object?> { "Surface Laptop", 1299.99, true, "Hardware" },
+        new List<object?> { "Office 365", 99.99, true, "Software" },
+        new List<object?> { "Azure Credits", 500.00, false, "Cloud" }
+    },
+    new GridConfig
+    {
+        PromoteHeaders = true,
+        AdjustColumnNames = true
+    });
+
+var workbook = manager.GenerateTableWorkbookFromGrid(grid);
+await File.WriteAllBytesAsync("SalesReport.xlsx", workbook);
+```
+
+</details>
 
 <div align="center">
 <img width="450" alt="Smart Formatted Excel Table" src="https://github.com/microsoft/connected-workbooks/assets/7674478/b91e5d69-8444-4a19-a4b0-3fd721e5576f">
@@ -148,6 +234,9 @@ The library will then populate the designated table with your data. Any function
   <!-- Template example downloads -->
   <a href="./assets/before.xlsx" download>Download before.xlsx</a> • <a href="./assets/after.xlsx" download>Download after.xlsx</a>
 </div>
+
+<details open>
+<summary><strong>TypeScript</strong></summary>
 
 #### 📁 **Loading Template Files**
 
@@ -198,6 +287,41 @@ const blob = await workbookManager.generateTableWorkbookFromGrid(
 workbookManager.openInExcelWeb(blob, "Q4_Executive_Dashboard.xlsx", true);
 ```
 
+</details>
+
+<details>
+<summary><strong>.NET</strong></summary>
+
+```csharp
+using System.Collections.Generic;
+using Microsoft.ConnectedWorkbooks;
+using Microsoft.ConnectedWorkbooks.Models;
+
+var manager = new WorkbookManager();
+var grid = new Grid(new List<IReadOnlyList<object?>>
+{
+    new List<object?> { "Region", "Q3_Revenue", "Q4_Revenue", "Growth", "Target_Met" },
+    new List<object?> { "North America", 2_500_000, 2_750_000, "10%", true },
+    new List<object?> { "Europe", 1_800_000, 2_100_000, "17%", true }
+});
+
+var templateBytes = await File.ReadAllBytesAsync("Templates/sales-dashboard.xlsx");
+var configuration = new FileConfiguration
+{
+    TemplateBytes = templateBytes,
+    TemplateSettings = new TemplateSettings
+    {
+        SheetName = "Dashboard",
+        TableName = "QuarterlyData"
+    }
+};
+
+var workbook = manager.GenerateTableWorkbookFromGrid(grid, configuration);
+await File.WriteAllBytesAsync("Q4_Executive_Dashboard.xlsx", workbook);
+```
+
+</details>
+
 <div align="center">
 <img  alt="Custom Branded Excel Dashboard" src="./assets/template_example.png">
 </div>
@@ -207,6 +331,9 @@ workbookManager.openInExcelWeb(blob, "Q4_Executive_Dashboard.xlsx", true);
 ### 🔄 **Live Data Connections with Power Query**
 
 Create workbooks that automatically refresh from your data sources.
+
+<details open>
+<summary><strong>TypeScript</strong></summary>
 
 ```typescript
 import { workbookManager } from '@microsoft/connected-workbooks';
@@ -223,6 +350,34 @@ const blob = await workbookManager.generateSingleQueryWorkbook({
 workbookManager.openInExcelWeb(blob, "MyData.xlsx", true);
 ```
 
+</details>
+
+<details>
+<summary><strong>.NET</strong></summary>
+
+```csharp
+using Microsoft.ConnectedWorkbooks;
+using Microsoft.ConnectedWorkbooks.Models;
+
+var manager = new WorkbookManager();
+var query = new QueryInfo
+{
+    QueryMashup = """
+let
+    Source = {1..10}
+in
+    Source
+""",
+    RefreshOnOpen = true,
+    QueryName = "Query1"
+};
+
+var workbook = manager.GenerateSingleQueryWorkbook(query);
+await File.WriteAllBytesAsync("MyData.xlsx", workbook);
+```
+
+</details>
+
 > 📚 **Learn Power Query**: New to Power Query? Check out the [official documentation](https://docs.microsoft.com/en-us/power-query/) to unlock the full potential of live data connections.
 
 <div align="center">
@@ -231,6 +386,9 @@ workbookManager.openInExcelWeb(blob, "MyData.xlsx", true);
 ### 📄 **Professional Document Properties**
 
 Add metadata and professional document properties for enterprise use.
+
+<details open>
+<summary><strong>TypeScript</strong></summary>
 
 ```typescript
 const blob = await workbookManager.generateTableWorkbookFromHtml(
@@ -249,6 +407,40 @@ const blob = await workbookManager.generateTableWorkbookFromHtml(
 workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
 ```
 
+</details>
+
+<details>
+<summary><strong>.NET</strong></summary>
+
+```csharp
+using System.Collections.Generic;
+using Microsoft.ConnectedWorkbooks;
+using Microsoft.ConnectedWorkbooks.Models;
+
+var manager = new WorkbookManager();
+var grid = new Grid(new List<IReadOnlyList<object?>>
+{
+    new List<object?> { "Product", "Revenue" },
+    new List<object?> { "Surface Laptop", 1299.99 }
+});
+
+var configuration = new FileConfiguration
+{
+    DocumentProperties = new DocumentProperties
+    {
+        CreatedBy = "John Doe",
+        LastModifiedBy = "Jane Doe",
+        Description = "Sales Report Q4 2024",
+        Title = "Quarterly Sales Data"
+    }
+};
+
+var workbook = manager.GenerateTableWorkbookFromGrid(grid, configuration);
+await File.WriteAllBytesAsync("MyTable.xlsx", workbook);
+```
+
+</details>
+
 <div align="center">
 <img width="400" alt="Professional Document Properties" src="https://github.com/microsoft/connected-workbooks/assets/7674478/c267c9eb-6367-419d-832d-5a835c7683f9">
 </div>
@@ -260,6 +452,9 @@ workbookManager.downloadWorkbook(blob, "MyTable.xlsx");
 #### 🔗 `generateSingleQueryWorkbook()`
 Create Power Query connected workbooks with live data refresh capabilities.
 
+<details open>
+<summary><strong>TypeScript</strong></summary>
+
 ```typescript
 async function generateSingleQueryWorkbook(
   query: QueryInfo, 
@@ -267,6 +462,24 @@ async function generateSingleQueryWorkbook(
   fileConfigs?: FileConfigs
 ): Promise<Blob>
 ```
+
+</details>
+
+<details>
+<summary><strong>.NET</strong></summary>
+
+```csharp
+using Microsoft.ConnectedWorkbooks;
+using Microsoft.ConnectedWorkbooks.Models;
+
+var manager = new WorkbookManager();
+var workbook = manager.GenerateSingleQueryWorkbook(
+    query: new QueryInfo { QueryMashup = "...", RefreshOnOpen = true },
+    initialDataGrid: grid,
+    fileConfiguration: new FileConfiguration());
+```
+
+</details>
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -277,12 +490,28 @@ async function generateSingleQueryWorkbook(
 #### 📋 `generateTableWorkbookFromHtml()`
 Convert HTML tables to Excel workbooks instantly.
 
+<details open>
+<summary><strong>TypeScript</strong></summary>
+
 ```typescript
 async function generateTableWorkbookFromHtml(
   htmlTable: HTMLTableElement, 
   fileConfigs?: FileConfigs
 ): Promise<Blob>
 ```
+
+</details>
+
+<details>
+<summary><strong>.NET</strong></summary>
+
+> The .NET SDK does not parse HTML tables directly. Convert the incoming data to a `Grid` and call `WorkbookManager.GenerateTableWorkbookFromGrid` as shown above.
+
+```csharp
+var workbook = manager.GenerateTableWorkbookFromGrid(grid);
+```
+
+</details>
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -292,12 +521,30 @@ async function generateTableWorkbookFromHtml(
 #### 📊 `generateTableWorkbookFromGrid()`
 Transform raw data arrays into formatted Excel tables.
 
+<details open>
+<summary><strong>TypeScript</strong></summary>
+
 ```typescript
 async function generateTableWorkbookFromGrid(
   grid: Grid, 
   fileConfigs?: FileConfigs
 ): Promise<Blob>
 ```
+
+</details>
+
+<details>
+<summary><strong>.NET</strong></summary>
+
+```csharp
+using Microsoft.ConnectedWorkbooks;
+using Microsoft.ConnectedWorkbooks.Models;
+
+var manager = new WorkbookManager();
+var workbook = manager.GenerateTableWorkbookFromGrid(grid, fileConfiguration);
+```
+
+</details>
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -307,6 +554,9 @@ async function generateTableWorkbookFromGrid(
 #### 🌐 `openInExcelWeb()`
 Open workbooks directly in Excel for the Web.
 
+<details open>
+<summary><strong>TypeScript</strong></summary>
+
 ```typescript
 async function openInExcelWeb(
   blob: Blob, 
@@ -314,6 +564,23 @@ async function openInExcelWeb(
   allowTyping?: boolean
 ): Promise<void>
 ```
+
+</details>
+
+<details>
+<summary><strong>.NET</strong></summary>
+
+> Server-side apps typically return the generated bytes as a download instead of opening Excel for the Web directly.
+
+```csharp
+var workbook = manager.GenerateTableWorkbookFromGrid(grid);
+return Results.File(
+    workbook,
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "MyData.xlsx");
+```
+
+</details>
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -324,12 +591,30 @@ async function openInExcelWeb(
 #### 💾 `downloadWorkbook()`
 Trigger browser download of the workbook.
 
+<details open>
+<summary><strong>TypeScript</strong></summary>
+
 ```typescript
 function downloadWorkbook(file: Blob, filename: string): void
 ```
 
+</details>
+
+<details>
+<summary><strong>.NET</strong></summary>
+
+```csharp
+var workbook = manager.GenerateTableWorkbookFromGrid(grid);
+await File.WriteAllBytesAsync("MyWorkbook.xlsx", workbook);
+```
+
+</details>
+
 #### 🔗 `getExcelForWebWorkbookUrl()` 
 Get the Excel for Web URL without opening (useful for custom integrations).
+
+<details open>
+<summary><strong>TypeScript</strong></summary>
 
 ```typescript
 async function getExcelForWebWorkbookUrl(
@@ -338,6 +623,20 @@ async function getExcelForWebWorkbookUrl(
   allowTyping?: boolean
 ): Promise<string>
 ```
+
+</details>
+
+<details>
+<summary><strong>.NET</strong></summary>
+
+> The .NET SDK does not open Excel for the Web. Generate the workbook bytes and hand them to your client application (or browser) to handle navigation.
+
+```csharp
+var workbook = manager.GenerateSingleQueryWorkbook(query);
+// send workbook to the caller through your preferred channel
+```
+
+</details>
 
 ---
 
