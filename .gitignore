@@ -33,3 +33,7 @@ dotnet/**/obj/
 # Python artifacts
 python/.venv/
 python/**/__pycache__/
+
+# Test files
+**/WeatherSample.xlsx
+**/WeatherSample.ts.xlsx

@@ -12,11 +12,25 @@ pool:
 steps:
 - task: NodeTool@0
   inputs:
-    versionSpec: '10.x'
+    versionSpec: '18.x'
   displayName: 'Install Node.js'
 
 - script: |
+    cd typescript
     npm install
     npm run build
     npm run test
-  displayName: 'Build + Test'
+  displayName: 'Build + Test (TypeScript)'
+
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '8.0.x'
+  displayName: 'Install .NET SDK'
+
+- script: |
+    cd dotnet
+    dotnet restore ConnectedWorkbooks.sln
+    dotnet build ConnectedWorkbooks.sln --configuration Release --no-restore
+    dotnet test ConnectedWorkbooks.sln --configuration Release --no-build
+  displayName: 'Build + Test (.NET)'
