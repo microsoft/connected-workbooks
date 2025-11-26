@@ -11,17 +11,19 @@ internal static class EmbeddedTemplateLoader
     private const string SimpleQueryTemplateResource = ResourcePrefix + "SIMPLE_QUERY_WORKBOOK_TEMPLATE.xlsx";
     private const string BlankTableTemplateResource = ResourcePrefix + "SIMPLE_BLANK_TABLE_TEMPLATE.xlsx";
 
-    public static byte[] LoadSimpleQueryTemplate() => LoadTemplate(SimpleQueryTemplateResource);
+    public static Task<byte[]> LoadSimpleQueryTemplateAsync(CancellationToken cancellationToken = default) =>
+        LoadTemplateAsync(SimpleQueryTemplateResource, cancellationToken);
 
-    public static byte[] LoadBlankTableTemplate() => LoadTemplate(BlankTableTemplateResource);
+    public static Task<byte[]> LoadBlankTableTemplateAsync(CancellationToken cancellationToken = default) =>
+        LoadTemplateAsync(BlankTableTemplateResource, cancellationToken);
 
-    private static byte[] LoadTemplate(string resourceName)
+    private static async Task<byte[]> LoadTemplateAsync(string resourceName, CancellationToken cancellationToken)
     {
         var assembly = Assembly.GetExecutingAssembly();
-        using var stream = assembly.GetManifestResourceStream(resourceName)
+        await using var stream = assembly.GetManifestResourceStream(resourceName)
             ?? throw new InvalidOperationException($"Unable to locate embedded template '{resourceName}'.");
-        using var memory = new MemoryStream();
-        stream.CopyTo(memory);
+        await using var memory = new MemoryStream();
+        await stream.CopyToAsync(memory, cancellationToken);
         return memory.ToArray();
     }
 }

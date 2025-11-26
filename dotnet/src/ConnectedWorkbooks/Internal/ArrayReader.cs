@@ -11,41 +11,45 @@ internal sealed class ArrayReader
     private int _offset;
 
     public ArrayReader(byte[] buffer)
+        : this(new ReadOnlyMemory<byte>(buffer))
     {
-        _buffer = new ReadOnlyMemory<byte>(buffer);
+    }
+
+    public ArrayReader(ReadOnlyMemory<byte> buffer)
+    {
+        _buffer = buffer;
         _offset = 0;
     }
 
-    public byte[] ReadBytes(int count)
+    public ReadOnlyMemory<byte> ReadMemory(int count)
     {
-        if (_offset + count > _buffer.Length)
-        {
-            throw new InvalidOperationException("Attempted to read beyond the length of the buffer.");
-        }
-
-        var slice = _buffer.Slice(_offset, count).ToArray();
+        EnsureAvailable(count);
+        var slice = _buffer.Slice(_offset, count);
         _offset += count;
         return slice;
     }
 
     public int ReadInt32()
     {
-        var span = _buffer.Span;
-        if (_offset + sizeof(int) > span.Length)
-        {
-            throw new InvalidOperationException("Attempted to read beyond the length of the buffer.");
-        }
-
-        var value = BinaryPrimitives.ReadInt32LittleEndian(span.Slice(_offset, sizeof(int)));
+        EnsureAvailable(sizeof(int));
+        var value = BinaryPrimitives.ReadInt32LittleEndian(_buffer.Span.Slice(_offset, sizeof(int)));
         _offset += sizeof(int);
         return value;
     }
 
-    public byte[] ReadToEnd()
+    public ReadOnlyMemory<byte> ReadToEnd()
     {
-        var slice = _buffer.Slice(_offset).ToArray();
+        var slice = _buffer.Slice(_offset);
         _offset = _buffer.Length;
         return slice;
+    }
+
+    private void EnsureAvailable(int count)
+    {
+        if (_offset + count > _buffer.Length)
+        {
+            throw new InvalidOperationException("Attempted to read beyond the length of the buffer.");
+        }
     }
 }
 

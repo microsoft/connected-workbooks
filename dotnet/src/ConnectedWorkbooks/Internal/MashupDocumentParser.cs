@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+using System.Buffers.Binary;
 using System.IO.Compression;
-using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 
@@ -14,35 +14,50 @@ internal static class MashupDocumentParser
     {
         var buffer = Convert.FromBase64String(base64);
         var reader = new ArrayReader(buffer);
-        var versionBytes = reader.ReadBytes(4);
+        var versionBytes = reader.ReadMemory(4);
         var packageSize = reader.ReadInt32();
-        var packageOpc = reader.ReadBytes(packageSize);
+        var packageOpc = reader.ReadMemory(packageSize);
         var permissionsSize = reader.ReadInt32();
-        var permissions = reader.ReadBytes(permissionsSize);
+        var permissions = reader.ReadMemory(permissionsSize);
         var metadataSize = reader.ReadInt32();
-        var metadataBytes = reader.ReadBytes(metadataSize);
+        var metadataBytes = reader.ReadMemory(metadataSize);
         var endBuffer = reader.ReadToEnd();
 
-        var newPackage = EditSingleQueryPackage(packageOpc, queryMashupDocument);
+        var newPackage = EditSingleQueryPackage(packageOpc.Span, queryMashupDocument);
         var newMetadata = EditSingleQueryMetadata(metadataBytes, queryName);
 
-        var finalBytes = ByteHelpers.Concat(
-            versionBytes,
-            ByteHelpers.GetInt32Bytes(newPackage.Length),
-            newPackage,
-            ByteHelpers.GetInt32Bytes(permissionsSize),
-            permissions,
-            ByteHelpers.GetInt32Bytes(newMetadata.Length),
-            newMetadata,
-            endBuffer);
+        var totalLength = versionBytes.Length
+            + sizeof(int)
+            + newPackage.Length
+            + sizeof(int)
+            + permissions.Length
+            + sizeof(int)
+            + newMetadata.Length
+            + endBuffer.Length;
+
+        var finalBytes = new byte[totalLength];
+        var destination = finalBytes.AsSpan();
+        var offset = 0;
+
+        offset += Copy(versionBytes.Span, destination[offset..]);
+        BinaryPrimitives.WriteInt32LittleEndian(destination.Slice(offset, sizeof(int)), newPackage.Length);
+        offset += sizeof(int);
+        offset += Copy(newPackage, destination[offset..]);
+        BinaryPrimitives.WriteInt32LittleEndian(destination.Slice(offset, sizeof(int)), permissionsSize);
+        offset += sizeof(int);
+        offset += Copy(permissions.Span, destination[offset..]);
+        BinaryPrimitives.WriteInt32LittleEndian(destination.Slice(offset, sizeof(int)), newMetadata.Length);
+        offset += sizeof(int);
+        offset += Copy(newMetadata, destination[offset..]);
+        _ = Copy(endBuffer.Span, destination[offset..]);
 
         return Convert.ToBase64String(finalBytes);
     }
 
-    private static byte[] EditSingleQueryPackage(byte[] packageOpc, string queryMashupDocument)
+    private static byte[] EditSingleQueryPackage(ReadOnlySpan<byte> packageOpc, string queryMashupDocument)
     {
         using var packageStream = new MemoryStream();
-        packageStream.Write(packageOpc, 0, packageOpc.Length);
+        packageStream.Write(packageOpc);
         packageStream.Position = 0;
         using var zip = new ZipArchive(packageStream, ZipArchiveMode.Update, leaveOpen: true);
         var entry = zip.GetEntry(WorkbookConstants.Section1mPath)
@@ -60,15 +75,15 @@ internal static class MashupDocumentParser
         return packageStream.ToArray();
     }
 
-    private static byte[] EditSingleQueryMetadata(byte[] metadataBytes, string queryName)
+    private static byte[] EditSingleQueryMetadata(ReadOnlyMemory<byte> metadataBytes, string queryName)
     {
         var reader = new ArrayReader(metadataBytes);
-        var metadataVersion = reader.ReadBytes(4);
+        var metadataVersion = reader.ReadMemory(4);
         var metadataXmlSize = reader.ReadInt32();
-        var metadataXmlBytes = reader.ReadBytes(metadataXmlSize);
+        var metadataXmlBytes = reader.ReadMemory(metadataXmlSize);
         var endBuffer = reader.ReadToEnd();
 
-        var metadataXmlString = Encoding.UTF8.GetString(metadataXmlBytes).TrimStart('\uFEFF');
+        var metadataXmlString = Encoding.UTF8.GetString(metadataXmlBytes.Span).TrimStart('\uFEFF');
         XDocument metadataDoc;
         try
         {
@@ -76,18 +91,26 @@ internal static class MashupDocumentParser
         }
         catch (Exception ex)
         {
-            var preview = Convert.ToHexString(metadataXmlBytes.AsSpan(0, Math.Min(metadataXmlBytes.Length, 64)));
+            var preview = Convert.ToHexString(metadataXmlBytes.Span[..Math.Min(metadataXmlBytes.Length, 64)]);
             throw new InvalidOperationException($"Failed to parse metadata XML. Hex preview: {preview}", ex);
         }
         UpdateItemPaths(metadataDoc, queryName);
         UpdateEntries(metadataDoc);
 
         var newMetadataXml = Encoding.UTF8.GetBytes(metadataDoc.ToString(SaveOptions.DisableFormatting));
-        return ByteHelpers.Concat(
-            metadataVersion,
-            ByteHelpers.GetInt32Bytes(newMetadataXml.Length),
-            newMetadataXml,
-            endBuffer);
+
+        var totalLength = metadataVersion.Length + sizeof(int) + newMetadataXml.Length + endBuffer.Length;
+        var buffer = new byte[totalLength];
+        var destination = buffer.AsSpan();
+        var offset = 0;
+
+        offset += Copy(metadataVersion.Span, destination[offset..]);
+        BinaryPrimitives.WriteInt32LittleEndian(destination.Slice(offset, sizeof(int)), newMetadataXml.Length);
+        offset += sizeof(int);
+        offset += Copy(newMetadataXml, destination[offset..]);
+        _ = Copy(endBuffer.Span, destination[offset..]);
+
+        return buffer;
     }
 
     private static void UpdateItemPaths(XDocument doc, string queryName)
@@ -119,7 +142,7 @@ internal static class MashupDocumentParser
     private static void UpdateEntries(XDocument doc)
     {
         var now = DateTime.UtcNow.ToString("o", System.Globalization.CultureInfo.InvariantCulture);
-        var lastUpdatedValue = ($"d{now}").Replace("Z", "0000Z", StringComparison.Ordinal);
+        var lastUpdatedValue = $"d{now}".Replace("Z", "0000Z", StringComparison.Ordinal);
 
         foreach (var entry in doc.Descendants().Where(e => e.Name.LocalName == XmlNames.Elements.Entry))
         {
@@ -133,6 +156,12 @@ internal static class MashupDocumentParser
                 entry.SetAttributeValue(XmlNames.Attributes.Value, lastUpdatedValue);
             }
         }
+    }
+
+    private static int Copy(ReadOnlySpan<byte> source, Span<byte> destination)
+    {
+        source.CopyTo(destination);
+        return source.Length;
     }
 }
 

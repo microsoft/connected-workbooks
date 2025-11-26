@@ -24,11 +24,13 @@ public sealed class WorkbookManager
             : query.QueryName!;
 
         PqUtilities.ValidateQueryName(queryName);
-        var templateBytes = fileConfiguration?.TemplateBytes ?? EmbeddedTemplateLoader.LoadSimpleQueryTemplate();
+        var templateBytes = fileConfiguration?.TemplateBytes
+            ?? await EmbeddedTemplateLoader.LoadSimpleQueryTemplateAsync(cancellationToken).ConfigureAwait(false);
         var tableData = initialDataGrid is null ? null : GridParser.Parse(initialDataGrid);
 
         using var archive = ExcelArchive.Load(templateBytes);
-        var editor = new WorkbookEditor(archive, fileConfiguration?.DocumentProperties);
+        var templateMetadata = TemplateMetadataResolver.Resolve(archive, fileConfiguration?.TemplateSettings);
+        var editor = new WorkbookEditor(archive, fileConfiguration?.DocumentProperties, templateMetadata);
         var mashup = PowerQueryGenerator.GenerateSingleQueryMashup(queryName, query.QueryMashup);
         editor.UpdatePowerQueryDocument(queryName, mashup);
         var connectionId = editor.UpdateConnections(queryName, query.RefreshOnOpen);
@@ -39,6 +41,26 @@ public sealed class WorkbookManager
         {
             editor.UpdateTableData(tableData);
         }
+        editor.UpdateDocumentProperties();
+
+        return await Task.FromResult(archive.ToArray());
+    }
+
+    public async Task<byte[]> GenerateTableWorkbookFromGridAsync(
+        Grid grid,
+        FileConfiguration? fileConfiguration = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(grid);
+
+        var templateBytes = fileConfiguration?.TemplateBytes
+            ?? await EmbeddedTemplateLoader.LoadBlankTableTemplateAsync(cancellationToken).ConfigureAwait(false);
+        var tableData = GridParser.Parse(grid);
+
+        using var archive = ExcelArchive.Load(templateBytes);
+        var templateMetadata = TemplateMetadataResolver.Resolve(archive, fileConfiguration?.TemplateSettings);
+        var editor = new WorkbookEditor(archive, fileConfiguration?.DocumentProperties, templateMetadata);
+        editor.UpdateTableData(tableData);
         editor.UpdateDocumentProperties();
 
         return await Task.FromResult(archive.ToArray());

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.ConnectedWorkbooks.Models;
 
 namespace Microsoft.ConnectedWorkbooks.Internal;
@@ -45,13 +43,13 @@ internal static class GridParser
         if (data.Count == 0)
         {
             promoteHeaders = false;
-            data.Add(new[] { string.Empty });
+            data.Add([string.Empty]);
             return;
         }
 
         if (data[0].Length == 0)
         {
-            data[0] = new[] { string.Empty };
+            data[0] = [string.Empty];
         }
 
         var width = data[0].Length;

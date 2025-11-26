@@ -36,16 +36,7 @@ internal sealed class ExcelArchive : IDisposable
         using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, leaveOpen: false);
         return reader.ReadToEnd();
     }
-
-    public byte[] ReadBytes(string path)
-    {
-        var entry = GetEntry(path);
-        using var stream = entry.Open();
-        using var memory = new MemoryStream();
-        stream.CopyTo(memory);
-        return memory.ToArray();
-    }
-
+    
     public void WriteText(string path, string content, Encoding? encoding = null)
     {
         var entry = GetOrCreateEntry(path);

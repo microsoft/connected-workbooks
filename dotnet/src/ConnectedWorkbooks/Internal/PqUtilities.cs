@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-using System.Globalization;
-using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 
@@ -20,8 +18,7 @@ internal static class PqUtilities
                 continue;
             }
 
-            var bytes = archive.ReadBytes(entryPath);
-            var xml = XmlEncodingHelper.DecodeToString(bytes).TrimStart('\uFEFF');
+            var xml = archive.ReadText(entryPath);
             var doc = XDocument.Parse(xml, LoadOptions.PreserveWhitespace);
             if (!string.Equals(doc.Root?.Name.NamespaceName, WorkbookConstants.DataMashupNamespace, StringComparison.Ordinal))
             {

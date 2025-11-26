@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 using System.Globalization;
-using System.Linq;
 using System.Xml.Linq;
 using Microsoft.ConnectedWorkbooks.Models;
 
@@ -12,11 +11,17 @@ internal sealed class WorkbookEditor
 {
     private readonly ExcelArchive _archive;
     private readonly DocumentProperties? _documentProperties;
+    private readonly string _worksheetPath;
+    private readonly string _tablePath;
+    private readonly (int Row, int Column) _tableStart;
 
-    public WorkbookEditor(ExcelArchive archive, DocumentProperties? documentProperties)
+    public WorkbookEditor(ExcelArchive archive, DocumentProperties? documentProperties, TemplateMetadata templateMetadata)
     {
         _archive = archive;
         _documentProperties = documentProperties;
+        _worksheetPath = templateMetadata.WorksheetPath;
+        _tablePath = templateMetadata.TablePath;
+        _tableStart = templateMetadata.TableStart;
     }
 
     public void UpdatePowerQueryDocument(string queryName, string mashupDocument)
@@ -70,7 +75,7 @@ internal sealed class WorkbookEditor
 
     public void UpdateWorksheet(int sharedStringIndex)
     {
-        var xml = _archive.ReadText(WorkbookConstants.DefaultSheetPath);
+        var xml = _archive.ReadText(_worksheetPath);
         var doc = XDocument.Parse(xml, LoadOptions.PreserveWhitespace);
         var ns = doc.Root?.Name.Namespace ?? XNamespace.None;
         var cellValue = doc.Descendants(ns + XmlNames.Elements.CellValue).FirstOrDefault();
@@ -80,7 +85,7 @@ internal sealed class WorkbookEditor
         }
 
         cellValue.Value = sharedStringIndex.ToString(CultureInfo.InvariantCulture);
-        _archive.WriteText(WorkbookConstants.DefaultSheetPath, doc.ToString(SaveOptions.DisableFormatting));
+        _archive.WriteText(_worksheetPath, doc.ToString(SaveOptions.DisableFormatting));
     }
 
     public void UpdateQueryTable(string connectionId, bool refreshOnOpen)
@@ -135,7 +140,7 @@ internal sealed class WorkbookEditor
 
     private void UpdateSheetData(TableData tableData)
     {
-        var xml = _archive.ReadText(WorkbookConstants.DefaultSheetPath);
+        var xml = _archive.ReadText(_worksheetPath);
         var doc = XDocument.Parse(xml, LoadOptions.PreserveWhitespace);
         var ns = doc.Root?.Name.Namespace ?? XNamespace.None;
         var x14ac = doc.Root?.GetNamespaceOfPrefix("x14ac") ?? XNamespace.None;
@@ -146,8 +151,7 @@ internal sealed class WorkbookEditor
         }
 
         sheetData.RemoveNodes();
-        var startCell = "A1";
-        var (startRow, startColumn) = CellReferenceHelper.GetStartPosition(startCell);
+        var (startRow, startColumn) = _tableStart;
         var spans = $"{startColumn}:{startColumn + tableData.ColumnNames.Count - 1}";
 
         var headerRow = new XElement(ns + XmlNames.Elements.Row,
@@ -180,16 +184,16 @@ internal sealed class WorkbookEditor
             sheetData.Add(row);
         }
 
-        var endReference = CellReferenceHelper.BuildReference((startRow, startColumn), tableData.ColumnNames.Count, tableData.Rows.Count + 1);
+        var endReference = CellReferenceHelper.BuildReference(_tableStart, tableData.ColumnNames.Count, tableData.Rows.Count + 1);
         doc.Descendants(ns + XmlNames.Elements.Dimension).FirstOrDefault()?.SetAttributeValue(XmlNames.Attributes.Reference, endReference);
         doc.Descendants(ns + XmlNames.Elements.Selection).FirstOrDefault()?.SetAttributeValue(XmlNames.Attributes.SqRef, endReference);
 
-        _archive.WriteText(WorkbookConstants.DefaultSheetPath, doc.ToString(SaveOptions.DisableFormatting));
+        _archive.WriteText(_worksheetPath, doc.ToString(SaveOptions.DisableFormatting));
     }
 
     private void UpdateTableDefinition(TableData tableData)
     {
-        var xml = _archive.ReadText(WorkbookConstants.DefaultTablePath);
+        var xml = _archive.ReadText(_tablePath);
         var doc = XDocument.Parse(xml, LoadOptions.PreserveWhitespace);
         var ns = doc.Root?.Name.Namespace ?? XNamespace.None;
         var tableColumns = doc.Descendants(ns + XmlNames.Elements.TableColumns).FirstOrDefault();
@@ -208,11 +212,11 @@ internal sealed class WorkbookEditor
             tableColumns.Add(column);
         }
 
-        var reference = $"A1:{CellReferenceHelper.ColumnNumberToName(tableData.ColumnNames.Count - 1)}{tableData.Rows.Count + 1}";
+        var reference = CellReferenceHelper.BuildReference(_tableStart, tableData.ColumnNames.Count, tableData.Rows.Count + 1);
         doc.Root?.SetAttributeValue(XmlNames.Attributes.Reference, reference);
         doc.Descendants(ns + XmlNames.Elements.AutoFilter).FirstOrDefault()?.SetAttributeValue(XmlNames.Attributes.Reference, reference);
 
-        _archive.WriteText(WorkbookConstants.DefaultTablePath, doc.ToString(SaveOptions.DisableFormatting));
+        _archive.WriteText(_tablePath, doc.ToString(SaveOptions.DisableFormatting));
     }
 
     private void UpdateWorkbookDefinedName(TableData tableData)
@@ -227,13 +231,18 @@ internal sealed class WorkbookEditor
             return;
         }
 
-        var reference = $"!$A$1:${CellReferenceHelper.ColumnNumberToName(tableData.ColumnNames.Count - 1)}${tableData.Rows.Count + 1}";
-        definedName.Value = reference;
+        var range = CellReferenceHelper.BuildReference(_tableStart, tableData.ColumnNames.Count, tableData.Rows.Count + 1);
+        definedName.Value = CellReferenceHelper.WithAbsolute(range);
         _archive.WriteText(WorkbookConstants.WorkbookXmlPath, doc.ToString(SaveOptions.DisableFormatting));
     }
 
     private void UpdateQueryTableColumns(TableData tableData)
     {
+        if (!_archive.EntryExists(WorkbookConstants.QueryTablePath))
+        {
+            return;
+        }
+
         var xml = _archive.ReadText(WorkbookConstants.QueryTablePath);
         var doc = XDocument.Parse(xml, LoadOptions.PreserveWhitespace);
         var ns = doc.Root?.Name.Namespace ?? XNamespace.None;

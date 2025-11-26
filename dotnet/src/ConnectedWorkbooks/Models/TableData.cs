@@ -8,6 +8,5 @@ namespace Microsoft.ConnectedWorkbooks.Models;
 /// </summary>
 public sealed record TableData(IReadOnlyList<string> ColumnNames, IReadOnlyList<IReadOnlyList<string>> Rows)
 {
-    public static TableData Empty { get; } = new(Array.Empty<string>(), Array.Empty<IReadOnlyList<string>>());
 }
 
