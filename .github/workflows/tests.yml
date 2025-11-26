@@ -1,0 +1,51 @@
+name: TypeScript and .NET Tests
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'typescript/package-lock.json'
+
+      - name: Install TypeScript dependencies
+        run: npm ci
+        working-directory: typescript
+
+      - name: Build TypeScript package
+        run: npm run build
+        working-directory: typescript
+
+      - name: Test TypeScript package
+        run: npm test
+        working-directory: typescript
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore .NET solution
+        run: dotnet restore ConnectedWorkbooks.sln
+        working-directory: dotnet
+
+      - name: Build .NET solution
+        run: dotnet build ConnectedWorkbooks.sln --configuration Release --no-restore
+        working-directory: dotnet
+
+      - name: Test .NET solution
+        run: dotnet test ConnectedWorkbooks.sln --configuration Release --no-build
+        working-directory: dotnet
