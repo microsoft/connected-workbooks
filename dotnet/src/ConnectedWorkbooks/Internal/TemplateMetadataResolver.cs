@@ -7,13 +7,28 @@ using Microsoft.ConnectedWorkbooks.Models;
 
 namespace Microsoft.ConnectedWorkbooks.Internal;
 
+/// <summary>
+/// Represents the worksheet/table components extracted from a workbook template.
+/// </summary>
+/// <param name="WorksheetPath">Path to the worksheet part that should receive data.</param>
+/// <param name="TablePath">Path to the table definition part.</param>
+/// <param name="TableStart">One-based coordinates describing where the table begins.</param>
 internal sealed record TemplateMetadata(string WorksheetPath, string TablePath, (int Row, int Column) TableStart);
 
+/// <summary>
+/// Resolves template metadata (worksheet/table paths and coordinates) for built-in or custom templates.
+/// </summary>
 internal static class TemplateMetadataResolver
 {
     private static readonly XNamespace RelationshipsNamespace = "http://schemas.openxmlformats.org/package/2006/relationships";
     private static readonly XNamespace OfficeRelationshipsNamespace = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
 
+    /// <summary>
+    /// Resolves worksheet/table information for the provided template, honoring optional overrides.
+    /// </summary>
+    /// <param name="archive">Workbook archive to inspect.</param>
+    /// <param name="templateSettings">Optional overrides that specify sheet/table names.</param>
+    /// <returns>A <see cref="TemplateMetadata"/> instance describing the target sheet/table.</returns>
     public static TemplateMetadata Resolve(ExcelArchive archive, TemplateSettings? templateSettings)
     {
         var worksheetPath = ResolveWorksheetPath(archive, templateSettings?.SheetName);

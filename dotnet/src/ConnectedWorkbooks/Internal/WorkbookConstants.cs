@@ -5,6 +5,9 @@ using System.Text.RegularExpressions;
 
 namespace Microsoft.ConnectedWorkbooks.Internal;
 
+/// <summary>
+/// Central location for common workbook part paths, namespaces, and other constants.
+/// </summary>
 internal static class WorkbookConstants
 {
     public const string ConnectionsXmlPath = "xl/connections.xml";
@@ -25,6 +28,7 @@ internal static class WorkbookConstants
     public const string CustomXmlFolder = "customXml";
     public const string LabelInfoPath = "docMetadata/LabelInfo.xml";
     public const string TablesFolder = "xl/tables/";
+    public const string DefaultQueryName = "Query1";
 
     public const string ConnectedWorkbookNamespace = "http://schemas.microsoft.com/ConnectedWorkbook";
     public const string DataMashupNamespace = "http://schemas.microsoft.com/DataMashup";

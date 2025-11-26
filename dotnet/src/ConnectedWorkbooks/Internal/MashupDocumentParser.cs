@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+using System;
 using System.Buffers.Binary;
 using System.IO.Compression;
 using System.Text;
@@ -8,8 +9,18 @@ using System.Xml.Linq;
 
 namespace Microsoft.ConnectedWorkbooks.Internal;
 
+/// <summary>
+/// Handles low-level editing of the Power Query (DataMashup) payload inside workbook templates.
+/// </summary>
 internal static class MashupDocumentParser
 {
+    /// <summary>
+    /// Replaces the contents of the Section1.m formula with the provided mashup and updates metadata accordingly.
+    /// </summary>
+    /// <param name="base64">Original DataMashup payload encoded as Base64.</param>
+    /// <param name="queryName">Friendly query name that should be referenced throughout metadata.</param>
+    /// <param name="queryMashupDocument">New M document to write into Section1.m.</param>
+    /// <returns>A base64 string with the updated mashup payload.</returns>
     public static string ReplaceSingleQuery(string base64, string queryName, string queryMashupDocument)
     {
         var buffer = Convert.FromBase64String(base64);
@@ -36,22 +47,43 @@ internal static class MashupDocumentParser
             + endBuffer.Length;
 
         var finalBytes = new byte[totalLength];
-        var destination = finalBytes.AsSpan();
-        var offset = 0;
-
-        offset += Copy(versionBytes.Span, destination[offset..]);
-        BinaryPrimitives.WriteInt32LittleEndian(destination.Slice(offset, sizeof(int)), newPackage.Length);
-        offset += sizeof(int);
-        offset += Copy(newPackage, destination[offset..]);
-        BinaryPrimitives.WriteInt32LittleEndian(destination.Slice(offset, sizeof(int)), permissionsSize);
-        offset += sizeof(int);
-        offset += Copy(permissions.Span, destination[offset..]);
-        BinaryPrimitives.WriteInt32LittleEndian(destination.Slice(offset, sizeof(int)), newMetadata.Length);
-        offset += sizeof(int);
-        offset += Copy(newMetadata, destination[offset..]);
-        _ = Copy(endBuffer.Span, destination[offset..]);
+        var writer = new SpanWriter(finalBytes);
+        writer.WriteBytes(versionBytes.Span);
+        writer.WriteLength(newPackage.Length);
+        writer.WriteBytes(newPackage);
+        writer.WriteLength(permissionsSize);
+        writer.WriteBytes(permissions.Span);
+        writer.WriteLength(newMetadata.Length);
+        writer.WriteBytes(newMetadata);
+        writer.WriteBytes(endBuffer.Span);
 
         return Convert.ToBase64String(finalBytes);
+    }
+
+    /// <summary>
+    /// Extracts the first query name referenced in the template's metadata.
+    /// </summary>
+    /// <param name="base64">Base64-encoded DataMashup payload.</param>
+    /// <returns>The query name referenced by Section1 (defaults to Query1 when missing).</returns>
+    public static string GetPrimaryQueryName(string base64)
+    {
+        var buffer = Convert.FromBase64String(base64);
+        var reader = new ArrayReader(buffer);
+        reader.ReadMemory(4); // version
+        var packageSize = reader.ReadInt32();
+        reader.ReadMemory(packageSize);
+        var permissionsSize = reader.ReadInt32();
+        reader.ReadMemory(permissionsSize);
+        var metadataSize = reader.ReadInt32();
+        var metadataBytes = reader.ReadMemory(metadataSize);
+
+        var metadataReader = new ArrayReader(metadataBytes);
+        metadataReader.ReadMemory(4); // metadata version
+        var metadataXmlSize = metadataReader.ReadInt32();
+        var metadataXmlBytes = metadataReader.ReadMemory(metadataXmlSize);
+
+        var doc = ParseMetadataDocument(metadataXmlBytes);
+        return ExtractQueryName(doc) ?? WorkbookConstants.DefaultQueryName;
     }
 
     private static byte[] EditSingleQueryPackage(ReadOnlySpan<byte> packageOpc, string queryMashupDocument)
@@ -83,43 +115,89 @@ internal static class MashupDocumentParser
         var metadataXmlBytes = reader.ReadMemory(metadataXmlSize);
         var endBuffer = reader.ReadToEnd();
 
+        var metadataDoc = ParseMetadataDocument(metadataXmlBytes);
+        UpdateMetadataDocument(metadataDoc, queryName);
+
+        var newMetadataXml = Encoding.UTF8.GetBytes(metadataDoc.ToString(SaveOptions.DisableFormatting));
+
+        var totalLength = metadataVersion.Length + sizeof(int) + newMetadataXml.Length + endBuffer.Length;
+        var buffer = new byte[totalLength];
+        var writer = new SpanWriter(buffer);
+        writer.WriteBytes(metadataVersion.Span);
+        writer.WriteLength(newMetadataXml.Length);
+        writer.WriteBytes(newMetadataXml);
+        writer.WriteBytes(endBuffer.Span);
+
+        return buffer;
+    }
+
+    private static XDocument ParseMetadataDocument(ReadOnlyMemory<byte> metadataXmlBytes)
+    {
         var metadataXmlString = Encoding.UTF8.GetString(metadataXmlBytes.Span).TrimStart('\uFEFF');
-        XDocument metadataDoc;
         try
         {
-            metadataDoc = XDocument.Parse(metadataXmlString, LoadOptions.PreserveWhitespace);
+            return XDocument.Parse(metadataXmlString, LoadOptions.PreserveWhitespace);
         }
         catch (Exception ex)
         {
             var preview = Convert.ToHexString(metadataXmlBytes.Span[..Math.Min(metadataXmlBytes.Length, 64)]);
             throw new InvalidOperationException($"Failed to parse metadata XML. Hex preview: {preview}", ex);
         }
-        UpdateItemPaths(metadataDoc, queryName);
-        UpdateEntries(metadataDoc);
-
-        var newMetadataXml = Encoding.UTF8.GetBytes(metadataDoc.ToString(SaveOptions.DisableFormatting));
-
-        var totalLength = metadataVersion.Length + sizeof(int) + newMetadataXml.Length + endBuffer.Length;
-        var buffer = new byte[totalLength];
-        var destination = buffer.AsSpan();
-        var offset = 0;
-
-        offset += Copy(metadataVersion.Span, destination[offset..]);
-        BinaryPrimitives.WriteInt32LittleEndian(destination.Slice(offset, sizeof(int)), newMetadataXml.Length);
-        offset += sizeof(int);
-        offset += Copy(newMetadataXml, destination[offset..]);
-        _ = Copy(endBuffer.Span, destination[offset..]);
-
-        return buffer;
     }
 
-    private static void UpdateItemPaths(XDocument doc, string queryName)
+    private static string? ExtractQueryName(XDocument doc)
     {
         if (doc.Root is null)
         {
-            return;
+            return null;
         }
 
+        foreach (var itemPathElement in doc.Descendants().Where(e => e.Name.LocalName == XmlNames.Elements.ItemPath))
+        {
+            var content = itemPathElement.Value;
+            if (!content.Contains("Section1/", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var parts = content.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2)
+            {
+                continue;
+            }
+
+            return Uri.UnescapeDataString(parts[1]);
+        }
+
+        return null;
+    }
+
+    private static void UpdateMetadataDocument(XDocument doc, string queryName)
+    {
+        if (!string.IsNullOrWhiteSpace(queryName))
+        {
+            RenameItemPaths(doc, queryName);
+        }
+
+        var now = DateTime.UtcNow.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff", System.Globalization.CultureInfo.InvariantCulture);
+        var lastUpdatedValue = $"d{now}0000Z";
+
+        foreach (var entry in doc.Descendants().Where(e => e.Name.LocalName == XmlNames.Elements.Entry))
+        {
+            var typeValue = entry.Attribute(XmlNames.Attributes.Type)?.Value;
+            if (string.Equals(typeValue, "ResultType", StringComparison.Ordinal))
+            {
+                entry.SetAttributeValue(XmlNames.Attributes.Value, "sTable");
+            }
+            else if (string.Equals(typeValue, "FillLastUpdated", StringComparison.Ordinal))
+            {
+                entry.SetAttributeValue(XmlNames.Attributes.Value, lastUpdatedValue);
+            }
+        }
+    }
+
+    private static void RenameItemPaths(XDocument doc, string queryName)
+    {
         foreach (var itemPathElement in doc.Descendants().Where(e => e.Name.LocalName == XmlNames.Elements.ItemPath))
         {
             var content = itemPathElement.Value;
@@ -139,29 +217,33 @@ internal static class MashupDocumentParser
         }
     }
 
-    private static void UpdateEntries(XDocument doc)
+    private ref struct SpanWriter
     {
-        var now = DateTime.UtcNow.ToString("o", System.Globalization.CultureInfo.InvariantCulture);
-        var lastUpdatedValue = $"d{now}".Replace("Z", "0000Z", StringComparison.Ordinal);
+        private readonly Span<byte> _destination;
+        private int _offset;
 
-        foreach (var entry in doc.Descendants().Where(e => e.Name.LocalName == XmlNames.Elements.Entry))
+        public SpanWriter(Span<byte> destination)
         {
-            var typeValue = entry.Attribute(XmlNames.Attributes.Type)?.Value;
-            if (string.Equals(typeValue, "ResultType", StringComparison.Ordinal))
-            {
-                entry.SetAttributeValue(XmlNames.Attributes.Value, "sTable");
-            }
-            else if (string.Equals(typeValue, "FillLastUpdated", StringComparison.Ordinal))
-            {
-                entry.SetAttributeValue(XmlNames.Attributes.Value, lastUpdatedValue);
-            }
+            _destination = destination;
+            _offset = 0;
         }
-    }
 
-    private static int Copy(ReadOnlySpan<byte> source, Span<byte> destination)
-    {
-        source.CopyTo(destination);
-        return source.Length;
+        public void WriteBytes(ReadOnlySpan<byte> source)
+        {
+            if (source.Length == 0)
+            {
+                return;
+            }
+
+            source.CopyTo(_destination[_offset..]);
+            _offset += source.Length;
+        }
+
+        public void WriteLength(int value)
+        {
+            BinaryPrimitives.WriteInt32LittleEndian(_destination.Slice(_offset, sizeof(int)), value);
+            _offset += sizeof(int);
+        }
     }
 }
 

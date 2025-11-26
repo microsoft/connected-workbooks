@@ -3,8 +3,16 @@
 
 namespace Microsoft.ConnectedWorkbooks.Internal;
 
+/// <summary>
+/// Utility methods for converting between Excel-style cell references and numeric coordinates.
+/// </summary>
 internal static class CellReferenceHelper
 {
+    /// <summary>
+    /// Returns the zero-based row/column tuple that represents the starting cell in the reference.
+    /// </summary>
+    /// <param name="reference">A cell reference such as "A1" or "A1:B5".</param>
+    /// <returns>A tuple containing one-based row and column coordinates.</returns>
     public static (int Row, int Column) GetStartPosition(string reference)
     {
         // Reference format "A1" or "A1:B5"; we only care about the first cell
@@ -16,6 +24,11 @@ internal static class CellReferenceHelper
         return (row, column);
     }
 
+    /// <summary>
+    /// Converts a zero-based column index into its Excel column name.
+    /// </summary>
+    /// <param name="columnIndex">Zero-based column index.</param>
+    /// <returns>The Excel column label (e.g. 0 -> "A").</returns>
     public static string ColumnNumberToName(int columnIndex)
     {
         columnIndex++; // zero-based to one-based
@@ -30,6 +43,13 @@ internal static class CellReferenceHelper
         return columnName;
     }
 
+    /// <summary>
+    /// Builds a rectangular range reference given a starting coordinate and bounds.
+    /// </summary>
+    /// <param name="start">One-based starting position.</param>
+    /// <param name="columnCount">Number of columns in the range.</param>
+    /// <param name="rowCount">Number of rows in the range.</param>
+    /// <returns>The Excel range reference spanning the requested area.</returns>
     public static string BuildReference((int Row, int Column) start, int columnCount, int rowCount)
     {
         var endColumnIndex = start.Column - 1 + columnCount;
@@ -39,11 +59,18 @@ internal static class CellReferenceHelper
         return $"{startRef}:{endRef}";
     }
 
-    public static string WithAbsolute(string reference)
+    /// <summary>
+    /// Converts the provided range into an absolute reference with an optional sheet prefix.
+    /// </summary>
+    /// <param name="reference">The relative range reference.</param>
+    /// <param name="sheetName">Optional sheet prefix (for example <c>'Sheet1'</c>).</param>
+    /// <returns>The absolute equivalent (e.g. <c>'Sheet1'!$A$1:$B$2</c>).</returns>
+    public static string WithAbsolute(string reference, string? sheetName = null)
     {
         var (row, column) = GetStartPosition(reference);
         var (endRow, endColumn) = GetEndPosition(reference);
-        return $"!${ColumnNumberToName(column - 1)}${row}:${ColumnNumberToName(endColumn - 1)}${endRow}";
+        var prefix = string.IsNullOrEmpty(sheetName) ? string.Empty : $"{sheetName}!";
+        return $"{prefix}${ColumnNumberToName(column - 1)}${row}:${ColumnNumberToName(endColumn - 1)}${endRow}";
     }
 
     private static (int Row, int Column) GetEndPosition(string reference)

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+using System;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
@@ -24,7 +25,7 @@ public sealed class WorkbookManagerTests
     private const string CustomTableRange = "C3:D5";
 
     [TestMethod]
-    public async Task GeneratesWorkbookWithMashupAndTable()
+    public void GeneratesWorkbookWithMashupAndTable()
     {
         var queryBody = @"let
     Source = Kusto.Contents(""https://help.kusto.windows.net"", ""Samples"", ""StormEvents"")
@@ -38,14 +39,14 @@ in
             new List<object?> { "London", 12 }
         }, new GridConfig { PromoteHeaders = true, AdjustColumnNames = true });
 
-        var bytes = await _manager.GenerateSingleQueryWorkbookAsync(query, grid);
+        var bytes = _manager.GenerateSingleQueryWorkbook(query, grid);
         Assert.IsTrue(bytes.Length > 0, "The generated workbook should not be empty.");
 
         using var archiveStream = new MemoryStream(bytes);
         using var archive = new ZipArchive(archiveStream, ZipArchiveMode.Read);
 
         var connections = ReadEntry(archive, "xl/connections.xml");
-        StringAssert.Contains(connections, "DataAgentQuery");
+        StringAssert.Contains(connections, "Query - DataAgentQuery");
 
         var sharedStrings = ReadEntry(archive, "xl/sharedStrings.xml");
         StringAssert.Contains(sharedStrings, "DataAgentQuery");
@@ -62,11 +63,12 @@ in
         StringAssert.Contains(mashupXml, "DataMashup");
         var root = XDocument.Parse(mashupXml).Root ?? throw new AssertFailedException("DataMashup XML root was missing.");
         var sectionContent = ExtractSection1m(root.Value.Trim());
-        StringAssert.Contains(sectionContent, "DataAgentQuery");
+        StringAssert.Contains(sectionContent, "shared #\"DataAgentQuery\"");
+        StringAssert.Contains(sectionContent, "Kusto.Contents(\"https://help.kusto.windows.net\"");
     }
 
     [TestMethod]
-    public async Task GeneratesTableWorkbookFromGrid()
+    public void GeneratesTableWorkbookFromGrid()
     {
         var grid = new Grid(new List<IReadOnlyList<object?>>
         {
@@ -75,7 +77,7 @@ in
             new List<object?> { "Bananas", 8, 0.99 }
         }, new GridConfig { PromoteHeaders = true });
 
-        var bytes = await _manager.GenerateTableWorkbookFromGridAsync(grid);
+        var bytes = _manager.GenerateTableWorkbookFromGrid(grid);
         Assert.IsTrue(bytes.Length > 0, "The generated workbook should not be empty.");
 
         using var archiveStream = new MemoryStream(bytes);
@@ -95,13 +97,24 @@ in
     public void RejectsInvalidQueryName()
     {
         var query = new QueryInfo("let Source = 1 in Source", "Invalid.Name", refreshOnOpen: false);
-        Assert.ThrowsException<ArgumentException>(() => _manager.GenerateSingleQueryWorkbookAsync(query).GetAwaiter().GetResult());
+        Assert.ThrowsException<ArgumentException>(() => _manager.GenerateSingleQueryWorkbook(query));
     }
 
     [TestMethod]
-    public async Task RequiresTemplateSettingsWhenDefaultsMissing()
+    public void DefaultsQueryNameWhenMissing()
     {
-        var template = await CreateCustomTemplateAsync();
+        var query = new QueryInfo("let Source = 1 in Source");
+        var bytes = _manager.GenerateSingleQueryWorkbook(query);
+        using var archiveStream = new MemoryStream(bytes);
+        using var archive = new ZipArchive(archiveStream, ZipArchiveMode.Read);
+        var connections = ReadEntry(archive, "xl/connections.xml");
+        StringAssert.Contains(connections, "Query - Query1");
+    }
+
+    [TestMethod]
+    public void RequiresTemplateSettingsWhenDefaultsMissing()
+    {
+        var template = CreateCustomTemplate();
         var grid = new Grid(new List<IReadOnlyList<object?>>
         {
             new List<object?> { "Col1", "Col2" },
@@ -110,13 +123,13 @@ in
 
         var config = new FileConfiguration { TemplateBytes = template };
 
-        await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => _manager.GenerateTableWorkbookFromGridAsync(grid, config));
+        Assert.ThrowsException<InvalidOperationException>(() => _manager.GenerateTableWorkbookFromGrid(grid, config));
     }
 
     [TestMethod]
-    public async Task GeneratesTableWorkbookWithTemplateSettings()
+    public void GeneratesTableWorkbookWithTemplateSettings()
     {
-        var template = await CreateCustomTemplateAsync();
+        var template = CreateCustomTemplate();
         var grid = new Grid(new List<IReadOnlyList<object?>>
         {
             new List<object?> { "Product", "Qty" },
@@ -134,7 +147,7 @@ in
             }
         };
 
-        var bytes = await _manager.GenerateTableWorkbookFromGridAsync(grid, config);
+        var bytes = _manager.GenerateTableWorkbookFromGrid(grid, config);
 
         using var archiveStream = new MemoryStream(bytes);
         using var archive = new ZipArchive(archiveStream, ZipArchiveMode.Read);
@@ -158,9 +171,9 @@ in
         return reader.ReadToEnd();
     }
 
-    private static async Task<byte[]> CreateCustomTemplateAsync()
+    private static byte[] CreateCustomTemplate()
     {
-        var template = await EmbeddedTemplateLoader.LoadBlankTableTemplateAsync();
+        var template = EmbeddedTemplateLoader.LoadBlankTableTemplate();
         using var stream = new MemoryStream();
         stream.Write(template, 0, template.Length);
 

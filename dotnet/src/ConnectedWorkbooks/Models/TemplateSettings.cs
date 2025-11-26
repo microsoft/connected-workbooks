@@ -8,7 +8,14 @@ namespace Microsoft.ConnectedWorkbooks.Models;
 /// </summary>
 public sealed record TemplateSettings
 {
+    /// <summary>
+    /// Optional table name override inside the custom template.
+    /// </summary>
     public string? TableName { get; init; }
+
+    /// <summary>
+    /// Optional worksheet name override inside the custom template.
+    /// </summary>
     public string? SheetName { get; init; }
 }
 

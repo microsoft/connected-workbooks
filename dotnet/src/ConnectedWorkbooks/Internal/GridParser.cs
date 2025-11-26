@@ -5,8 +5,16 @@ using Microsoft.ConnectedWorkbooks.Models;
 
 namespace Microsoft.ConnectedWorkbooks.Internal;
 
+/// <summary>
+/// Converts the public <see cref="Grid"/> abstraction into normalized <see cref="TableData"/> instances.
+/// </summary>
 internal static class GridParser
 {
+    /// <summary>
+    /// Normalizes the supplied grid into a form that can be written to Excel.
+    /// </summary>
+    /// <param name="grid">Grid data supplied by the caller.</param>
+    /// <returns>A normalized <see cref="TableData"/> instance.</returns>
     public static TableData Parse(Grid grid)
     {
         grid ??= new Grid(Array.Empty<IReadOnlyList<object?>>());

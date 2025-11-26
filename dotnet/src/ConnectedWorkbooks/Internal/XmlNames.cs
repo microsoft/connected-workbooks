@@ -3,8 +3,14 @@
 
 namespace Microsoft.ConnectedWorkbooks.Internal;
 
+/// <summary>
+/// Centralizes frequently used OpenXML element/attribute names.
+/// </summary>
 internal static class XmlNames
 {
+    /// <summary>
+    /// Element names used throughout the workbook package.
+    /// </summary>
     internal static class Elements
     {
         public const string SharedStringTable = "sst";
@@ -36,6 +42,9 @@ internal static class XmlNames
         public const string Selection = "selection";
     }
 
+    /// <summary>
+    /// Attribute names used throughout the workbook package.
+    /// </summary>
     internal static class Attributes
     {
         public const string Count = "count";

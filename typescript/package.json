@@ -19,7 +19,8 @@
     "test:clean": "npm run clean && npm run test",
     "test:node": "tsc && jest --config jest.config.node.js",
     "test:jsdom": "tsc && jest --config jest.config.jsdom.js",
-    "test": "npm run test:jsdom && npm run test:node"
+    "test": "npm run test:jsdom && npm run test:node",
+    "validate:implementations": "node scripts/validateImplementations.js"
   },
   "repository": {
     "type": "git",

@@ -11,30 +11,32 @@ namespace Microsoft.ConnectedWorkbooks;
 /// </summary>
 public sealed class WorkbookManager
 {
-    public async Task<byte[]> GenerateSingleQueryWorkbookAsync(
+    /// <summary>
+    /// Generates a workbook that contains a single Power Query backed by optional initial grid data.
+    /// </summary>
+    /// <param name="query">Information about the query to embed.</param>
+    /// <param name="initialDataGrid">Optional grid whose data should seed the query table.</param>
+    /// <param name="fileConfiguration">Optional template and document configuration overrides.</param>
+    /// <returns>The generated workbook bytes.</returns>
+    public byte[] GenerateSingleQueryWorkbook(
         QueryInfo query,
         Grid? initialDataGrid = null,
-        FileConfiguration? fileConfiguration = null,
-        CancellationToken cancellationToken = default)
+        FileConfiguration? fileConfiguration = null)
     {
         ArgumentNullException.ThrowIfNull(query);
 
-        var queryName = string.IsNullOrWhiteSpace(query.QueryName)
-            ? "Query1"
-            : query.QueryName!;
-
-        PqUtilities.ValidateQueryName(queryName);
         var templateBytes = fileConfiguration?.TemplateBytes
-            ?? await EmbeddedTemplateLoader.LoadSimpleQueryTemplateAsync(cancellationToken).ConfigureAwait(false);
+            ?? EmbeddedTemplateLoader.LoadSimpleQueryTemplate();
         var tableData = initialDataGrid is null ? null : GridParser.Parse(initialDataGrid);
+        var effectiveQueryName = QueryNameValidator.Resolve(query.QueryName);
 
         using var archive = ExcelArchive.Load(templateBytes);
         var templateMetadata = TemplateMetadataResolver.Resolve(archive, fileConfiguration?.TemplateSettings);
         var editor = new WorkbookEditor(archive, fileConfiguration?.DocumentProperties, templateMetadata);
-        var mashup = PowerQueryGenerator.GenerateSingleQueryMashup(queryName, query.QueryMashup);
-        editor.UpdatePowerQueryDocument(queryName, mashup);
-        var connectionId = editor.UpdateConnections(queryName, query.RefreshOnOpen);
-        var sharedStringIndex = editor.UpdateSharedStrings(queryName);
+        editor.UpdatePowerQueryDocument(query.QueryMashup, effectiveQueryName);
+
+        var connectionId = editor.UpdateConnections(effectiveQueryName, query.RefreshOnOpen);
+        var sharedStringIndex = editor.UpdateSharedStrings(effectiveQueryName);
         editor.UpdateWorksheet(sharedStringIndex);
         editor.UpdateQueryTable(connectionId, query.RefreshOnOpen);
         if (tableData is not null)
@@ -43,18 +45,23 @@ public sealed class WorkbookManager
         }
         editor.UpdateDocumentProperties();
 
-        return await Task.FromResult(archive.ToArray());
+        return archive.ToArray();
     }
 
-    public async Task<byte[]> GenerateTableWorkbookFromGridAsync(
+    /// <summary>
+    /// Generates a workbook that contains only a table populated from the supplied grid.
+    /// </summary>
+    /// <param name="grid">The source grid data.</param>
+    /// <param name="fileConfiguration">Optional template/document overrides.</param>
+    /// <returns>The generated workbook bytes.</returns>
+    public byte[] GenerateTableWorkbookFromGrid(
         Grid grid,
-        FileConfiguration? fileConfiguration = null,
-        CancellationToken cancellationToken = default)
+        FileConfiguration? fileConfiguration = null)
     {
         ArgumentNullException.ThrowIfNull(grid);
 
         var templateBytes = fileConfiguration?.TemplateBytes
-            ?? await EmbeddedTemplateLoader.LoadBlankTableTemplateAsync(cancellationToken).ConfigureAwait(false);
+            ?? EmbeddedTemplateLoader.LoadBlankTableTemplate();
         var tableData = GridParser.Parse(grid);
 
         using var archive = ExcelArchive.Load(templateBytes);
@@ -63,6 +70,6 @@ public sealed class WorkbookManager
         editor.UpdateTableData(tableData);
         editor.UpdateDocumentProperties();
 
-        return await Task.FromResult(archive.ToArray());
+        return archive.ToArray();
     }
 }

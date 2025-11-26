@@ -11,26 +11,26 @@ namespace ConnectedWorkbooks.Tests;
 public sealed class PqUtilitiesTests
 {
     [TestMethod]
-    public async Task GetDataMashupHandlesUtf16LittleEndianBom()
+    public void GetDataMashupHandlesUtf16LittleEndianBom()
     {
-        await AssertDataMashupRoundtripAsync(Encoding.Unicode);
+        AssertDataMashupRoundtrip(Encoding.Unicode);
     }
 
     [TestMethod]
-    public async Task GetDataMashupHandlesUtf16BigEndianBom()
+    public void GetDataMashupHandlesUtf16BigEndianBom()
     {
-        await AssertDataMashupRoundtripAsync(Encoding.BigEndianUnicode);
+        AssertDataMashupRoundtrip(Encoding.BigEndianUnicode);
     }
 
     [TestMethod]
-    public async Task GetDataMashupHandlesUtf8Bom()
+    public void GetDataMashupHandlesUtf8Bom()
     {
-        await AssertDataMashupRoundtripAsync(new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+        AssertDataMashupRoundtrip(new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
     }
 
-    private static async Task AssertDataMashupRoundtripAsync(Encoding encoding)
+    private static void AssertDataMashupRoundtrip(Encoding encoding)
     {
-        var template = await EmbeddedTemplateLoader.LoadSimpleQueryTemplateAsync();
+        var template = EmbeddedTemplateLoader.LoadSimpleQueryTemplate();
         using var archive = ExcelArchive.Load(template);
         var base64 = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
         WriteDataMashup(archive, base64, encoding);
