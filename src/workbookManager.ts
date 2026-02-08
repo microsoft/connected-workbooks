@@ -86,16 +86,16 @@ export const downloadWorkbook = (file: Blob, filename: string): void => {
     }
 };
 
-export const openInExcelWeb = async (file: Blob, filename?: string, allowTyping?: boolean): Promise<void> => {
+export const openInExcelWeb = async (file: Blob, filename?: string, allowTyping?: boolean, allowEdit?: boolean): Promise<void> => {
     try {
-        const url = await getExcelForWebWorkbookUrl(file, filename, allowTyping);
+        const url = await getExcelForWebWorkbookUrl(file, filename, allowTyping, allowEdit);
         window.open(url, "_blank");
     } catch (error) {
         console.error("An error occurred:", error);
     }
 };
 
-export const getExcelForWebWorkbookUrl = async (file: Blob, filename?: string, allowTyping?: boolean): Promise<string> => {
+export const getExcelForWebWorkbookUrl = async (file: Blob, filename?: string, allowTyping?: boolean, allowEdit?: boolean): Promise<string> => {
     // Check if the file exists
     if (file.size <= 0) {
         throw new Error("File is empty");
@@ -108,6 +108,9 @@ export const getExcelForWebWorkbookUrl = async (file: Blob, filename?: string, a
     // Parse allowTyping parameter
     const allowTypingParam = allowTyping ? 1 : 0;
 
+    // Select the appropriate URL based on allowEdit parameter
+    const baseUrl = allowEdit ? OFU.editUrl : OFU.ViewUrl;
+
     try {
         // Send the POST request to the desired endpoint using Fetch
         const response = await fetch(`${OFU.PostUrl}${fileNameGuid}&${OFU.WdOrigin}=${OFU.OpenInExcelOririgin}`, {
@@ -118,8 +121,8 @@ export const getExcelForWebWorkbookUrl = async (file: Blob, filename?: string, a
 
         // Check if the response is successful
         if (response.ok) {
-            // if upload was successful - open the file in a new tab
-            return `${OFU.ViewUrl}${fileNameGuid}&${OFU.AllowTyping}=${allowTypingParam}&${OFU.WdOrigin}=${OFU.OpenInExcelOririgin}`;
+            // if upload was successful - return the URL
+            return `${baseUrl}${fileNameGuid}&${OFU.AllowTyping}=${allowTypingParam}&${OFU.WdOrigin}=${OFU.OpenInExcelOririgin}`;
         } else {
             throw new Error(`File upload failed. Status code: ${response.status}`);
         }
