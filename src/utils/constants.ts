@@ -197,6 +197,7 @@ export const headers = {
 
 export const OFU = {
     ViewUrl: "https://view.officeapps.live.com/op/view.aspx?src=http://connectedWorkbooks.excel/",
+    editUrl: "https://view.officeapps.live.com/op/edit.aspx?app=x&src=http://connectedWorkbooks.excel/",
     PostUrl: "https://view.officeapps.live.com/op/viewpost.aspx?src=http://connectedWorkbooks.excel/",
     AllowTyping: "AllowTyping",
     WdOrigin: "wdOrigin",
