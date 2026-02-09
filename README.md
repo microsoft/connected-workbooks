@@ -84,14 +84,14 @@ const blob = await workbookManager.generateTableWorkbookFromHtml(
 );
 
 // Open in Excel for the Web
-// View mode with typing disabled (default)
+// Edit mode with full editing capabilities (default)
 workbookManager.openInExcelWeb(blob, "QuickExport.xlsx");
 
-// View mode with typing enabled
-workbookManager.openInExcelWeb(blob, "QuickExport.xlsx", true);
+// View mode with typing disabled
+workbookManager.openInExcelWeb(blob, "QuickExport.xlsx", false, false);
 
-// Edit mode (full editing capabilities)
-workbookManager.openInExcelWeb(blob, "QuickExport.xlsx", false, true);
+// View mode with typing enabled
+workbookManager.openInExcelWeb(blob, "QuickExport.xlsx", true, false);
 ```
 
 ### 📊 **Smart Data Formatting**
@@ -332,7 +332,7 @@ async function openInExcelWeb(
 | `blob` | `Blob` | ✅ **Required** | Generated workbook |
 | `filename` | `string` |  Optional | Custom filename |
 | `allowTyping` | `boolean` |  Optional | Enable typing in view mode (default: false) |
-| `allowEdit` | `boolean` |  Optional | Open in edit mode instead of view mode (default: false) |
+| `allowEdit` | `boolean` |  Optional | Open in edit mode with full editing capabilities (default: **true**) |
 
 #### 💾 `downloadWorkbook()`
 Trigger browser download of the workbook.
@@ -358,7 +358,7 @@ async function getExcelForWebWorkbookUrl(
 | `file` | `Blob` | ✅ **Required** | Generated workbook |
 | `filename` | `string` |  Optional | Custom filename |
 | `allowTyping` | `boolean` |  Optional | Enable typing in view mode (default: false) |
-| `allowEdit` | `boolean` |  Optional | Use edit URL instead of view URL (default: false) |
+| `allowEdit` | `boolean` |  Optional | Use edit URL with full editing capabilities (default: **true**) |
 
 ---
 

@@ -86,7 +86,7 @@ export const downloadWorkbook = (file: Blob, filename: string): void => {
     }
 };
 
-export const openInExcelWeb = async (file: Blob, filename?: string, allowTyping?: boolean, allowEdit?: boolean): Promise<void> => {
+export const openInExcelWeb = async (file: Blob, filename?: string, allowTyping?: boolean, allowEdit: boolean = true): Promise<void> => {
     try {
         const url = await getExcelForWebWorkbookUrl(file, filename, allowTyping, allowEdit);
         window.open(url, "_blank");
@@ -95,7 +95,7 @@ export const openInExcelWeb = async (file: Blob, filename?: string, allowTyping?
     }
 };
 
-export const getExcelForWebWorkbookUrl = async (file: Blob, filename?: string, allowTyping?: boolean, allowEdit?: boolean): Promise<string> => {
+export const getExcelForWebWorkbookUrl = async (file: Blob, filename?: string, allowTyping?: boolean, allowEdit: boolean = true): Promise<string> => {
     // Check if the file exists
     if (file.size <= 0) {
         throw new Error("File is empty");
@@ -108,7 +108,7 @@ export const getExcelForWebWorkbookUrl = async (file: Blob, filename?: string, a
     // Parse allowTyping parameter
     const allowTypingParam = allowTyping ? 1 : 0;
 
-    // Select the appropriate URL based on allowEdit parameter
+    // Select the appropriate URL based on allowEdit parameter (defaults to true for edit mode)
     const baseUrl = allowEdit ? OFU.editUrl : OFU.ViewUrl;
 
     try {
