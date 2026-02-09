@@ -322,7 +322,6 @@ Open workbooks directly in Excel for the Web.
 async function openInExcelWeb(
   blob: Blob,
   filename?: string,
-  allowTyping?: boolean,
   allowEdit?: boolean
 ): Promise<void>
 ```
@@ -331,7 +330,6 @@ async function openInExcelWeb(
 |-----------|------|----------|-------------|
 | `blob` | `Blob` | ✅ **Required** | Generated workbook |
 | `filename` | `string` |  Optional | Custom filename |
-| `allowTyping` | `boolean` |  Optional | Enable typing in view mode (default: false) |
 | `allowEdit` | `boolean` |  Optional | Open in edit mode with full editing capabilities (default: **true**) |
 
 #### 💾 `downloadWorkbook()`
@@ -348,7 +346,6 @@ Get the Excel for Web URL without opening (useful for custom integrations).
 async function getExcelForWebWorkbookUrl(
   file: Blob,
   filename?: string,
-  allowTyping?: boolean,
   allowEdit?: boolean
 ): Promise<string>
 ```
@@ -357,7 +354,6 @@ async function getExcelForWebWorkbookUrl(
 |-----------|------|----------|-------------|
 | `file` | `Blob` | ✅ **Required** | Generated workbook |
 | `filename` | `string` |  Optional | Custom filename |
-| `allowTyping` | `boolean` |  Optional | Enable typing in view mode (default: false) |
 | `allowEdit` | `boolean` |  Optional | Use edit URL with full editing capabilities (default: **true**) |
 
 ---

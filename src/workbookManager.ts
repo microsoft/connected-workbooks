@@ -86,16 +86,16 @@ export const downloadWorkbook = (file: Blob, filename: string): void => {
     }
 };
 
-export const openInExcelWeb = async (file: Blob, filename?: string, allowTyping?: boolean, allowEdit: boolean = true): Promise<void> => {
+export const openInExcelWeb = async (file: Blob, filename?: string, allowEdit: boolean = true): Promise<void> => {
     try {
-        const url = await getExcelForWebWorkbookUrl(file, filename, allowTyping, allowEdit);
+        const url = await getExcelForWebWorkbookUrl(file, filename, allowEdit);
         window.open(url, "_blank");
     } catch (error) {
         console.error("An error occurred:", error);
     }
 };
 
-export const getExcelForWebWorkbookUrl = async (file: Blob, filename?: string, allowTyping?: boolean, allowEdit: boolean = true): Promise<string> => {
+export const getExcelForWebWorkbookUrl = async (file: Blob, filename?: string, allowEdit: boolean = true): Promise<string> => {
     // Check if the file exists
     if (file.size <= 0) {
         throw new Error("File is empty");
@@ -104,9 +104,6 @@ export const getExcelForWebWorkbookUrl = async (file: Blob, filename?: string, a
     // Read the content of the Excel file into a buffer
     const fileContent = file;
     const fileNameGuid = new Date().getTime().toString() + (filename ? "_" + filename : "") + ".xlsx";
-
-    // Parse allowTyping parameter
-    const allowTypingParam = allowTyping ? 1 : 0;
 
     // Select the appropriate URL based on allowEdit parameter (defaults to true for edit mode)
     const baseUrl = allowEdit ? OFU.editUrl : OFU.ViewUrl;
@@ -122,7 +119,7 @@ export const getExcelForWebWorkbookUrl = async (file: Blob, filename?: string, a
         // Check if the response is successful
         if (response.ok) {
             // if upload was successful - return the URL
-            return `${baseUrl}${fileNameGuid}&${OFU.AllowTyping}=${allowTypingParam}&${OFU.WdOrigin}=${OFU.OpenInExcelOririgin}`;
+            return `${baseUrl}${fileNameGuid}&${OFU.WdOrigin}=${OFU.OpenInExcelOririgin}`;
         } else {
             throw new Error(`File upload failed. Status code: ${response.status}`);
         }
