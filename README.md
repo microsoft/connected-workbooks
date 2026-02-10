@@ -10,7 +10,11 @@
 **Open your data directly in Excel for the Web with zero installation** - A JavaScript library that converts web tables and data into interactive Excel workbooks with Power Query integration and custom branded templates
 
 <div align="center">
-<img src="./assets/template example.gif" alt="Connected Workbooks Demo" >
+<a href="https://aka.ms/OpenInExcelREADME" target="_blank">
+  <img src="./assets/template example.gif" alt="Connected Workbooks Demo - Click to watch video" >
+  <br/>
+  <strong>📺 Watch the video tutorial</strong>
+</a>
 </div>
 
 
@@ -79,8 +83,15 @@ const blob = await workbookManager.generateTableWorkbookFromHtml(
   document.querySelector('table') as HTMLTableElement
 );
 
-// Open in Excel for the Web with editing enabled
-workbookManager.openInExcelWeb(blob, "QuickExport.xlsx", true);
+// Open in Excel for the Web
+// Edit mode with full editing capabilities (default)
+workbookManager.openInExcelWeb(blob, "QuickExport.xlsx");
+
+// View mode with typing disabled
+workbookManager.openInExcelWeb(blob, "QuickExport.xlsx", false, false);
+
+// View mode with typing enabled
+workbookManager.openInExcelWeb(blob, "QuickExport.xlsx", true, false);
 ```
 
 ### 📊 **Smart Data Formatting**
@@ -309,9 +320,9 @@ Open workbooks directly in Excel for the Web.
 
 ```typescript
 async function openInExcelWeb(
-  blob: Blob, 
-  filename?: string, 
-  allowTyping?: boolean
+  blob: Blob,
+  filename?: string,
+  allowEdit?: boolean
 ): Promise<void>
 ```
 
@@ -319,7 +330,7 @@ async function openInExcelWeb(
 |-----------|------|----------|-------------|
 | `blob` | `Blob` | ✅ **Required** | Generated workbook |
 | `filename` | `string` |  Optional | Custom filename |
-| `allowTyping` | `boolean` |  Optional | Enable editing (default: false) |
+| `allowEdit` | `boolean` |  Optional | Open in edit mode with full editing capabilities (default: **true**) |
 
 #### 💾 `downloadWorkbook()`
 Trigger browser download of the workbook.
@@ -328,16 +339,22 @@ Trigger browser download of the workbook.
 function downloadWorkbook(file: Blob, filename: string): void
 ```
 
-#### 🔗 `getExcelForWebWorkbookUrl()` 
+#### 🔗 `getExcelForWebWorkbookUrl()`
 Get the Excel for Web URL without opening (useful for custom integrations).
 
 ```typescript
 async function getExcelForWebWorkbookUrl(
-  file: Blob, 
-  filename?: string, 
-  allowTyping?: boolean
+  file: Blob,
+  filename?: string,
+  allowEdit?: boolean
 ): Promise<string>
 ```
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `file` | `Blob` | ✅ **Required** | Generated workbook |
+| `filename` | `string` |  Optional | Custom filename |
+| `allowEdit` | `boolean` |  Optional | Use edit URL with full editing capabilities (default: **true**) |
 
 ---
 
