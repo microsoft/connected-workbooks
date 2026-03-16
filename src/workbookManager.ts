@@ -103,7 +103,8 @@ export const getExcelForWebWorkbookUrl = async (file: Blob, filename?: string, a
 
     // Read the content of the Excel file into a buffer
     const fileContent = file;
-    const fileNameGuid = new Date().getTime().toString() + (filename ? "_" + filename : "") + ".xlsx";
+    const extension = filename?.endsWith(".xlsx") ? "" : ".xlsx";
+    const fileNameGuid = new Date().getTime().toString() + (filename ? "_" + filename : "") + extension;
 
     // Select the appropriate URL based on allowEdit parameter (defaults to true for edit mode)
     const baseUrl = allowEdit ? OFU.editUrl : OFU.ViewUrl;
