@@ -13,7 +13,7 @@ A JavaScript library that turns any data in your web app into a real Excel workb
 
 <div align="center">
 <a href="https://aka.ms/OpenInExcelREADME" target="_blank">
-  <img src="./assets/template example.gif" alt="Open In Excel Demo - Click to watch video" >
+  <img src="./assets/open-in-excel-example.gif" alt="Open In Excel Demo - Click to watch video" >
   <br/>
   <strong>📺 Watch the 90-second demo</strong>
 </a>
