@@ -12,11 +12,10 @@
 A JavaScript library that turns any data in your web app into a real Excel workbook and opens it in a new tab in Excel Online — **anonymously**. Your users don't need a Microsoft account. They don't need Excel installed. They don't even need to download a file. They click a button and they're in Excel, ready to slice, sort, pivot, and analyze.
 
 <div align="center">
-<a href="https://aka.ms/OpenInExcelREADME" target="_blank">
-  <img src="./assets/open-in-excel-example.gif" alt="Open In Excel Demo - Click to watch video" >
-  <br/>
-  <strong>📺 Watch the 90-second demo</strong>
-</a>
+
+<video src="./assets/open-in-excel-example.mp4" autoplay loop muted playsinline width="720"></video>
+
+<a href="https://aka.ms/OpenInExcelREADME" target="_blank"><strong>📺 Watch the 90-second demo</strong></a>
 </div>
 
 </div>
