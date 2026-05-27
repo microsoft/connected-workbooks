@@ -13,7 +13,10 @@ A JavaScript library that turns any data in your web app into a real Excel workb
 
 <div align="center">
 
-<video src="./assets/open-in-excel-example.mp4" autoplay loop muted playsinline width="720"></video>
+<video autoplay loop muted playsinline controls width="720">
+  <source src="https://raw.githubusercontent.com/microsoft/connected-workbooks/user/menikroizer/OpenInXLOReadME/assets/open-in-excel-example.mp4" type="video/mp4">
+  Your browser does not support the video tag. <a href="./assets/open-in-excel-example.mp4">Download the demo</a> instead.
+</video>
 
 <a href="https://aka.ms/OpenInExcelREADME" target="_blank"><strong>📺 Watch the 90-second demo</strong></a>
 </div>
